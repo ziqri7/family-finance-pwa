@@ -1,0 +1,11 @@
+{
+  "partner-a": [
+    {"label":"Penghasilan utama","kind":"income"},{"label":"Penghasilan tambahan","kind":"income"},
+    {"label":"Donasi","kind":"allocation"},{"label":"Iuran","kind":"allocation"},{"label":"Dukungan keluarga","kind":"allocation"},
+    {"label":"Tabungan keluarga","kind":"allocation"},{"label":"Belanja bulanan","kind":"allocation"},{"label":"Listrik","kind":"allocation"},
+    {"label":"Air","kind":"allocation"},{"label":"Internet","kind":"allocation"},{"label":"Kiriman pasangan","kind":"transfer_out"},
+    {"label":"Transportasi pasangan","kind":"allocation"},{"label":"Transportasi pribadi","kind":"allocation"},
+    {"label":"Langganan","kind":"allocation"},{"label":"Layanan digital","kind":"allocation"},{"label":"Keperluan pribadi","kind":"allocation"}
+  ],
+  "partner-b": [{"label":"Penghasilan sendiri","kind":"income"},{"label":"Belanja dapur","kind":"allocation"},{"label":"Keperluan pribadi","kind":"allocation"},{"label":"Transportasi","kind":"allocation"}]
+}

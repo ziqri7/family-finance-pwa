@@ -1,0 +1,199 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+import { randomBytes, createHash } from "node:crypto";
+import { build } from "esbuild";
+import { Miniflare, convertV4MiniflareOptions } from "miniflare";
+import { credentials } from "../scripts/credentials.mjs";
+
+test("upload storage faults and parent deletion recover without exposing incomplete evidence", async (t) => {
+  const auth = credentials(),
+    origin = "http://localhost",
+    id = () => randomBytes(16).toString("hex");
+  // Fault injection exists only in this test wrapper, never in the deployed Worker.
+  const compiled = await build({
+    stdin: {
+      resolveDir: process.cwd(),
+      contents: `
+ import app from './worker/index.ts';
+ export default {async fetch(req,env,ctx){
+  const fault=req.headers.get('X-Test-Fault');
+  if(!fault)return app.fetch(req,env,ctx);
+  const bucket=env.EVIDENCE,db=env.DB;
+  const evidence=new Proxy(bucket,{get(target,key){
+   if(key==='put')return async(...args)=>{
+    if(fault==='put')throw Error('injected storage outage');
+    const result=await target.put(...args);
+    if(fault==='parent')await db.prepare('UPDATE expenses SET deleted_at=1,version=version+1').run();
+    return result;
+   };
+   const value=Reflect.get(target,key);return typeof value==='function'?value.bind(target):value;
+  }});
+  const database=new Proxy(db,{get(target,key){
+   if(key==='prepare')return sql=>{
+    if(fault==='finalize'&&sql.startsWith("UPDATE attachments SET status='ready'"))throw Error('injected finalize outage');
+    return target.prepare(sql);
+   };
+   const value=Reflect.get(target,key);return typeof value==='function'?value.bind(target):value;
+  }});
+  return app.fetch(req,{...env,DB:database,EVIDENCE:evidence},ctx);
+ }};`,
+    },
+    bundle: true,
+    format: "esm",
+    platform: "browser",
+    write: false,
+    target: "es2022",
+  });
+  const mf = new Miniflare(
+    convertV4MiniflareOptions({
+      modules: true,
+      script: compiled.outputFiles[0].text,
+      compatibilityDate: "2026-11-12",
+      d1Databases: ["DB"],
+      r2Buckets: ["EVIDENCE"],
+      bindings: {
+        APP_ORIGIN: origin,
+        LOCAL_DEV: "1",
+        AUTH_USERS_JSON: JSON.stringify(auth.users),
+        SESSION_SECRET: auth.secret,
+      },
+    }),
+  );
+  try {
+    const db = await mf.getD1Database("DB"),
+      bucket = await mf.getR2Bucket("EVIDENCE");
+    await db.exec(await readFile("migrations/0001_initial.sql", "utf8"));
+    await db
+      .prepare("INSERT INTO default_items VALUES(?,?,?,?,?)")
+      .bind(id(), "partner-a", "Allocation", "allocation", 0)
+      .run();
+    let cookie = "";
+    const req = async (method, path, body, fault, raw = false) => {
+      const r = await mf.dispatchFetch(origin + "/api" + path, {
+        method,
+        headers: {
+          Origin: origin,
+          Cookie: cookie,
+          "Content-Type": raw ? "image/png" : "application/json",
+          ...(fault ? { "X-Test-Fault": fault } : {}),
+        },
+        body:
+          body === undefined ? undefined : raw ? body : JSON.stringify(body),
+      });
+      if (r.headers.get("set-cookie"))
+        cookie = r.headers.get("set-cookie").split(";")[0];
+      return {
+        status: r.status,
+        data: r.headers.get("content-type")?.includes("json")
+          ? await r.json()
+          : await r.arrayBuffer(),
+      };
+    };
+    assert.equal(
+      (
+        await req("POST", "/login", {
+          email: auth.users[0].email,
+          password: auth.passwords[0],
+        })
+      ).status,
+      200,
+    );
+    assert.equal(
+      (await req("POST", "/periods", { id: "2001-01", mode: "default" }))
+        .status,
+      201,
+    );
+    const item = (await req("GET", "/periods/2001-01")).data.items[0];
+    const png = await readFile("public/icons/icon-192.png");
+    for (const fault of ["put", "finalize", "parent"])
+      await t.test(fault, async () => {
+        const expense = id(),
+          file = id(),
+          path = "/attachments/" + file + "/content";
+        assert.equal(
+          (
+            await req("POST", "/expenses", {
+              id: expense,
+              date: "2001-01-01",
+              itemId: item.id,
+              note: "Fault fixture",
+              amount: 25000,
+            })
+          ).status,
+          201,
+        );
+        const reservation = {
+          id: file,
+          contentType: "image/png",
+          byteSize: png.length,
+          sha256: createHash("sha256").update(png).digest("hex"),
+        };
+        assert.equal(
+          (
+            await req(
+              "POST",
+              "/expenses/" + expense + "/attachments",
+              reservation,
+            )
+          ).status,
+          201,
+        );
+        assert.equal(
+          (await req("PUT", path, png, fault, true)).status,
+          fault === "parent" ? 409 : 500,
+        );
+        const row = await db
+          .prepare("SELECT * FROM attachments WHERE id=?")
+          .bind(file)
+          .first();
+        assert.equal(row.status, "pending");
+        assert.equal((await req("GET", path)).status, 404);
+        assert.equal(
+          Boolean(await bucket.head(row.object_key)),
+          fault === "finalize",
+        );
+        if (fault === "parent") {
+          assert.equal(
+            (await req("PUT", path, png, undefined, true)).status,
+            409,
+          );
+        } else {
+          assert.equal(
+            (
+              await req(
+                "POST",
+                "/expenses/" + expense + "/attachments",
+                reservation,
+              )
+            ).status,
+            200,
+          );
+          assert.equal(
+            (await req("PUT", path, png, undefined, true)).status,
+            200,
+          );
+          assert.equal((await req("GET", path)).status, 200);
+          assert.equal(
+            (
+              await db
+                .prepare(
+                  "SELECT count(*) AS n FROM attachments WHERE expense_id=?",
+                )
+                .bind(expense)
+                .first()
+            ).n,
+            1,
+          );
+          assert.equal(
+            (await bucket.list()).objects.filter(
+              (o) => o.key === row.object_key,
+            ).length,
+            1,
+          );
+        }
+      });
+  } finally {
+    await mf.dispose();
+  }
+});
