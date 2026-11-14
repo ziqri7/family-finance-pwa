@@ -8,7 +8,7 @@ web
 
 ## Stack
 
-Aplikasi lokal tahap 6: React, Vite, TypeScript, Tailwind CSS, komponen berpola shadcn/Radix, Cloudflare Workers, Hono, D1, Drizzle serta R2 privat. Prototipe tahap 4 tetap arsip terpisah; aplikasi aktual memakai API dan penyimpanan lokal.
+React, Vite, TypeScript, Tailwind CSS, komponen berpola shadcn/Radix, Cloudflare Workers/Hono, Neon PostgreSQL, Drizzle serta Neon Object Storage privat. Integrasi disetujui; kandidat diuji terpisah, tanpa mengubah UI atau data lokal lama.
 
 ## Users
 
@@ -24,7 +24,7 @@ Struktur dan rumus mengikuti Keu.xlsx yang diperiksa pada tahap 2 dan diperiksa 
 
 ## Capabilities and Constraints
 
-Periode bulanan, salin rencana sendiri tanpa realisasi/bukti, dua akun dengan batas kepemilikan, polling online, aset PWA, self-host Cloudflare, MIT. Bukti JPG/PNG opsional beberapa gambar per pengeluaran; kedua pihak dapat melihatnya. Detail keputusan 1A–6B ada di docs/REVISI_KELUARGA.md. Backend, akun, D1/R2 lokal, backup dan pemeriksaan pemulihan telah dijalankan. Kandidat kode publik tidak memuat nilai secret lokal/workbook. Belum ada publikasi atau deployment baru; aktivasi R2 remote dan potensi biaya memerlukan keputusan pada tahap deployment. Instalasi perangkat fisik dan batas runtime Cloudflare nyata belum dinyatakan lulus.
+Periode bulanan, salin rencana sendiri tanpa realisasi/bukti, dua akun dengan batas kepemilikan, polling online, aset PWA, self-host Cloudflare, MIT. Bukti JPG/PNG opsional beberapa gambar per pengeluaran; kedua pihak dapat melihatnya. Detail keputusan 1A–6B ada di docs/REVISI_KELUARGA.md. Versi D1/R2 awal sudah dipublikasikan; kandidat Neon belum dirilis. Integrasi memakai akun Cloudflare dan Neon milik setiap keluarga, dengan Free tier yang dibatasi kuota. Tidak memindahkan nominal lama otomatis. Instalasi perangkat fisik dan batas runtime Cloudflare nyata belum dinyatakan lulus.
 
 ## Brand Commitments
 

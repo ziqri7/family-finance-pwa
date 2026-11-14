@@ -113,7 +113,7 @@ export const authenticated: MiddlewareHandler<AppEnv> = async (c, next) => {
     fail(401, "LOGIN_REQUIRED", "Silakan masuk untuk melanjutkan.");
   const tokenHash = await hash(token),
     session = await c.env.DB.prepare(
-      "SELECT * FROM sessions WHERE token_hash=? AND expires_at>? AND auth_fingerprint=?",
+      "SELECT * FROM sessions WHERE token_hash=$1 AND expires_at>$2 AND auth_fingerprint=$3",
     )
       .bind(tokenHash, Date.now(), c.get("fingerprint"))
       .first<{ account_id: string }>();
@@ -149,7 +149,7 @@ export async function login(c: Context<AppEnv>) {
   const attempts = await c.env.DB.batch<{ attempts: number }>(
     keys.map((key) =>
       c.env.DB.prepare(
-        "INSERT INTO login_attempts(key,attempts,window_start,blocked_until) VALUES(?,1,?,?) ON CONFLICT(key) DO UPDATE SET attempts=attempts+1 RETURNING attempts",
+        "INSERT INTO login_attempts(key,attempts,window_start,blocked_until) VALUES($1,1,$2,$3) ON CONFLICT(key) DO UPDATE SET attempts=login_attempts.attempts+1 RETURNING attempts",
       ).bind(key, windowStart, windowStart + 900000),
     ),
   );
@@ -176,7 +176,7 @@ export async function login(c: Context<AppEnv>) {
   const token = hex(crypto.getRandomValues(new Uint8Array(32))),
     tokenHash = await hash(token);
   await c.env.DB.batch([
-    c.env.DB.prepare("INSERT INTO sessions VALUES(?,?,?,?,?)").bind(
+    c.env.DB.prepare("INSERT INTO sessions VALUES($1,$2,$3,$4,$5)").bind(
       tokenHash,
       user.id,
       c.get("fingerprint"),
@@ -184,10 +184,10 @@ export async function login(c: Context<AppEnv>) {
       now + 604800000,
     ),
     c.env.DB.prepare(
-      "DELETE FROM login_attempts WHERE key=? OR key IN (SELECT key FROM login_attempts WHERE blocked_until<? LIMIT 100)",
+      "DELETE FROM login_attempts WHERE key=$1 OR key IN (SELECT key FROM login_attempts WHERE blocked_until<$2 LIMIT 100)",
     ).bind(keys[1], now),
     c.env.DB.prepare(
-      "DELETE FROM sessions WHERE token_hash IN (SELECT token_hash FROM sessions WHERE expires_at<? LIMIT 100)",
+      "DELETE FROM sessions WHERE token_hash IN (SELECT token_hash FROM sessions WHERE expires_at<$1 LIMIT 100)",
     ).bind(now),
   ]);
   setCookie(c, cookieName(c), token, {
@@ -200,7 +200,7 @@ export async function login(c: Context<AppEnv>) {
   return c.json({ user: { id: user.id, name: user.name } });
 }
 export async function logout(c: Context<AppEnv>) {
-  await c.env.DB.prepare("DELETE FROM sessions WHERE token_hash=?")
+  await c.env.DB.prepare("DELETE FROM sessions WHERE token_hash=$1")
     .bind(c.get("tokenHash"))
     .run();
   deleteCookie(c, cookieName(c), {

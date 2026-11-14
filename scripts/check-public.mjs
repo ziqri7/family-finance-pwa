@@ -2,6 +2,7 @@
 import { readdir, readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { publicFiles } from "./public-files.mjs";
+import { parseEnv } from "node:util";
 const files = await publicFiles();
 const sourceCount = files.length;
 // Built assets are checked separately and never copied into the source package.
@@ -15,6 +16,26 @@ async function walkBuild(path) {
 }
 if (existsSync("dist")) await walkBuild("dist");
 const secrets = [];
+for (const file of await readdir(".")) {
+  if (
+    !/^(\.env(?:\..*)?|\.dev\.vars(?:\..*)?)$/.test(file) ||
+    file.endsWith(".example")
+  )
+    continue;
+  const vars = parseEnv(await readFile(file, "utf8"));
+  for (const name of [
+    "DATABASE_URL",
+    "DATABASE_URL_UNPOOLED",
+    "AWS_ACCESS_KEY_ID",
+    "AWS_SECRET_ACCESS_KEY",
+    "SESSION_SECRET",
+  ])
+    if (vars[name]) secrets.push(vars[name]);
+  if (vars.DATABASE_URL) {
+    const password = new URL(vars.DATABASE_URL).password;
+    if (password) secrets.push(password, decodeURIComponent(password));
+  }
+}
 if (existsSync(".dev.vars")) {
   const vars = await readFile(".dev.vars", "utf8");
   const secret = vars.match(/^SESSION_SECRET=(.+)$/m)?.[1].trim();

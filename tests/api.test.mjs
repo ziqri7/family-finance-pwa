@@ -11,7 +11,8 @@ const origin = "http://localhost",
   cookies = {},
   ids = {},
   state = {};
-let mf, db, workerScript;
+let mf, workerScript;
+import { config, db, reset } from "./neon-helper.mjs";
 const id = () => randomBytes(16).toString("hex");
 async function req(method, path, body, who = "a", extra = {}) {
   const headers = { Origin: origin, ...extra };
@@ -72,9 +73,8 @@ before(async () => {
       modules: true,
       script: workerScript,
       compatibilityDate: "2026-11-12",
-      d1Databases: ["DB"],
-      r2Buckets: ["EVIDENCE"],
       bindings: {
+        ...config,
         APP_ORIGIN: origin,
         LOCAL_DEV: "1",
         AUTH_USERS_JSON: JSON.stringify(auth.users),
@@ -82,13 +82,12 @@ before(async () => {
       },
     }),
   );
-  db = await mf.getD1Database("DB");
-  await db.exec(await readFile("migrations/0001_initial.sql", "utf8"));
+  await reset();
   const template = JSON.parse(await readFile("data/template.json", "utf8"));
   for (const owner of ["partner-a", "partner-b"])
     for (const [position, item] of template[owner].entries())
       await db
-        .prepare("INSERT INTO default_items VALUES(?,?,?,?,?)")
+        .prepare("INSERT INTO default_items VALUES($1,$2,$3,$4,$5)")
         .bind(id(), owner, item.label, item.kind, position)
         .run();
 });
@@ -569,9 +568,8 @@ test("HTTPS configuration uses host-only Secure cookies, hashed tokens and finge
       modules: true,
       script: workerScript,
       compatibilityDate: "2026-11-12",
-      d1Databases: ["DB"],
-      r2Buckets: ["EVIDENCE"],
       bindings: {
+        ...config,
         APP_ORIGIN: https,
         AUTH_USERS_JSON: JSON.stringify(auth.users),
         SESSION_SECRET: auth.secret,
@@ -579,8 +577,8 @@ test("HTTPS configuration uses host-only Secure cookies, hashed tokens and finge
     }),
   );
   try {
-    const database = await prod.getD1Database("DB");
-    await database.exec(await readFile("migrations/0001_initial.sql", "utf8"));
+    const database = db;
+    await db.prepare("DELETE FROM sessions").run();
     const response = await prod.dispatchFetch(https + "/api/login", {
       method: "POST",
       headers: { Origin: https, "Content-Type": "application/json" },

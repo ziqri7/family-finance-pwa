@@ -1,13 +1,13 @@
-# Rancangan database D1
+# Rancangan database PostgreSQL
 
-Acuan tahap 5, revisi keluarga; skema Drizzle dan migrasi SQL eksplisit tahap 6 telah dibuat serta diterapkan pada D1 lokal. Sembilan tabel: default_items, periods, budgets, budget_items, expenses, transfers, attachments, sessions, login_attempts. Perhitungan dan kepemilikan mengikuti REVISI_KELUARGA.md. Backup/restore lokal dan pengujian CAS/constraint telah dijalankan; hasil rinci ada di TESTING.md. Database produksi belum dibuat.
+Integrasi Neon menggantikan D1/SQLite. Sembilan tabel domain tetap, ditambah schema_migrations untuk nomor/hash migrasi. Skema Drizzle pg-core dan SQL bernomor adalah sumber implementasi; data keluarga lokal lama tidak dipindahkan otomatis. Nominal/waktu memakai BIGINT, versi/posisi INTEGER. Semua transaksi mengambil advisory lock keluarga sebelum query data dalam READ COMMITTED; snapshot dan kuota konsisten untuk dua penulis. Hasil serta batas pengujian pada TESTING.md.
 
 ## Konvensi
 
 - Satu database untuk satu keluarga. Tidak ada household_id karena tidak ada multi-tenant atau server pusat.
 - ID pos adalah 128 bit acak dalam 32 karakter heksadesimal lowercase. ID bulan YYYY-MM.
-- Waktu INTEGER berupa Unix epoch milidetik UTC dari server. Bulan adalah identitas kalender yang dipilih pengguna, tidak dikonversi dari UTC.
-- Nominal disimpan INTEGER rupiah positif menurut jenis. NULL berarti belum diisi. Tidak menggunakan REAL untuk uang.
+- Waktu BIGINT berupa Unix epoch milidetik UTC dari server. Bulan adalah identitas kalender yang dipilih pengguna, tidak dikonversi dari UTC.
+- Nominal disimpan BIGINT rupiah positif menurut jenis. NULL berarti belum diisi. Tidak menggunakan REAL untuk uang.
 - Versi dan revisi INTEGER dimulai dari 1, monoton naik, tidak memakai timestamp untuk menentukan konflik.
 - Foreign key aktif; bulan sumber tidak menjadi foreign key karena salinan berdiri sendiri.
 
@@ -74,7 +74,7 @@ Tidak menyimpan nominal atau email akun. owner_id adalah ID tetap internal. Peng
 | --- | --- | --- |
 | id | TEXT PRIMARY KEY | YYYY-MM, tahun 2000–2100 dan bulan 01–12 |
 | revision | INTEGER NOT NULL DEFAULT 1 | ≥ 1, naik pada perubahan anggaran, pengeluaran, kiriman dan metadata bukti bulan tersebut |
-| created_at | INTEGER NOT NULL | Waktu pembuatan server |
+| created_at | BIGINT NOT NULL | Waktu pembuatan server |
 
 Tidak menyimpan total, sisa, persentase atau ketergantungan ke bulan sumber. Daftar bulan diurutkan berdasarkan id, sehingga urutan kalender konsisten.
 
@@ -84,7 +84,7 @@ Tidak menyimpan total, sisa, persentase atau ketergantungan ke bulan sumber. Daf
 | --- | --- | --- |
 | period_id | TEXT NOT NULL REFERENCES periods(id) | Identitas bulan bersama |
 | owner_id | TEXT NOT NULL | partner-a atau partner-b |
-| created_at | INTEGER NOT NULL | Waktu server |
+| created_at | BIGINT NOT NULL | Waktu server |
 
 PRIMARY KEY(period_id, owner_id). Satu anggaran per pemilik per bulan. Baris tidak dibuat otomatis oleh pasangan. Hanya berfungsi sebagai kepala anggaran; tidak berisi total atau nominal. Pembuatan periode memakai INSERT jika belum ada, lalu membuat budgets milik sesi secara atomik. Bila periode telah ada dari pasangan, tambahkan hanya budgets pemilik sesi; anggaran pasangan tidak diubah.
 
@@ -97,14 +97,14 @@ PRIMARY KEY(period_id, owner_id). Satu anggaran per pemilik per bulan. Baris tid
 | owner_id | TEXT NOT NULL | Bagian foreign key komposit ke budgets; dari sesi, tidak dapat diubah |
 | label | TEXT NOT NULL | Trim, 1–100 karakter |
 | kind | TEXT NOT NULL | income, allocation atau transfer_out; tetap setelah dibuat |
-| amount | INTEGER NULL | NULL atau integer 0–1.000.000.000.000 |
+| amount | BIGINT NULL | NULL atau integer 0–1.000.000.000.000 |
 | position | INTEGER NOT NULL | ≥ 0; urutan dalam kelompok |
 | label_version | INTEGER NOT NULL DEFAULT 1 | ≥ 1, naik hanya saat label berubah |
 | amount_version | INTEGER NOT NULL DEFAULT 1 | ≥ 1, naik hanya saat nominal berubah |
 | row_version | INTEGER NOT NULL DEFAULT 1 | ≥ 1, naik saat label, nominal, atau status hapus berubah |
-| created_at | INTEGER NOT NULL | Waktu server |
-| updated_at | INTEGER NOT NULL | Waktu server mutasi terakhir |
-| deleted_at | INTEGER NULL | Tombstone; NULL berarti aktif |
+| created_at | BIGINT NOT NULL | Waktu server |
+| updated_at | BIGINT NOT NULL | Waktu server mutasi terakhir |
+| deleted_at | BIGINT NULL | Tombstone; NULL berarti aktif |
 
 FOREIGN KEY(period_id,owner_id) REFERENCES budgets(period_id,owner_id) ON DELETE RESTRICT. UNIQUE(id,period_id,owner_id) untuk relasi anak yang memverifikasi pemilik/bulan. Indeks (period_id,owner_id,deleted_at,kind,position,id). Mutasi mengikat owner_id sesi; GET keluarga boleh membaca kedua bagian. Urutan per kelompok position lalu id; label tidak menjadi identitas.
 
@@ -140,8 +140,8 @@ RETURNING id, amount, amount_version, row_version;
 | token_hash | TEXT PRIMARY KEY | SHA-256 token sesi; token mentah tidak disimpan |
 | account_id | TEXT NOT NULL | partner-a atau partner-b; masih harus ada dalam konfigurasi secret |
 | auth_fingerprint | TEXT NOT NULL | HMAC konfigurasi autentikasi, bukan salinan hash sandi |
-| created_at | INTEGER NOT NULL | Waktu login server |
-| expires_at | INTEGER NOT NULL | created_at + tujuh hari; tidak diperpanjang setiap polling |
+| created_at | BIGINT NOT NULL | Waktu login server |
+| expires_at | BIGINT NOT NULL | created_at + tujuh hari; tidak diperpanjang setiap polling |
 
 Indeks expires_at untuk pembersihan. Setiap request memeriksa kedaluwarsa dan fingerprint. Logout menghapus token_hash terkait. Pembersihan sesi kedaluwarsa bersifat terbatas dan oportunistik agar tidak perlu cron atau layanan tambahan. Restore database mencabut seluruh sesi sebelum digunakan.
 
@@ -151,8 +151,8 @@ Indeks expires_at untuk pembersihan. Setiap request memeriksa kedaluwarsa dan fi
 | --- | --- | --- |
 | key | TEXT PRIMARY KEY | HMAC namespace+IP atau namespace+IP+identitas login |
 | attempts | INTEGER NOT NULL | ≥ 0; upsert mencatat slot percobaan dan memeriksa batas secara atomik sebelum hash diverifikasi |
-| window_start | INTEGER NOT NULL | Awal jendela server |
-| blocked_until | INTEGER NOT NULL | 0 atau waktu akhir blok |
+| window_start | BIGINT NOT NULL | Awal jendela server |
+| blocked_until | BIGINT NOT NULL | 0 atau waktu akhir blok |
 
 Indeks blocked_until/window_start untuk pembersihan terbatas. Tidak menyimpan email, IP mentah, sandi, atau token sesi. Kebijakan blok mengacu ARCHITECTURE.md.
 
@@ -169,7 +169,7 @@ Indeks blocked_until/window_start untuk pembersihan terbatas. Tidak menyimpan em
 
 - Migrasi awal rancangan baru membuat sembilan tabel, constraint, indeks dan trigger; belum ada database produksi yang perlu dimigrasikan dari lima tabel lama. Definisi Drizzle dan SQL harus konsisten.
 - Seed template publik dan provisioning privat dipisahkan dari migrasi skema; tidak memuat nama keluarga atau nominal workbook.
-- Uji constraint dan CAS dua penulis pada D1 lokal; uji rollback dengan kegagalan insert yang disengaja; uji revision untuk insert/edit/hapus; uji pengulangan request.
+- Uji constraint dan CAS dua penulis pada PostgreSQL lokal; uji rollback dengan kegagalan insert yang disengaja; uji revision untuk insert/edit/hapus; uji pengulangan request.
 - Uji salin terhadap NULL, nol, nama duplikat, pos terhapus, dua pembuatan bulan bersamaan, dan edit sumber saat salin.
 - Uji backup/restore ke database terpisah, verifikasi constraint dan trigger ikut pulih, serta hapus sesi pulihan.
 - Semua ini adalah gerbang tahap implementasi/pengujian; belum dijalankan dalam tahap 5.
@@ -183,10 +183,10 @@ Indeks blocked_until/window_start untuk pembersihan terbatas. Tidak menyimpan em
 | item_id | TEXT NOT NULL | FK komposit (item_id,period_id,owner_id) ke budget_items; kind wajib allocation dan pos aktif |
 | occurred_on | TEXT NOT NULL | Tanggal kalender valid YYYY-MM-DD dalam period_id |
 | note | TEXT NOT NULL | Trim 1–150 karakter |
-| amount | INTEGER NOT NULL | 1–1.000.000.000.000 rupiah |
+| amount | BIGINT NOT NULL | 1–1.000.000.000.000 rupiah |
 | version | INTEGER NOT NULL DEFAULT 1 | CAS seluruh catatan saat edit/hapus |
-| created_at, updated_at | INTEGER NOT NULL | Waktu server |
-| deleted_at | INTEGER NULL | Hapus logis, dikeluarkan dari ringkasan dan akses bukti |
+| created_at, updated_at | BIGINT NOT NULL | Waktu server |
+| deleted_at | BIGINT NULL | Hapus logis, dikeluarkan dari ringkasan dan akses bukti |
 
 Indeks (period_id,owner_id,deleted_at,occurred_on,id) dan item_id. Maksimal 1.000 pengeluaran aktif per pemilik per bulan; batas dijaga atomik. Dengan dua pemilik, batas nominal dan jumlah ini menjaga agregasi bulanan dalam rentang integer aman JavaScript. Backend dan constraint/trigger memeriksa pemilik/jenis pos, bukan hanya keberadaan ID.
 
@@ -200,10 +200,10 @@ Indeks (period_id,owner_id,deleted_at,occurred_on,id) dan item_id. Maksimal 1.00
 | to_owner_id | TEXT NOT NULL | Pasangan yang berbeda, ditentukan server |
 | source_item_id | TEXT NOT NULL | FK komposit ke pos transfer_out milik pengirim pada bulan sama |
 | occurred_on | TEXT NOT NULL | Tanggal valid pada period_id |
-| amount | INTEGER NOT NULL | Rupiah positif sesuai batas nominal |
+| amount | BIGINT NOT NULL | Rupiah positif sesuai batas nominal |
 | version | INTEGER NOT NULL DEFAULT 1 | Untuk penghapusan aman |
-| created_at | INTEGER NOT NULL | Waktu server |
-| deleted_at | INTEGER NULL | Catatan dihapus dari kedua tampilan |
+| created_at | BIGINT NOT NULL | Waktu server |
+| deleted_at | BIGINT NULL | Catatan dihapus dari kedua tampilan |
 
 Indeks period_id/from_owner_id/deleted_at, period_id/to_owner_id/deleted_at, dan source_item_id. Maksimal 1.000 kiriman aktif per pengirim per bulan. Rencana kiriman disimpan dalam budget_items.transfer_out; transfers hanya realisasi. Tidak mengubah amount rencana dan tidak membuat expense/pemasukan eksternal.
 
@@ -214,22 +214,22 @@ Indeks period_id/from_owner_id/deleted_at, period_id/to_owner_id/deleted_at, dan
 | id | TEXT PRIMARY KEY | ID tetap untuk reservasi/retry |
 | expense_id | TEXT NOT NULL REFERENCES expenses(id) | Induk aktif saat reservasi/finalisasi |
 | owner_id | TEXT NOT NULL | Harus sama dengan expenses.owner_id; tidak dapat diubah |
-| object_key | TEXT NOT NULL UNIQUE | Key R2 acak dibuat server; bukan nama asli |
+| object_key | TEXT NOT NULL UNIQUE | Key Neon Object Storage acak dibuat server; bukan nama asli |
 | content_type | TEXT NOT NULL | image/jpeg atau image/png yang diverifikasi |
 | byte_size | INTEGER NOT NULL | 1–5.242.880; byte aktual harus sesuai |
 | sha256 | TEXT NOT NULL | Checksum isi; ID sama tidak boleh berganti isi |
 | width, height | INTEGER NULL | Diisi setelah validasi struktur; batas sisi 10.000 dan 16 megapiksel |
 | status | TEXT NOT NULL | pending, ready, deleting atau failed |
-| created_at, updated_at | INTEGER NOT NULL | Waktu server untuk retry/cleanup |
+| created_at, updated_at | BIGINT NOT NULL | Waktu server untuk retry/cleanup |
 
 Indeks (expense_id,status), (status,updated_at). Maksimal 10 slot pending/ready per pengeluaran dijaga atomik saat reservasi; slot gagal/kedaluwarsa dibersihkan sebelum penggantian. GET hanya ready dengan expense aktif, kedua sesi boleh membaca. DELETE/PUT hanya pemilik expense. Nama tampilan gambar ditentukan server seperti bukti-01.jpg, sehingga tidak perlu menyimpan nama berkas pribadi mentah di log atau object key.
 
-Constraint/trigger menaikkan revision periode induk untuk perubahan expense, transfer dan attachment yang mengubah tampilan. Perubahan status bukti memengaruhi count dashboard, bukan jumlah rupiah. D1 menandai pending/deleting untuk pemulihan operasi lintas R2; jangan menyatakan batch D1 turut membatalkan objek R2.
+Constraint/trigger menaikkan revision periode induk untuk perubahan expense, transfer dan attachment yang mengubah tampilan. Perubahan status bukti memengaruhi count dashboard, bukan jumlah rupiah. PostgreSQL menandai pending/deleting untuk pemulihan operasi lintas Neon Object Storage; jangan menyatakan batch PostgreSQL turut membatalkan objek Neon Object Storage.
 
 ## Pengujian revisi keluarga
 
 - Percobaan mutasi ID pos/expense/transfer/attachment milik pasangan ditolak, termasuk memasangkan expense sendiri dengan item pasangan.
 - Cek pembatasan pemilik tetap berlaku sebelum jalur retry/idempotensi; retry bukan celah otorisasi.
 - Perhitungan konsolidasi memakai external income/allocation dan expense aktif, tidak seluruh income turunan pribadi.
-- Uji concurrent upload untuk slot ke-10, hapus induk saat upload, kegagalan R2.put, kegagalan finalisasi D1, objek yatim, serta pembacaan bukti induk terhapus.
-- Uji restore gabungan manifest objek R2 dan ekspor D1; backup SQL saja tidak dianggap memulihkan bukti.
+- Uji concurrent upload untuk slot ke-10, hapus induk saat upload, kegagalan Neon Object Storage.put, kegagalan finalisasi PostgreSQL, objek yatim, serta pembacaan bukti induk terhapus.
+- Uji restore gabungan manifest objek Neon Object Storage dan ekspor PostgreSQL; backup SQL saja tidak dianggap memulihkan bukti.

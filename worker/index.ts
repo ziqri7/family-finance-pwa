@@ -5,6 +5,8 @@ import type { AppEnv, Bindings } from "./types";
 import { configure, authenticated, login, logout } from "./auth";
 import * as finance from "./finance";
 import * as files from "./attachments";
+import { Database } from "./db/postgres";
+import { EvidenceStorage } from "./storage";
 const app = new Hono<AppEnv>();
 app.use("/api/*", configure);
 app.use("/api/*", async (c, next) => {
@@ -51,7 +53,7 @@ app.onError((err, c) => {
     );
   const message = String(err);
   if (
-    /ITEM_LIMIT|EXPENSE_LIMIT|TRANSFER_LIMIT|ATTACHMENT_LIMIT|ITEM_REFERENCED|UNIQUE constraint/i.test(
+    /ITEM_LIMIT|EXPENSE_LIMIT|TRANSFER_LIMIT|ATTACHMENT_LIMIT|ITEM_REFERENCED|unique constraint/i.test(
       message,
     )
   )
@@ -91,12 +93,34 @@ app.onError((err, c) => {
     500,
   );
 });
+export { app };
 export default {
   async fetch(request: Request, env: Bindings, ctx: ExecutionContext) {
-    const url = new URL(request.url),
+    const url = new URL(request.url);
+    let response: Response;
+    try {
       response = url.pathname.startsWith("/api/")
-        ? await app.fetch(request, env, ctx)
+        ? await app.fetch(
+            request,
+            {
+              ...env,
+              DB: new Database(env.DATABASE_URL),
+              EVIDENCE: new EvidenceStorage(env),
+            },
+            ctx,
+          )
         : await env.ASSETS.fetch(request);
+    } catch {
+      response = Response.json(
+        {
+          error: {
+            code: "SERVICE_UNAVAILABLE",
+            message: "Layanan belum dapat dihubungi. Silakan coba lagi.",
+          },
+        },
+        { status: 503 },
+      );
+    }
     const headers = new Headers(response.headers);
     headers.set("X-Content-Type-Options", "nosniff");
     headers.set("Referrer-Policy", "no-referrer");

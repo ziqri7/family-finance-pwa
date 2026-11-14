@@ -1,3 +1,42 @@
+# Pengujian integrasi Neon — 14 November 2026
+
+## Persiapan rilis Cloudflare
+
+Salinan rilis dipasang bersih: npm ci, 15 tes unit, typecheck/build, format dan pemeriksaan publik lulus. Konfigurasi privat memakai region S3 dari CLI Neon; default region pada contoh publik dihapus agar tidak diasumsikan lintas proyek. Tidak mengubah hitungan, UI atau handler API.
+
+Produksi Neon disiapkan dari keadaan 0 tabel public: dua migrasi, sembilan trigger dan 20 pos bawaan tanpa nominal. Tidak memindahkan November. Backup lengkap dibuat setelah provisioning. Worker native lokal memakai koneksi dan secret produksi: kedua akun berhasil login, cookie Secure/HttpOnly/SameSite/host-only, hash sesi, daftar bulan kosong, Origin asing ditolak dan logout mencabut sesi. S3 produksi menerima PNG dummy, checksum cocok, GET tanpa kredensial ditolak, lalu objek dihapus dan HEAD memastikan hilang. Tidak menyisakan bulan, sesi atau hitungan percobaan uji.
+
+Dry-run Cloudflare dengan konfigurasi dan berkas JSON secret asli berhasil; nilainya tidak dicetak. Worker remote belum dibuat dan kode belum diunggah. CPU/memori Cloudflare serta perangkat fisik masih memerlukan uji setelah rilis disetujui. Catatan 33 tes integrasi di bawah tetap bukti tahap sebelumnya untuk handler yang sama.
+
+
+**Kandidat terisolasi: 33 tes lulus, 0 gagal, 0 dilewati.** API berjalan pada Worker native Miniflare dan PostgreSQL/Object Storage Neon sungguhan di cabang dummy; bukan D1 atau storage tiruan. Produksi belum dirilis.
+
+- Dua akun, sesi/cookie/hash/fingerprint, Origin, pembatasan login bersamaan, validasi, kepemilikan backend, CAS dua penulis, retry, hapus dan salin bulan lulus.
+- JPG/PNG nyata diunggah/dibaca dari bucket privat; akses tanpa sesi ditolak. Sepuluh reservasi bersamaan diterima dan slot ke-11 ditolak. Kegagalan PUT, finalisasi dan induk terhapus diuji kembali pada backend baru.
+- Replay migrasi tanpa perubahan, rollback transaksi, relasi lintas pemilik, batas 200 pos aktif di bawah dua penulis dan penyisipan tombstone pada kuota penuh lulus. Semua perubahan mengambil lock sebelum query data.
+- Backup/pemulihan tujuh tabel domain dan satu PNG ke cabang lain lulus; seluruh nilai dibandingkan, termasuk angka 1 triliun dan revisi. Hash gambar cocok. Backup kurang gambar/berubah dan tujuan sudah berisi data ditolak; sesi tidak dipulihkan. GET langsung tanpa kredensial ke object storage ditolak.
+- Unit hitungan, antrean simpan, PWA shell-only, metadata backup, pemeliharaan serta allowlist publik tetap lulus. Dua tes kontrak metadata/pemeliharaan memakai SQLite in-memory hanya untuk logika SQL portabel; bukan bukti integrasi PostgreSQL. Bukti PostgreSQL berasal dari tes integrasi terpisah.
+
+Typecheck/build, format, pemeriksaan publik dan Worker dry-run lulus. Build frontend tetap 425,20 KB JS mentah/130,20 KB gzip dan 26,12 KB CSS; UI tidak diubah. Bundel Worker 1.434,81 KiB/270,53 KiB gzip. Ukuran bukan benchmark CPU atau kelancaran perangkat.
+
+Instalasi bersih dari allowlist sumber: npm ci, 15 tes unit, build, format, pemeriksaan publik dan setup dari koneksi cabang dummy lulus. Pemeriksaan HTTP hasil instalasi memverifikasi branding, CSP, API tanpa sesi 401, dua sandi acak native Worker, pembacaan data bersama dan logout. Server sementara instalasi bersih telah dihentikan. npm melaporkan 0 kerentanan dikenal saat instalasi, dengan warning kebijakan install script esbuild/workerd; runtime/build tetap berhasil.
+
+Pratinjau browser hasil build pada port 5191: login suami dummy, buat Januari 2004, isi pemasukan 10 juta/alokasi 7 juta, status Tersimpan, sisa 3 juta/30%, lalu reload dan nilai tetap. Desktop dan viewport mobile 390×844 diperiksa; lebar dokumen/client sama-sama 375 px sehingga tidak ada overflow halaman. Bukti layar hanya berisi data dummy. Viewport dikembalikan setelah pemeriksaan.
+
+Uji bangun otomatis: compute production yang kosong terlihat idle dengan suspended_at, SELECT 1 biasa berhasil dalam 1.919 ms, status menjadi active tanpa perintah resume. Query juga mengonfirmasi 0 tabel public. Satu sampel ini termasuk jaringan dan query, bukan SLA atau jaminan latensi.
+
+## Belum selesai dan batas bukti
+
+- Belum push kandidat Neon ke GitHub atau deployment Cloudflare produksi. Paket publik sebelumnya tetap versi D1/R2.
+- Akun dan skema produksi kini disiapkan seperti bagian persiapan rilis di atas; nominal November belum disalin. Data lokal lama dan workbook dipertahankan.
+- Batas CPU/memori Cloudflare nyata, pemasangan PWA pada perangkat fisik dan jaringan dua perangkat sungguhan belum diuji pada integrasi ini. HTTP/dua sesi native Worker lokal tidak membuktikan kondisi tersebut.
+- Penyimpanan database/gambar bukan satu transaksi. Backup gagal bila gambar tidak bisa diambil; restore terputus dapat meninggalkan objek pada tujuan. Bukan backup terjadwal. Lihat BACKUP.md.
+- Free tier memiliki kuota. Tab terlihat yang melakukan polling bisa mempertahankan compute aktif.
+
+## Arsip pemeriksaan sebelum perpindahan Neon
+
+Catatan di bawah menggambarkan versi D1/R2 sebelumnya dan keputusan pengguna pada tahap 7–9, bukan hasil terbaru kandidat Neon.
+
 # Hasil pemeriksaan lokal — 13 November 2026
 
 Status ini membedakan kode yang sudah dijalankan dari hal yang masih memerlukan layanan/perangkat nyata. Tahap 6 menghasilkan aplikasi lokal; belum ada rilis produksi atau repositori baru.

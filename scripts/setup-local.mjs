@@ -1,93 +1,71 @@
 import { existsSync } from "node:fs";
-import { readFile, writeFile, mkdir } from "node:fs/promises";
-import { spawnSync } from "node:child_process";
+import { writeFile, mkdir } from "node:fs/promises";
 import { credentials } from "./credentials.mjs";
+import { runtime, loadConfig, migrate } from "./neon-runtime.mjs";
+import { seed } from "./seed-template.mjs";
+const option = (name, fallback) => {
+  const i = process.argv.indexOf(name);
+  return i < 0 ? fallback : process.argv[i + 1];
+};
+const source = option("--from", ".env.neon-dev"),
+  origin = option("--origin", "http://127.0.0.1:5173"),
+  url = new URL(origin);
+if (
+  !["127.0.0.1", "localhost", "[::1]"].includes(url.hostname) ||
+  url.origin !== origin
+)
+  throw Error("Alamat lokal harus origin loopback.");
+const config = loadConfig(source);
+if (!config.NEON_BRANCH || config.NEON_BRANCH === "production")
+  throw Error("Setup lokal memerlukan cabang development terpisah.");
 await mkdir("private", { recursive: true });
 await mkdir("dist", { recursive: true });
 if (!existsSync(".dev.vars")) {
   const { users, passwords, secret } = credentials();
+  const vars = Object.fromEntries(
+    Object.entries(config).filter(([key]) => !key.startsWith("NEON_")),
+  );
+  Object.assign(vars, {
+    APP_ORIGIN: origin,
+    LOCAL_DEV: "1",
+    SESSION_SECRET: secret,
+    AUTH_USERS_JSON: JSON.stringify(users),
+  });
   await writeFile(
     ".dev.vars",
-    `APP_ORIGIN=http://127.0.0.1:5173\nLOCAL_DEV=1\nSESSION_SECRET=${secret}\nAUTH_USERS_JSON='${JSON.stringify(users)}'\n`,
-    { mode: 0o600 },
+    Object.entries(vars)
+      .map(([k, v]) => {
+        if (v.includes("'") || /[\r\n]/.test(v))
+          throw Error(
+            "Nilai konfigurasi lokal tidak dapat ditulis dengan aman.",
+          );
+        return k + "='" + v + "'";
+      })
+      .join("\n") + "\n",
+    { mode: 0o600, flag: "wx" },
   );
   await writeFile(
     ".initial-credentials.txt",
-    `AKUN LOKAL SAJA — BUKAN UNTUK PRODUKSI\nSimpan pada pengelola sandi Anda. Berkas ini dikecualikan dari Git.\n\n${users.map((u, i) => `${u.name}\nIdentitas: ${u.email}\nSandi: ${passwords[i]}`).join("\n\n")}\n`,
-    { mode: 0o600 },
+    "AKUN LOKAL DUMMY — BUKAN PRODUKSI\n\n" +
+      users
+        .map(
+          (u, i) => `${u.name}\nIdentitas: ${u.email}\nSandi: ${passwords[i]}`,
+        )
+        .join("\n\n") +
+      "\n",
+    { mode: 0o600, flag: "wx" },
   );
   console.log(
-    "Dua akun lokal dibuat. Identitas dan sandi ada di .initial-credentials.txt; tidak dicetak ke log.",
+    "Akun lokal dibuat; identitas dan sandi ada pada .initial-credentials.txt.",
   );
-}
-const run = (args) => {
-  const result = spawnSync(
-    process.execPath,
-    ["node_modules/wrangler/bin/wrangler.js", ...args],
-    {
-      encoding: "utf8",
-      env: { ...process.env, WRANGLER_SEND_METRICS: "false" },
-    },
+} else
+  throw Error(
+    ".dev.vars sudah ada; tidak diganti. Gunakan db:migrate/seed-template untuk pembaruan.",
   );
-  if (result.status !== 0)
-    throw Error(result.stderr || "Perintah database gagal.");
-  return result.stdout;
-};
-run(["d1", "migrations", "apply", "family-finance", "--local"]);
-const result = JSON.parse(
-  run([
-    "d1",
-    "execute",
-    "family-finance",
-    "--local",
-    "--command",
-    "SELECT count(*) AS count FROM default_items",
-    "--json",
-  ]),
-);
-if (!Number(result[0].results[0].count)) {
-  const template = JSON.parse(
-    await readFile(
-      existsSync("private/template.json")
-        ? "private/template.json"
-        : "data/template.json",
-      "utf8",
-    ),
-  );
-  const rows = [];
-  for (const owner of ["partner-a", "partner-b"]) {
-    if (!Array.isArray(template[owner]) || template[owner].length > 200)
-      throw Error("Template tidak valid.");
-    template[owner].forEach((r, i) => {
-      if (
-        typeof r.label !== "string" ||
-        !r.label.trim() ||
-        r.label.length > 100 ||
-        !["income", "allocation", "transfer_out"].includes(r.kind)
-      )
-        throw Error("Pos template tidak valid.");
-      rows.push(
-        `('${(owner === "partner-a" ? "a" : "b") + i.toString(16).padStart(31, "0")}','${owner}','${r.label.trim().replaceAll("'", "''")}','${r.kind}',${i})`,
-      );
-    });
-  }
-  await writeFile(
-    "private/seed.sql",
-    "INSERT INTO default_items(id,owner_id,label,kind,position) VALUES " +
-      rows.join(",") +
-      ";\n",
-    { mode: 0o600 },
-  );
-  run([
-    "d1",
-    "execute",
-    "family-finance",
-    "--local",
-    "--file",
-    "private/seed.sql",
-  ]);
-  console.log("Template disiapkan tanpa nominal historis.");
-}
+const { Database } = await runtime(),
+  db = new Database(config.DATABASE_URL);
+await migrate(db);
+await seed(db);
 console.log(
-  "Migrasi lokal siap. Jalankan npm run dev. Tidak ada layanan Cloudflare jarak jauh yang dibuat.",
+  "Setup selesai. Backend lokal memakai cabang Neon online; memerlukan internet.",
 );

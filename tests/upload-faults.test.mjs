@@ -4,6 +4,7 @@ import { readFile } from "node:fs/promises";
 import { randomBytes, createHash } from "node:crypto";
 import { build } from "esbuild";
 import { Miniflare, convertV4MiniflareOptions } from "miniflare";
+import { config, db, bucket, reset } from "./neon-helper.mjs";
 import { credentials } from "../scripts/credentials.mjs";
 
 test("upload storage faults and parent deletion recover without exposing incomplete evidence", async (t) => {
@@ -15,8 +16,11 @@ test("upload storage faults and parent deletion recover without exposing incompl
     stdin: {
       resolveDir: process.cwd(),
       contents: `
- import app from './worker/index.ts';
+ import {app} from './worker/index.ts';
+ import {Database} from './worker/db/postgres.ts';
+ import {EvidenceStorage} from './worker/storage.ts';
  export default {async fetch(req,env,ctx){
+  env={...env,DB:new Database(env.DATABASE_URL),EVIDENCE:new EvidenceStorage(env)};
   const fault=req.headers.get('X-Test-Fault');
   if(!fault)return app.fetch(req,env,ctx);
   const bucket=env.EVIDENCE,db=env.DB;
@@ -50,9 +54,8 @@ test("upload storage faults and parent deletion recover without exposing incompl
       modules: true,
       script: compiled.outputFiles[0].text,
       compatibilityDate: "2026-11-12",
-      d1Databases: ["DB"],
-      r2Buckets: ["EVIDENCE"],
       bindings: {
+        ...config,
         APP_ORIGIN: origin,
         LOCAL_DEV: "1",
         AUTH_USERS_JSON: JSON.stringify(auth.users),
@@ -61,11 +64,9 @@ test("upload storage faults and parent deletion recover without exposing incompl
     }),
   );
   try {
-    const db = await mf.getD1Database("DB"),
-      bucket = await mf.getR2Bucket("EVIDENCE");
-    await db.exec(await readFile("migrations/0001_initial.sql", "utf8"));
+    await reset();
     await db
-      .prepare("INSERT INTO default_items VALUES(?,?,?,?,?)")
+      .prepare("INSERT INTO default_items VALUES($1,$2,$3,$4,$5)")
       .bind(id(), "partner-a", "Allocation", "allocation", 0)
       .run();
     let cookie = "";
@@ -144,7 +145,7 @@ test("upload storage faults and parent deletion recover without exposing incompl
           fault === "parent" ? 409 : 500,
         );
         const row = await db
-          .prepare("SELECT * FROM attachments WHERE id=?")
+          .prepare("SELECT * FROM attachments WHERE id=$1")
           .bind(file)
           .first();
         assert.equal(row.status, "pending");
@@ -178,19 +179,14 @@ test("upload storage faults and parent deletion recover without exposing incompl
             (
               await db
                 .prepare(
-                  "SELECT count(*) AS n FROM attachments WHERE expense_id=?",
+                  "SELECT count(*) AS n FROM attachments WHERE expense_id=$1",
                 )
                 .bind(expense)
                 .first()
             ).n,
             1,
           );
-          assert.equal(
-            (await bucket.list()).objects.filter(
-              (o) => o.key === row.object_key,
-            ).length,
-            1,
-          );
+          assert.ok(await bucket.head(row.object_key));
         }
       });
   } finally {

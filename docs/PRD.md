@@ -1,5 +1,7 @@
 # PRD — family-finance-pwa
 
+Pembaruan arsitektur yang disetujui: hosting/API tetap Cloudflare, database dan gambar privat memakai Neon milik keluarga yang sama. Instalasi kini memerlukan dua akun layanan. Fungsi dan hitungan MVP tetap; rincian di ARCHITECTURE.md.
+
 Acuan tahap 5, revisi keluarga. Perluasan kebutuhan telah dikonfirmasi dan implementasi lokal tahap 6 tersedia. Hasil serta bagian yang belum diverifikasi ada di [TESTING.md](TESTING.md); dokumen kebutuhan tidak berarti seluruh gerbang produksi lulus. Rincian formula gabungan, transfer dan bukti berada di [REVISI_KELUARGA.md](REVISI_KELUARGA.md) dan menjadi bagian PRD ini.
 
 ## Dasar keputusan
@@ -12,7 +14,7 @@ Acuan tahap 5, revisi keluarga. Perluasan kebutuhan telah dikonfirmasi dan imple
 
 ## Tujuan dan pengguna
 
-Suami dan istri memiliki anggaran serta pengeluaran masing-masing. Keduanya melihat seluruh data keluarga, tetapi hanya mengubah bagian miliknya. Dashboard awal menggabungkan kedua bagian tanpa menghitung transfer internal dua kali. Setiap keluarga memasang salinan sendiri di Cloudflare. Tidak ada layanan akun pusat.
+Suami dan istri memiliki anggaran serta pengeluaran masing-masing. Keduanya melihat seluruh data keluarga, tetapi hanya mengubah bagian miliknya. Dashboard awal menggabungkan kedua bagian tanpa menghitung transfer internal dua kali. Setiap keluarga memasang salinan sendiri di Cloudflare dan Neon. Tidak ada layanan akun pusat.
 
 ## Lingkup MVP
 

@@ -1,6 +1,6 @@
 import type { Context } from "hono";
-import { drizzle } from "drizzle-orm/d1";
-import { and, eq, isNull, asc } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/neon-http";
+import { and, eq, isNull, asc, sql } from "drizzle-orm";
 import * as schema from "./db/schema";
 import type { AppEnv } from "./types";
 import { fail, json } from "./http";
@@ -29,7 +29,7 @@ export async function owned<T extends { owner_id: Owner }>(
   id: string,
 ) {
   const row = await c.env.DB.prepare(
-    `SELECT * FROM ${table} WHERE id=? AND owner_id=?`,
+    `SELECT * FROM ${table} WHERE id=$1 AND owner_id=$2`,
   )
     .bind(id, c.get("user").id)
     .first<T>();
@@ -39,9 +39,10 @@ export async function owned<T extends { owner_id: Owner }>(
 }
 export async function snapshot(c: C) {
   const id = periodId(c),
-    db = drizzle(c.env.DB);
-  const [period, budgets, items, expenses, transfers, attachments] =
+    db = drizzle(c.env.DB.client);
+  const [, period, budgets, items, expenses, transfers, attachments] =
     await db.batch([
+      db.execute(sql`SELECT pg_advisory_xact_lock(61324017)`),
       db.select().from(schema.periods).where(eq(schema.periods.id, id)),
       db
         .select({ owner_id: schema.budgets.owner_id })
@@ -111,7 +112,7 @@ export async function snapshot(c: C) {
 }
 export async function listPeriods(c: C) {
   const rows = await c.env.DB.prepare(
-    "SELECT id,revision,(SELECT group_concat(owner_id) FROM budgets WHERE period_id=periods.id) AS owners FROM periods ORDER BY id DESC",
+    "SELECT id,revision,(SELECT string_agg(owner_id,',' ORDER BY owner_id) FROM budgets WHERE period_id=periods.id) AS owners FROM periods ORDER BY id DESC",
   ).all<{ id: string; revision: number; owners: string }>();
   return c.json({
     periods: rows.results.map((r) => ({
@@ -125,31 +126,31 @@ export async function createPeriod(c: C) {
     owner = c.get("user").id,
     now = Date.now(),
     db = c.env.DB;
-  const condition =
+  const condition = (offset: number) =>
     input.mode === "copy"
-      ? "EXISTS(SELECT 1 FROM budgets WHERE period_id=? AND owner_id=?)"
-      : "EXISTS(SELECT 1 FROM default_items WHERE owner_id=?)";
+      ? `EXISTS(SELECT 1 FROM budgets WHERE period_id=$${offset + 1} AND owner_id=$${offset + 2})`
+      : `EXISTS(SELECT 1 FROM default_items WHERE owner_id=$${offset + 1})`;
   const args = input.mode === "copy" ? [input.sourcePeriodId!, owner] : [owner];
   const result = await db.batch([
     db
       .prepare(
-        `INSERT INTO periods(id,created_at) SELECT ?,? WHERE ${condition} ON CONFLICT(id) DO NOTHING`,
+        `INSERT INTO periods(id,created_at) SELECT $1,$2 WHERE ${condition(2)} ON CONFLICT(id) DO NOTHING`,
       )
       .bind(input.id, now, ...args),
     db
       .prepare(
-        `INSERT INTO budgets(period_id,owner_id,created_at) SELECT ?,?,? WHERE ${condition}`,
+        `INSERT INTO budgets(period_id,owner_id,created_at) SELECT $1,$2,$3 WHERE ${condition(3)}`,
       )
       .bind(input.id, owner, now, ...args),
     input.mode === "copy"
       ? db
           .prepare(
-            "INSERT INTO budget_items(id,period_id,owner_id,label,kind,amount,position,created_at,updated_at) SELECT lower(hex(randomblob(16))),?,?,label,kind,amount,position,?,? FROM budget_items WHERE period_id=? AND owner_id=? AND deleted_at IS NULL",
+            "INSERT INTO budget_items(id,period_id,owner_id,label,kind,amount,position,created_at,updated_at) SELECT replace(gen_random_uuid()::text,'-',''),$1,$2,label,kind,amount,position,$3,$4 FROM budget_items WHERE period_id=$5 AND owner_id=$6 AND deleted_at IS NULL",
           )
           .bind(input.id, owner, now, now, input.sourcePeriodId!, owner)
       : db
           .prepare(
-            "INSERT INTO budget_items(id,period_id,owner_id,label,kind,amount,position,created_at,updated_at) SELECT lower(hex(randomblob(16))),?,?,label,kind,NULL,position,?,? FROM default_items WHERE owner_id=?",
+            "INSERT INTO budget_items(id,period_id,owner_id,label,kind,amount,position,created_at,updated_at) SELECT replace(gen_random_uuid()::text,'-',''),$1,$2,label,kind,NULL,position,$3,$4 FROM default_items WHERE owner_id=$5",
           )
           .bind(input.id, owner, now, now, owner),
   ]);
@@ -167,7 +168,7 @@ export async function createItem(c: C) {
     owner = c.get("user").id,
     now = Date.now();
   const existing = await c.env.DB.prepare(
-    "SELECT * FROM budget_items WHERE id=?",
+    "SELECT * FROM budget_items WHERE id=$1",
   )
     .bind(v.id)
     .first<Item>();
@@ -185,14 +186,14 @@ export async function createItem(c: C) {
   }
   if (
     !(await c.env.DB.prepare(
-      "SELECT 1 FROM budgets WHERE period_id=? AND owner_id=?",
+      "SELECT 1 FROM budgets WHERE period_id=$1 AND owner_id=$2",
     )
       .bind(period, owner)
       .first())
   )
     fail(404, "BUDGET_NOT_FOUND", "Buat anggaran Anda dahulu.");
   const item = await c.env.DB.prepare(
-    "INSERT INTO budget_items(id,period_id,owner_id,label,kind,position,created_at,updated_at) VALUES(?,?,?,?,?,(SELECT coalesce(max(position),-1)+1 FROM budget_items WHERE period_id=? AND owner_id=? AND kind=?),?,?) RETURNING *",
+    "INSERT INTO budget_items(id,period_id,owner_id,label,kind,position,created_at,updated_at) VALUES($1,$2,$3,$4,$5,(SELECT coalesce(max(position),-1)+1 FROM budget_items WHERE period_id=$6 AND owner_id=$7 AND kind=$8),$9,$10) RETURNING *",
   )
     .bind(v.id, period, owner, v.label, v.kind, period, owner, v.kind, now, now)
     .first<Item>();
@@ -208,7 +209,7 @@ export async function editItem(c: C) {
   const column = v.field === "label" ? "label" : "amount",
     version = column === "label" ? "label_version" : "amount_version";
   const item = await c.env.DB.prepare(
-    `UPDATE budget_items SET ${column}=?,${version}=${version}+1,row_version=row_version+1,updated_at=? WHERE id=? AND owner_id=? AND deleted_at IS NULL AND ${version}=? RETURNING *`,
+    `UPDATE budget_items SET ${column}=$1,${version}=${version}+1,row_version=row_version+1,updated_at=$2 WHERE id=$3 AND owner_id=$4 AND deleted_at IS NULL AND ${version}=$5 RETURNING *`,
   )
     .bind(v.value, Date.now(), id, c.get("user").id, v.expectedVersion)
     .first<Item>();
@@ -231,7 +232,7 @@ export async function deleteItem(c: C) {
     row = await owned<Item>(c, "budget_items", id);
   if (row.deleted_at) return c.json({ ok: true });
   const result = await c.env.DB.prepare(
-    "UPDATE budget_items SET deleted_at=?,updated_at=?,row_version=row_version+1 WHERE id=? AND owner_id=? AND row_version=? AND deleted_at IS NULL",
+    "UPDATE budget_items SET deleted_at=$1,updated_at=$2,row_version=row_version+1 WHERE id=$3 AND owner_id=$4 AND row_version=$5 AND deleted_at IS NULL",
   )
     .bind(Date.now(), Date.now(), id, c.get("user").id, v.expectedVersion)
     .run();
@@ -258,7 +259,7 @@ export async function createExpense(c: C) {
     owner = c.get("user").id,
     row = await allocation(c, v.itemId, v.date),
     now = Date.now();
-  const existing = await c.env.DB.prepare("SELECT * FROM expenses WHERE id=?")
+  const existing = await c.env.DB.prepare("SELECT * FROM expenses WHERE id=$1")
     .bind(v.id)
     .first<Expense>();
   if (existing) {
@@ -275,7 +276,7 @@ export async function createExpense(c: C) {
     return c.json({ expense: existing });
   }
   const expense = await c.env.DB.prepare(
-    "INSERT INTO expenses(id,period_id,owner_id,item_id,occurred_on,note,amount,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?) RETURNING *",
+    "INSERT INTO expenses(id,period_id,owner_id,item_id,occurred_on,note,amount,created_at,updated_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *",
   )
     .bind(
       v.id,
@@ -308,7 +309,7 @@ export async function editExpense(c: C) {
   )
     return c.json({ expense: row });
   const expense = await c.env.DB.prepare(
-    "UPDATE expenses SET item_id=?,occurred_on=?,note=?,amount=?,updated_at=?,version=version+1 WHERE id=? AND owner_id=? AND version=? AND deleted_at IS NULL RETURNING *",
+    "UPDATE expenses SET item_id=$1,occurred_on=$2,note=$3,amount=$4,updated_at=$5,version=version+1 WHERE id=$6 AND owner_id=$7 AND version=$8 AND deleted_at IS NULL RETURNING *",
   )
     .bind(
       v.itemId,
@@ -342,10 +343,10 @@ export async function deleteExpense(c: C) {
   if (row.deleted_at) return c.json({ ok: true });
   const result = await c.env.DB.batch([
     c.env.DB.prepare(
-      "UPDATE expenses SET deleted_at=?,updated_at=?,version=version+1 WHERE id=? AND owner_id=? AND version=? AND deleted_at IS NULL RETURNING id",
+      "UPDATE expenses SET deleted_at=$1,updated_at=$2,version=version+1 WHERE id=$3 AND owner_id=$4 AND version=$5 AND deleted_at IS NULL RETURNING id",
     ).bind(Date.now(), Date.now(), id, c.get("user").id, v.expectedVersion),
     c.env.DB.prepare(
-      "UPDATE attachments SET status='deleting',updated_at=? WHERE expense_id=? AND EXISTS(SELECT 1 FROM expenses WHERE id=? AND deleted_at IS NOT NULL)",
+      "UPDATE attachments SET status='deleting',updated_at=$1 WHERE expense_id=$2 AND EXISTS(SELECT 1 FROM expenses WHERE id=$3 AND deleted_at IS NOT NULL)",
     ).bind(Date.now(), id, id),
   ]);
   if (!result[0].meta.changes)
@@ -355,7 +356,7 @@ export async function deleteExpense(c: C) {
       "Pengeluaran berubah. Muat catatan terbaru sebelum menghapus.",
     );
   const files = await c.env.DB.prepare(
-    "SELECT object_key FROM attachments WHERE expense_id=?",
+    "SELECT object_key FROM attachments WHERE expense_id=$1",
   )
     .bind(id)
     .all<{ object_key: string }>();
@@ -378,7 +379,7 @@ export async function createTransfer(c: C) {
       "INVALID_TRANSFER_ITEM",
       "Pilih rencana kiriman Anda pada bulan yang sama.",
     );
-  const existing = await c.env.DB.prepare("SELECT * FROM transfers WHERE id=?")
+  const existing = await c.env.DB.prepare("SELECT * FROM transfers WHERE id=$1")
     .bind(v.id)
     .first<Transfer>();
   if (existing) {
@@ -394,7 +395,7 @@ export async function createTransfer(c: C) {
     return c.json({ transfer: existing });
   }
   const transfer = await c.env.DB.prepare(
-    "INSERT INTO transfers(id,period_id,from_owner_id,to_owner_id,source_item_id,occurred_on,amount,created_at) VALUES(?,?,?,?,?,?,?,?) RETURNING *",
+    "INSERT INTO transfers(id,period_id,from_owner_id,to_owner_id,source_item_id,occurred_on,amount,created_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *",
   )
     .bind(
       v.id,
@@ -413,7 +414,7 @@ export async function deleteTransfer(c: C) {
   const id = rowId(c),
     v = await json(c, deleteSchema),
     row = await c.env.DB.prepare(
-      "SELECT * FROM transfers WHERE id=? AND from_owner_id=?",
+      "SELECT * FROM transfers WHERE id=$1 AND from_owner_id=$2",
     )
       .bind(id, c.get("user").id)
       .first<Transfer>();
@@ -421,7 +422,7 @@ export async function deleteTransfer(c: C) {
     fail(404, "NOT_FOUND", "Kiriman tidak ditemukan atau bukan milik Anda.");
   if (row.deleted_at) return c.json({ ok: true });
   const result = await c.env.DB.prepare(
-    "UPDATE transfers SET deleted_at=?,version=version+1 WHERE id=? AND from_owner_id=? AND version=? AND deleted_at IS NULL",
+    "UPDATE transfers SET deleted_at=$1,version=version+1 WHERE id=$2 AND from_owner_id=$3 AND version=$4 AND deleted_at IS NULL",
   )
     .bind(Date.now(), id, c.get("user").id, v.expectedVersion)
     .run();

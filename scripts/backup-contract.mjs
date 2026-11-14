@@ -1,9 +1,11 @@
 export function validateManifestObjects(db, manifest) {
-  const required = db
-    .prepare(
-      "SELECT a.id,a.object_key,a.sha256,a.byte_size,a.content_type FROM attachments a JOIN expenses e ON e.id=a.expense_id WHERE a.status='ready' AND e.deleted_at IS NULL",
-    )
-    .all();
+  const required = Array.isArray(db)
+    ? db
+    : db
+        .prepare(
+          "SELECT a.id,a.object_key,a.sha256,a.byte_size,a.content_type FROM attachments a JOIN expenses e ON e.id=a.expense_id WHERE a.status='ready' AND e.deleted_at IS NULL",
+        )
+        .all();
   if (
     !Array.isArray(manifest.objects) ||
     manifest.objects.length !== required.length

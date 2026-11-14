@@ -1,4 +1,6 @@
 import type { Owner, User } from "../shared/domain";
+import type { Database } from "./db/postgres";
+import type { EvidenceStorage, StorageConfig } from "./storage";
 export interface AuthUser {
   id: Owner;
   name: string;
@@ -7,17 +9,20 @@ export interface AuthUser {
   hash: string;
   iterations: number;
 }
-export interface Bindings {
-  DB: D1Database;
-  EVIDENCE: R2Bucket;
+export interface Bindings extends StorageConfig {
+  DATABASE_URL: string;
   ASSETS: Fetcher;
   AUTH_USERS_JSON: string;
   SESSION_SECRET: string;
   APP_ORIGIN: string;
   LOCAL_DEV?: string;
 }
+export interface RuntimeBindings extends Bindings {
+  DB: Database;
+  EVIDENCE: EvidenceStorage;
+}
 export type AppEnv = {
-  Bindings: Bindings;
+  Bindings: RuntimeBindings;
   Variables: {
     user: User;
     users: AuthUser[];

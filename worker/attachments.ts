@@ -23,7 +23,7 @@ export async function reserve(c: C) {
   if (expense.deleted_at)
     fail(409, "EXPENSE_DELETED", "Pengeluaran telah dihapus.");
   const existing = await c.env.DB.prepare(
-    "SELECT * FROM attachments WHERE id=?",
+    "SELECT * FROM attachments WHERE id=$1",
   )
     .bind(v.id)
     .first<FileRow>();
@@ -41,7 +41,7 @@ export async function reserve(c: C) {
     return c.json({ id: v.id, status: existing.status });
   }
   await c.env.DB.prepare(
-    "INSERT INTO attachments(id,expense_id,owner_id,object_key,content_type,byte_size,sha256,status,created_at,updated_at) VALUES(?,?,?,?,?,?,?,'pending',?,?)",
+    "INSERT INTO attachments(id,expense_id,owner_id,object_key,content_type,byte_size,sha256,status,created_at,updated_at) VALUES($1,$2,$3,$4,$5,$6,$7,'pending',$8,$9)",
   )
     .bind(
       v.id,
@@ -79,7 +79,7 @@ export async function upload(c: C) {
   });
   try {
     const result = await c.env.DB.prepare(
-      "UPDATE attachments SET status='ready',width=?,height=?,updated_at=? WHERE id=? AND status IN ('pending','failed','ready') AND EXISTS(SELECT 1 FROM expenses WHERE id=expense_id AND deleted_at IS NULL)",
+      "UPDATE attachments SET status='ready',width=$1,height=$2,updated_at=$3 WHERE id=$4 AND status IN ('pending','failed','ready') AND EXISTS(SELECT 1 FROM expenses WHERE id=expense_id AND deleted_at IS NULL)",
     )
       .bind(dimensions.width, dimensions.height, Date.now(), id)
       .run();
@@ -99,7 +99,7 @@ export async function upload(c: C) {
 export async function download(c: C) {
   const id = rowId(c),
     file = await c.env.DB.prepare(
-      "SELECT a.* FROM attachments a JOIN expenses e ON e.id=a.expense_id WHERE a.id=? AND a.status='ready' AND e.deleted_at IS NULL",
+      "SELECT a.* FROM attachments a JOIN expenses e ON e.id=a.expense_id WHERE a.id=$1 AND a.status='ready' AND e.deleted_at IS NULL",
     )
       .bind(id)
       .first<FileRow>();
@@ -117,7 +117,7 @@ export async function remove(c: C) {
   const id = rowId(c),
     file = await owned<FileRow>(c, "attachments", id);
   await c.env.DB.prepare(
-    "UPDATE attachments SET status='deleting',updated_at=? WHERE id=? AND owner_id=?",
+    "UPDATE attachments SET status='deleting',updated_at=$1 WHERE id=$2 AND owner_id=$3",
   )
     .bind(Date.now(), id, c.get("user").id)
     .run();

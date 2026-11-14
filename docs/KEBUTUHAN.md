@@ -1,10 +1,12 @@
 # Kebutuhan family-finance-pwa — Tahap 1
 
+Pembaruan arsitektur yang disetujui: hosting/API tetap Cloudflare, database dan gambar privat memakai Neon milik keluarga yang sama. Instalasi kini memerlukan dua akun layanan. Fungsi dan hitungan MVP tetap; rincian di ARCHITECTURE.md.
+
 Status: kebutuhan awal dikonfirmasi dan diperluas melalui jawaban 1A, 2B, 3A, 4A, 5A, 6B. Tambahan yang berlaku: masing-masing punya anggaran, hanya pemilik dapat mengubah, dashboard gabungan, pengeluaran nyata dengan beberapa bukti JPG/PNG opsional, dan kiriman internal tanpa hitung ganda. Rincian di REVISI_KELUARGA.md dan PRD.md.
 
 ## Tujuan
 
-PWA keuangan keluarga sederhana untuk suami dan istri, berdasarkan struktur dan rumus Keu.xlsx. Setiap keluarga melakukan self-host di Cloudflare sendiri tanpa server pusat.
+PWA keuangan keluarga sederhana untuk suami dan istri, berdasarkan struktur dan rumus Keu.xlsx. Setiap keluarga melakukan self-host di Cloudflare dan Neon sendiri tanpa server pusat.
 
 ## Keputusan pengguna
 
