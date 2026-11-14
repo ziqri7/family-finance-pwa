@@ -1,5 +1,9 @@
 # Pengujian integrasi Neon — 14 November 2026
 
+## Penyesuaian Cloudflare Pages
+
+Build advanced mode, 16 tes unit, format dan pemeriksaan publik lulus. Bundel dist/_worker.js diuji pada Worker native dengan koneksi produksi: kedua login/cookie HTTPS, Origin, logout dan S3 privat lulus. Server Pages lokal port 5193 melayani shell/manifest/SW, menolak berkas _worker.js/_routes.json/.vite sebagai aset publik, memerlukan sesi API dan berhasil dua login/baca daftar bulan kosong/logout. Service worker tidak mencache kode backend. API/rumus/UI tetap. Akses remote Pages menunggu otorisasi pages:write; financee.pages.dev belum terbukti tersedia dan belum ada deployment Pages.
+
 ## Persiapan rilis Cloudflare
 
 Salinan rilis dipasang bersih: npm ci, 15 tes unit, typecheck/build, format dan pemeriksaan publik lulus. Konfigurasi privat memakai region S3 dari CLI Neon; default region pada contoh publik dihapus agar tidak diasumsikan lintas proyek. Tidak mengubah hitungan, UI atau handler API.

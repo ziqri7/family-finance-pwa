@@ -6,8 +6,8 @@
   "license": "MIT",
   "scripts": {
     "dev": "node scripts/dev.mjs",
-    "preview": "wrangler dev --local --ip 127.0.0.1 --port 5173",
-    "build": "tsc --noEmit && vite build && node scripts/service-worker.mjs",
+    "preview": "wrangler pages dev dist --ip 127.0.0.1 --port 5173",
+    "build": "tsc --noEmit && vite build && node scripts/service-worker.mjs && node scripts/build-pages.mjs",
     "test": "node --test --test-concurrency=1 tests/*.test.mjs",
     "setup:local": "node scripts/setup-local.mjs",
     "db:migrate": "node scripts/migrate-neon.mjs",
@@ -18,7 +18,9 @@
     "format:check": "prettier --check src worker shared scripts tests vite.config.ts tsconfig.json wrangler.jsonc package.json index.html",
     "db:seed": "node scripts/seed-template.mjs",
     "backup": "node scripts/backup.mjs",
-    "test:unit": "node --test tests/domain.test.mjs tests/save-queue.test.mjs tests/pwa.test.mjs tests/backup-contract.test.mjs tests/cleanup.test.mjs tests/public-files.test.mjs"
+    "test:unit": "node --test tests/domain.test.mjs tests/save-queue.test.mjs tests/pwa.test.mjs tests/backup-contract.test.mjs tests/cleanup.test.mjs tests/public-files.test.mjs tests/pages-build.test.mjs",
+    "pretest": "npm run build",
+    "pretest:unit": "npm run build"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.2.1",

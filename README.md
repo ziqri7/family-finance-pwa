@@ -2,7 +2,7 @@
 
 Aplikasi keuangan keluarga berbahasa Indonesia: isi anggaran langsung, catat pengeluaran dan bukti JPG/PNG, serta lihat ringkasan suami–istri tanpa menghitung kiriman internal dua kali.
 
-Setiap keluarga memasang salinan sendiri pada **Cloudflare Workers + Neon** miliknya. Tidak ada server akun pusat, pendaftaran publik, koneksi bank atau pelaksanaan transfer uang. Pengisian dilakukan langsung pada aplikasi; tidak ada unggah Excel. Workbook sumber hanya dipakai saat pengembangan/provisioning privat.
+Setiap keluarga memasang salinan sendiri pada **Cloudflare Pages + Functions + Neon** miliknya. Tidak ada server akun pusat, pendaftaran publik, koneksi bank atau pelaksanaan transfer uang. Pengisian dilakukan langsung pada aplikasi; tidak ada unggah Excel. Workbook sumber hanya dipakai saat pengembangan/provisioning privat.
 
 **Status integrasi Neon:** kandidat backend PostgreSQL dan Object Storage privat tersedia; produksi belum dirilis. Bukti serta batas pemeriksaan di [docs/NEON_REVIEW.md](docs/NEON_REVIEW.md). Aplikasi/data lokal D1/R2 lama bukan target migrasi otomatis.
 
@@ -43,7 +43,7 @@ npm run check:public
 
 Tes integrasi `npm test` memerlukan dua cabang dummy khusus dan `FINANCEE_TEST=1`; tes mengosongkan cabang tersebut. Ikuti [panduan deployment](docs/DEPLOYMENT.md) dan [hasil pengujian](docs/TESTING.md). Jangan menjalankannya pada database keluarga.
 
-Stack: React, Vite, TypeScript, Tailwind CSS, komponen berpola shadcn/Radix, Hono, Cloudflare Workers, Neon PostgreSQL, Drizzle ORM dan Neon Object Storage privat. Migrasi SQL bernomor dan SHA-256 dijalankan eksplisit; tidak membutuhkan generator tambahan. Tidak memakai Neon Auth/Functions/Realtime.
+Stack: React, Vite, TypeScript, Tailwind CSS, komponen berpola shadcn/Radix, Hono, Cloudflare Pages Functions, Neon PostgreSQL, Drizzle ORM dan Neon Object Storage privat. Migrasi SQL bernomor dan SHA-256 dijalankan eksplisit; tidak membutuhkan generator tambahan. Tidak memakai Neon Auth/Functions/Realtime.
 
 - `src/`: antarmuka Caku, draf, antrean simpan dan dialog bukti.
 - `shared/`: tipe, validasi dan hitungan bersama UI/API.

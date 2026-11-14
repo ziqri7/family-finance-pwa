@@ -99,17 +99,21 @@ export default {
     const url = new URL(request.url);
     let response: Response;
     try {
-      response = url.pathname.startsWith("/api/")
-        ? await app.fetch(
-            request,
-            {
-              ...env,
-              DB: new Database(env.DATABASE_URL),
-              EVIDENCE: new EvidenceStorage(env),
-            },
-            ctx,
-          )
-        : await env.ASSETS.fetch(request);
+      response =
+        ["/_worker.js", "/_routes.json"].includes(url.pathname) ||
+        url.pathname.startsWith("/.vite/")
+          ? new Response("Not found", { status: 404 })
+          : url.pathname.startsWith("/api/")
+            ? await app.fetch(
+                request,
+                {
+                  ...env,
+                  DB: new Database(env.DATABASE_URL),
+                  EVIDENCE: new EvidenceStorage(env),
+                },
+                ctx,
+              )
+            : await env.ASSETS.fetch(request);
     } catch {
       response = Response.json(
         {

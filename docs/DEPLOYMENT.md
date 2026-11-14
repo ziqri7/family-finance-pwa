@@ -51,22 +51,29 @@ node scripts/production-credentials.mjs --suami alamat-pertama@example.com --ist
 
 Sandi acak hanya disimpan pada folder provisioning privat. Simpan pada pengelola sandi. Tidak ada registrasi bebas atau reset melalui email.
 
-Salin `wrangler.jsonc` ke `wrangler.deploy.jsonc` yang diabaikan Git. Atur nama Worker/account sendiri dan `vars.APP_ORIGIN` ke URL HTTPS workers.dev yang benar. `EVIDENCE_BUCKET`/`AWS_REGION` boleh berupa vars. Atur `AWS_REGION` pada konfigurasi privat sesuai CLI. Siapkan `DATABASE_URL`, `AWS_ENDPOINT_URL_S3`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AUTH_USERS_JSON`, dan `SESSION_SECRET` dalam `private/production.secrets.json`. Wrangler dapat memasang JSON secret bersama versi aplikasi melalui `--secrets-file`, sehingga tidak perlu membuat Worker sementara tanpa konfigurasi lengkap. Jangan menambahkan `LOCAL_DEV` ke produksi. Jangan memasukkan URL database atau secret ke `VITE_*`.
+Salin konfigurasi ke berkas privat wrangler.deploy.jsonc, atur nama proyek/account sendiri, AWS_REGION dari CLI Neon dan APP_ORIGIN ke https://NAMA_PROYEK.pages.dev. Jangan menambahkan LOCAL_DEV ke produksi. Build menghasilkan dist/_worker.js dan _routes.json; backend dijalankan Pages advanced mode dengan ASSETS bawaan.
 
-## 4. Tinjau lalu rilis
+## 4. Siapkan proyek Pages lalu tinjau rilis
+
+Otorisasi Wrangler harus mempunyai pages:write. Pembuatan proyek belum menayangkan aplikasi:
 
 ```powershell
+npx wrangler login
+npx wrangler pages project create NAMA_PROYEK --production-branch main
 npm run build
-npx wrangler deploy --dry-run --config wrangler.deploy.jsonc --secrets-file private/production.secrets.json
 ```
 
-Setelah pemilik menyetujui konfigurasi dan rilis konkret:
+Pasang enam secret backend (DATABASE_URL, AWS_ENDPOINT_URL_S3, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AUTH_USERS_JSON, SESSION_SECRET) memakai Pages secrets/dashboard, khusus lingkungan production. Jangan masukkan secret ke vars publik atau VITE_*. EVIDENCE_BUCKET, AWS_REGION dan APP_ORIGIN adalah konfigurasi backend. Atur preview tanpa secret produksi agar URL preview tidak membuka data keluarga.
+
+Setelah konfigurasi dan rilis disetujui, letakkan konfigurasi produksi bernama wrangler.jsonc dalam private/pages-deploy/. Atur pages_build_output_dir menjadi ../../dist karena path relatif terhadap berkas tersebut. Folder private tetap dikecualikan dari Git. Jalankan deployment dari direktori konfigurasi privat:
 
 ```powershell
-npx wrangler deploy --config wrangler.deploy.jsonc --secrets-file private/production.secrets.json
+npx wrangler pages deploy --cwd private/pages-deploy --project-name NAMA_PROYEK --branch main
 ```
 
-Uji login/hash dan decode gambar pada Worker nyata sebelum data keluarga digunakan. Runtime lokal tidak membuktikan batas CPU/memori Workers Free. Periksa cookie Secure/HttpOnly/SameSite, logout, dua perangkat, bukti yang memerlukan sesi dan cache PWA tanpa data keluarga. Jika pengujian runtime gagal, jangan menurunkan kekuatan sandi.
+Periksa bahwa Wrangler membaca konfigurasi pada direktori privat tersebut; jangan mengganti konfigurasi produksi dengan contoh tanpa APP_ORIGIN. Jangan menggunakan perintah Worker deploy atau --secrets-file Worker untuk Pages. Uji Pages lokal melalui npm run preview; pengisian tetap membutuhkan koneksi Neon. Build harus dijalankan sebelum npm run dev agar backend dist tersedia.
+
+Uji login/hash, cookie, Origin, dua akun, PNG/JPG dan pemulihan pada Pages nyata sebelum data keluarga digunakan. Pemasangan PWA pada ponsel fisik masih harus diperiksa. Jangan menurunkan kekuatan sandi jika runtime gagal.
 
 ## Paket gratis dan pembaruan
 

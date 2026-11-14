@@ -1,4 +1,4 @@
-# Arsitektur Financée — Cloudflare + Neon
+# Arsitektur Financée — Cloudflare Pages + Neon
 
 Integrasi Neon disetujui sebagai pengganti D1/R2. UI, hitungan dan hak akses tidak berubah. Implementasi berada pada kandidat terisolasi; produksi belum dirilis. Hasil aktual dan batas bukti ada di TESTING.md dan NEON_REVIEW.md.
 
@@ -6,13 +6,15 @@ Integrasi Neon disetujui sebagai pengganti D1/R2. UI, hitungan dan hak akses tid
 
 ```mermaid
 flowchart LR
- A[PWA suami] -->|HTTPS cookie sesi| W[Cloudflare Worker: Vite + Hono]
+ A[PWA suami] -->|HTTPS cookie sesi| W[Cloudflare Pages: Vite + Hono Functions]
  B[PWA istri] -->|HTTPS cookie sesi| W
  W --> V[Validasi dan kepemilikan backend]
  V --> D[(Neon PostgreSQL)]
  V --> S[(Neon Object Storage Private)]
  K[Secret instalasi sendiri] --> W
 ```
+
+Deployment kini memakai Pages advanced mode: build menghasilkan dist/_worker.js dari backend yang sama dan _routes.json untuk seluruh jalur. Berkas backend tidak masuk cache PWA dan tidak disajikan sebagai aset publik. Semua jalur tetap melewati header keamanan. Tidak menambah framework.
 
 Satu keluarga memakai akun Cloudflare dan Neon sendiri. Tidak ada server pusat, registrasi bebas, layanan email, koneksi bank, analytics atau pelaksanaan transfer uang. Neon Auth, Functions, Realtime dan AI Gateway tidak diperlukan.
 

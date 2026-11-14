@@ -7,8 +7,9 @@ const children = [
     process.execPath,
     [
       "node_modules/wrangler/bin/wrangler.js",
+      "pages",
       "dev",
-      "--local",
+      "dist",
       "--ip",
       "127.0.0.1",
       "--port",

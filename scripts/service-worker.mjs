@@ -8,7 +8,8 @@ async function walk(dir) {
     if (entry.isDirectory()) paths.push(...(await walk(path)));
     else if (
       /\.(js|css|woff2|png|svg|html|webmanifest)$/.test(path) &&
-      !path.endsWith("/sw.js")
+      !path.endsWith("/sw.js") &&
+      !path.endsWith("/_worker.js")
     )
       paths.push(path);
   }

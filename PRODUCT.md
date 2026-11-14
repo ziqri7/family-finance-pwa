@@ -8,7 +8,7 @@ web
 
 ## Stack
 
-React, Vite, TypeScript, Tailwind CSS, komponen berpola shadcn/Radix, Cloudflare Workers/Hono, Neon PostgreSQL, Drizzle serta Neon Object Storage privat. Integrasi disetujui; kandidat diuji terpisah, tanpa mengubah UI atau data lokal lama.
+React, Vite, TypeScript, Tailwind CSS, komponen berpola shadcn/Radix, Cloudflare Pages Functions/Hono, Neon PostgreSQL, Drizzle serta Neon Object Storage privat. Integrasi disetujui; kandidat diuji terpisah, tanpa mengubah UI atau data lokal lama.
 
 ## Users
 
