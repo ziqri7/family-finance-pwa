@@ -59,7 +59,7 @@ Aplikasi tidak meminta unggah Excel. Label workbook sumber dipetakan secara priv
 
 `node scripts/prepare-public.mjs` menyalin allowlist sumber ke folder privat baru beserta manifest SHA-256. Tidak membawa workbook, akun, `.env*`, `.dev.vars`, backup, `.wrangler/`, dependensi atau build. Pemeriksaan publik mencakup nilai koneksi/kunci lokal yang diketahui; bukan audit seluruh riwayat Git. Tinjau paket sebelum publikasi dan hindari `git add .` pada workspace yang berisi data keluarga.
 
-[Backup/pemulihan](docs/BACKUP.md) memakai snapshot tujuh tabel domain dan gambar dengan checksum. Sesi tidak disalin. Pemulihan hanya ke tujuan kosong. Data D1 lama tidak dipindahkan otomatis.
+[Backup/pemulihan](docs/BACKUP.md) memakai snapshot tujuh tabel keuangan, kredensial akun dan gambar dengan checksum. Sesi tidak disalin. Pemulihan hanya ke tujuan kosong. Data D1 lama tidak dipindahkan otomatis.
 
 Free tier memiliki kuota; aplikasi tidak menjanjikan biaya selalu nol atau uptime tanpa batas. Neon bangun otomatis setelah idle, dengan kemungkinan jeda pada permintaan pertama. Tab yang tetap terbuka melakukan polling dan dapat membuat compute tetap aktif. Periksa [harga Neon](https://neon.com/pricing) dan [Workers](https://developers.cloudflare.com/workers/platform/pricing/) saat memasang.
 
@@ -68,3 +68,5 @@ Free tier memiliki kuota; aplikasi tidak menjanjikan biaya selalu nol atau uptim
 Kode berlisensi [MIT](LICENSE). Arah visual mengadaptasi [Caku Finance App Mobile](https://www.figma.com/community/file/1341326234352864806/caku-finance-app-mobile), Asril Mochammad / Getah Creative; halaman sumber mencantumkan CC BY 4.0. Logo, foto dan kartu bank Caku tidak disertakan. [Catatan referensi](docs/REFERENSI_CAKU.md).
 
 Plus Jakarta Sans disimpan lokal beserta SIL Open Font License dalam `public/fonts/`; ini pilihan adaptasi, bukan identifikasi font asli Caku. Komponen memakai pola shadcn/ui dan primitive Radix. Pustaka pihak ketiga mempertahankan lisensi masing-masing.
+
+Ganti sandi tersedia melalui tombol kunci di dekat Keluar. Masukkan sandi saat ini, sandi baru 15–128 karakter, lalu ulangi. Setelah berhasil, seluruh perangkat akun tersebut perlu masuk kembali; pasangan tetap masuk. Fitur ini sedang disiapkan untuk pembaruan produksi; lihat [catatan implementasi](docs/CHANGE_PASSWORD_PROPOSAL.md).

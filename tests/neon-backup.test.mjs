@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFile, mkdir, writeFile } from "node:fs/promises";
 import { randomBytes } from "node:crypto";
+import { credentials } from "../scripts/credentials.mjs";
 import { db, bucket, reset, config } from "./neon-helper.mjs";
 import { runtime, loadConfig, migrate } from "../scripts/neon-runtime.mjs";
 import {
@@ -11,7 +12,7 @@ import {
   digest,
 } from "../scripts/neon-backup.mjs";
 test("Neon snapshot and image restore to a separate branch; tamper and occupied destination rejected", async () => {
-  await reset();
+  await reset(credentials().users);
   const target = loadConfig(
     process.env.FINANCEE_RESTORE_ENV || ".env.neon-restore",
   );
@@ -30,7 +31,7 @@ test("Neon snapshot and image restore to a separate branch; tamper and occupied 
     await storage.delete(f.object_key);
   await destination
     .prepare(
-      "TRUNCATE attachments,transfers,expenses,budget_items,budgets,periods,default_items,sessions,login_attempts",
+      "TRUNCATE attachments,transfers,expenses,budget_items,budgets,periods,default_items,sessions,login_attempts,account_credentials",
     )
     .run();
   const item = randomBytes(16).toString("hex"),
@@ -75,7 +76,7 @@ test("Neon snapshot and image restore to a separate branch; tamper and occupied 
     1000000000000,
   );
   assert.deepEqual(await restoreBackup(destination, storage, folder), {
-    tables: 7,
+    tables: 8,
     objects: 1,
   });
   assert.equal(
@@ -85,6 +86,8 @@ test("Neon snapshot and image restore to a separate branch; tamper and occupied 
   await assert.rejects(restoreBackup(destination, storage, folder), /kosong/);
   const manifestPath = folder + "/manifest.json",
     manifest = JSON.parse(await readFile(manifestPath, "utf8"));
+  await writeFile(manifestPath, JSON.stringify({ ...manifest, version: 2 }));
+  await assert.rejects(readBackup(folder), /versi 3/);
   await writeFile(manifestPath, JSON.stringify({ ...manifest, objects: [] }));
   await assert.rejects(readBackup(folder), /lengkap/);
   await writeFile(manifestPath, JSON.stringify(manifest));

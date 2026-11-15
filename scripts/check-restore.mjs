@@ -12,6 +12,9 @@ console.log(
     new Database(config.DATABASE_URL),
     new EvidenceStorage(config),
     process.argv[2],
+    config.PASSWORD_PEPPER,
   ),
 );
-console.log("Sesi tidak disalin; akun tetap berasal dari secret tujuan.");
+console.log(
+  "Hash dan versi sandi dipulihkan; sesi tidak disalin. Identitas dan kunci pelindung berasal dari secret tujuan.",
+);

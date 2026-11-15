@@ -3,6 +3,7 @@ import { getCookie, setCookie, deleteCookie } from "hono/cookie";
 import { z } from "zod";
 import type { AppEnv, AuthUser } from "./types";
 import { fail, json } from "./http";
+import { credential, verifyPassword } from "./passwords";
 const enc = new TextEncoder();
 export const hex = (b: ArrayBuffer | Uint8Array) =>
   Array.from(b instanceof Uint8Array ? b : new Uint8Array(b), (x) =>
@@ -113,10 +114,26 @@ export const authenticated: MiddlewareHandler<AppEnv> = async (c, next) => {
     fail(401, "LOGIN_REQUIRED", "Silakan masuk untuk melanjutkan.");
   const tokenHash = await hash(token),
     session = await c.env.DB.prepare(
-      "SELECT * FROM sessions WHERE token_hash=$1 AND expires_at>$2 AND auth_fingerprint=$3",
+      "SELECT s.account_id,s.auth_fingerprint,a.version FROM sessions s JOIN account_credentials a ON a.account_id=s.account_id WHERE token_hash=$1 AND expires_at>$2",
     )
-      .bind(tokenHash, Date.now(), c.get("fingerprint"))
-      .first<{ account_id: string }>();
+      .bind(tokenHash, Date.now())
+      .first<{
+        account_id: string;
+        auth_fingerprint: string;
+        version: number;
+      }>();
+  if (
+    !session ||
+    !equal(
+      session.auth_fingerprint,
+      await sessionFingerprint(c, session.account_id, session.version),
+    )
+  )
+    fail(
+      401,
+      "SESSION_EXPIRED",
+      "Sesi Anda sudah berakhir. Silakan masuk kembali.",
+    );
   const user = c.get("users").find((u) => u.id === session?.account_id);
   if (!user)
     fail(
@@ -128,6 +145,16 @@ export const authenticated: MiddlewareHandler<AppEnv> = async (c, next) => {
   c.set("tokenHash", tokenHash);
   await next();
 };
+// Version one preserves existing sessions during the additive migration.
+export async function sessionFingerprint(
+  c: Context<AppEnv>,
+  id: string,
+  version: number,
+) {
+  return version === 1
+    ? c.get("fingerprint")
+    : hmac(c.get("fingerprint"), id + ":" + version);
+}
 export async function login(c: Context<AppEnv>) {
   const input = await json(
     c,
@@ -166,22 +193,21 @@ export async function login(c: Context<AppEnv>) {
       .get("users")
       .find((u) => u.email.toLowerCase() === input.email),
     dummy = c.get("users")[0];
-  const calculated = await passwordHash(
-    input.password,
-    (user || dummy).salt,
-    (user || dummy).iterations,
-  );
-  if (!equal(calculated, (user || dummy).hash) || !user)
+  const stored = await credential(c, (user || dummy).id);
+  if (!(await verifyPassword(c, stored, input.password)) || !user)
     fail(401, "INVALID_LOGIN", "Identitas atau sandi tidak sesuai.");
   const token = hex(crypto.getRandomValues(new Uint8Array(32))),
     tokenHash = await hash(token);
-  await c.env.DB.batch([
-    c.env.DB.prepare("INSERT INTO sessions VALUES($1,$2,$3,$4,$5)").bind(
+  const saved = await c.env.DB.batch([
+    c.env.DB.prepare(
+      "INSERT INTO sessions(token_hash,account_id,auth_fingerprint,created_at,expires_at) SELECT $1,$2,$3,$4,$5 WHERE EXISTS(SELECT 1 FROM account_credentials WHERE account_id=$2 AND version=$6) RETURNING token_hash",
+    ).bind(
       tokenHash,
       user.id,
-      c.get("fingerprint"),
+      await sessionFingerprint(c, user.id, stored.version),
       now,
       now + 604800000,
+      stored.version,
     ),
     c.env.DB.prepare(
       "DELETE FROM login_attempts WHERE key=$1 OR key IN (SELECT key FROM login_attempts WHERE blocked_until<$2 LIMIT 100)",
@@ -190,6 +216,8 @@ export async function login(c: Context<AppEnv>) {
       "DELETE FROM sessions WHERE token_hash IN (SELECT token_hash FROM sessions WHERE expires_at<$1 LIMIT 100)",
     ).bind(now),
   ]);
+  if (!saved[0].meta.changes)
+    fail(401, "INVALID_LOGIN", "Identitas atau sandi tidak sesuai.");
   setCookie(c, cookieName(c), token, {
     httpOnly: true,
     secure: !local(c),
@@ -203,11 +231,14 @@ export async function logout(c: Context<AppEnv>) {
   await c.env.DB.prepare("DELETE FROM sessions WHERE token_hash=$1")
     .bind(c.get("tokenHash"))
     .run();
+  clearSessionCookie(c);
+  return c.json({ ok: true });
+}
+export function clearSessionCookie(c: Context<AppEnv>) {
   deleteCookie(c, cookieName(c), {
     path: "/",
     secure: !local(c),
     httpOnly: true,
     sameSite: "Strict",
   });
-  return c.json({ ok: true });
 }

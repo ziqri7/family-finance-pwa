@@ -29,6 +29,7 @@ for (const file of await readdir(".")) {
     "AWS_ACCESS_KEY_ID",
     "AWS_SECRET_ACCESS_KEY",
     "SESSION_SECRET",
+    "PASSWORD_PEPPER",
   ])
     if (vars[name]) secrets.push(vars[name]);
   if (vars.DATABASE_URL) {

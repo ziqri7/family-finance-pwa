@@ -29,7 +29,7 @@ Satu keluarga memakai akun Cloudflare dan Neon sendiri. Tidak ada server pusat, 
 
 ## Autentikasi dan keamanan
 
-- Tepat dua akun partner-a/partner-b dari AUTH_USERS_JSON. Nama login/hash tidak masuk frontend atau GitHub. Provisioning menghasilkan sandi acak 24 byte; PBKDF2-SHA256 100.000 iterasi, salt acak 16 byte. Tidak menerima sandi bebas lemah atau menurunkan hash untuk mengatasi batas CPU.
+- Tepat dua identitas partner-a/partner-b dari AUTH_USERS_JSON; hash aktif berada di account_credentials Neon. Provisioning menghasilkan sandi acak 24 byte dengan PBKDF2-SHA256 100.000 iterasi dan salt acak 16 byte untuk bootstrap. Sandi pilihan pengguna memakai HMAC-SHA384 di Worker dengan PASSWORD_PEPPER terpisah, base64 64 karakter, lalu pgcrypto bcrypt cost 12 di Neon. Database menerima hasil HMAC, bukan sandi mentah atau pepper. Tidak ada fallback ke hash bootstrap setelah perubahan.
 - Cookie produksi __Host-ff_session: Secure, HttpOnly, SameSite=Strict, Path=/, tanpa Domain. PostgreSQL hanya menyimpan SHA-256 token, account ID, fingerprint HMAC dan kedaluwarsa tujuh hari. Logout mencabut sesi server; pergantian konfigurasi akun/SESSION_SECRET membatalkan sesi melalui fingerprint.
 - Batas login atomik: lima percobaan per IP+identitas dan 30 per IP dalam 15 menit. Kunci HMAC, tanpa IP/email mentah. Respons akun tidak dikenal dan sandi salah sama.
 - Setiap API kecuali login memerlukan sesi. Kedua akun membaca keluarga; hanya pemilik mengubah bagiannya. Owner dari input klien tidak dipercaya, termasuk pada retry dan referensi relasi. Kiriman masuk adalah turunan hanya baca.
@@ -43,6 +43,7 @@ Semua path di bawah /api. Semua endpoint selain POST /login memerlukan sesi vali
 | Metode dan path | Input / hasil |
 | --- | --- |
 | POST /login | email, password → cookie sesi dan nama tampilan |
+| POST /account/password | Sesi aktif, sandi saat ini/baru/konfirmasi; hanya akun sendiri, cabut semua sesi akun tersebut |
 | GET /me | Identitas tampilan akun aktif tanpa hash/kredensial |
 | POST /logout | Cabut sesi; hapus cookie |
 | GET /periods | Daftar ID bulan dan revision |
@@ -86,8 +87,16 @@ Workbook, template privat, .env*, .dev.vars, konfigurasi deployment nyata, akun,
 
 Migrasi SQL bernomor mempunyai registry SHA-256; file yang sudah diterapkan tidak boleh berubah. Tidak ada migrasi otomatis pada request pengguna. Tabel domain sembilan, ditambah registry schema_migrations.
 
-Backup format 2 membaca tujuh tabel domain konsisten dan gambar siap dengan checksum. Sesi/percobaan login tidak diekspor. Restore hanya ke database/bucket terpisah, tujuan kosong dan versi migrasi sama. Seluruh nilai diperiksa kembali; reservasi belum siap menjadi deleting. Tidak ada transaksi tunggal PostgreSQL/S3 atau backup terjadwal. Lihat BACKUP.md. D1 lokal lama dipertahankan; tidak ada cutover data otomatis.
+Backup format 3 membaca tujuh tabel keuangan dan account_credentials secara konsisten dan gambar siap dengan checksum. Sesi/percobaan login tidak diekspor. Restore hanya ke database/bucket terpisah, tujuan kosong dan versi migrasi sama. Seluruh nilai diperiksa kembali; reservasi belum siap menjadi deleting. Tidak ada transaksi tunggal PostgreSQL/S3 atau backup terjadwal. Lihat BACKUP.md. D1 lokal lama dipertahankan; tidak ada cutover data otomatis.
 
 ## Gerbang produksi
 
 Cloudflare nyata masih harus membuktikan CPU hash/decode gambar, dua perangkat, instalasi PWA serta backup sebelum data keluarga digunakan. Local Worker + Neon nyata tidak sama dengan deployment produksi. Pemilik menyetujui rilis konkret setelah seluruh bahan siap.
+
+## Pergantian sandi
+
+POST /api/account/password menolak properti tambahan, meminta sandi lama dan origin sama, membatasi lima percobaan per akun per 15 menit. Sandi baru 15–128 Unicode code point, maksimal 512 byte UTF-8; spasi dipertahankan. Daftar sandi umum lokal bersifat terbatas, bukan layanan pemeriksaan kebocoran.
+
+UPDATE hash memakai CAS versi dan sesi yang belum kedaluwarsa; pencabutan sesi akun sendiri berlangsung pada transaksi yang sama. DELETE terikat hash/versi hasil UPDATE agar request yang kalah tidak mencabut sesi baru. Login mengunci transaksi penyimpanan sesi dan memeriksa versi yang tadi diverifikasi. Fingerprint versi satu kompatibel dengan sesi lama; versi berikutnya terikat akun dan versi. Tabel sessions tetap lima kolom agar migrasi additive tidak merusak kode yang sedang berjalan. Pasangan tidak berubah.
+
+Pepper harus disimpan privat di luar database, terpisah dari SESSION_SECRET. Jika hilang, hash bcrypt tidak bisa dipulihkan hanya dengan backup data. UI tidak mengulang otomatis permintaan setelah respons hilang dan hanya menyatakan berhasil bila balasan sukses terkonfirmasi.

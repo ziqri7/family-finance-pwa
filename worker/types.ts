@@ -14,6 +14,7 @@ export interface Bindings extends StorageConfig {
   ASSETS: Fetcher;
   AUTH_USERS_JSON: string;
   SESSION_SECRET: string;
+  PASSWORD_PEPPER: string;
   APP_ORIGIN: string;
   LOCAL_DEV?: string;
 }

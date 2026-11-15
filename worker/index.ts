@@ -7,6 +7,7 @@ import * as finance from "./finance";
 import * as files from "./attachments";
 import { Database } from "./db/postgres";
 import { EvidenceStorage } from "./storage";
+import { changePassword } from "./passwords";
 const app = new Hono<AppEnv>();
 app.use("/api/*", configure);
 app.use("/api/*", async (c, next) => {
@@ -15,6 +16,7 @@ app.use("/api/*", async (c, next) => {
 });
 app.post("/api/login", login);
 app.post("/api/logout", logout);
+app.post("/api/account/password", changePassword);
 app.get("/api/me", (c) =>
   c.json({
     user: c.get("user"),

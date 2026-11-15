@@ -111,3 +111,7 @@ Kriteria A1/A6 berlaku per pemilik dan tidak menyalin pengeluaran, kiriman nyata
 ## Tahap berikutnya
 
 Versi lokal tahap 6 sudah dibangun dan diperiksa dengan pengujian terarah. Tahap 7 melengkapi gerbang pengujian teknis, tahap 8 uji bersama pengguna, tahap 9 menyiapkan publikasi, tahap 10 deployment setelah persetujuan, tahap 11 menguji produksi dan serah terima. Akun serta database saat ini hanya lokal; repositori dan deployment baru belum dibuat.
+
+## Tambahan disetujui: ganti sandi sendiri
+
+Dua akun dapat mengganti sandi masing-masing dari aplikasi: sandi saat ini, sandi baru minimal 15 dan maksimal 128 karakter, konfirmasi. Backend memverifikasi dan membatasi percobaan. Sukses mengakhiri semua sesi akun tersebut, pasangan tetap masuk. Tidak ada registrasi atau reset email. Detail, migrasi dan uji penerimaan: CHANGE_PASSWORD_PROPOSAL.md.

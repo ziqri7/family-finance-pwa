@@ -1,6 +1,6 @@
 # Rancangan database PostgreSQL
 
-Integrasi Neon menggantikan D1/SQLite. Sembilan tabel domain tetap, ditambah schema_migrations untuk nomor/hash migrasi. Skema Drizzle pg-core dan SQL bernomor adalah sumber implementasi; data keluarga lokal lama tidak dipindahkan otomatis. Nominal/waktu memakai BIGINT, versi/posisi INTEGER. Semua transaksi mengambil advisory lock keluarga sebelum query data dalam READ COMMITTED; snapshot dan kuota konsisten untuk dua penulis. Hasil serta batas pengujian pada TESTING.md.
+Integrasi Neon menggantikan D1/SQLite. Sembilan tabel aplikasi awal tetap, ditambah account_credentials dan schema_migrations untuk nomor/hash migrasi. Skema Drizzle pg-core dan SQL bernomor adalah sumber implementasi; data keluarga lokal lama tidak dipindahkan otomatis. Nominal/waktu memakai BIGINT, versi/posisi INTEGER. Semua transaksi mengambil advisory lock keluarga sebelum query data dalam READ COMMITTED; snapshot dan kuota konsisten untuk dua penulis. Hasil serta batas pengujian pada TESTING.md.
 
 ## Konvensi
 
@@ -139,7 +139,7 @@ RETURNING id, amount, amount_version, row_version;
 | --- | --- | --- |
 | token_hash | TEXT PRIMARY KEY | SHA-256 token sesi; token mentah tidak disimpan |
 | account_id | TEXT NOT NULL | partner-a atau partner-b; masih harus ada dalam konfigurasi secret |
-| auth_fingerprint | TEXT NOT NULL | HMAC konfigurasi autentikasi, bukan salinan hash sandi |
+| auth_fingerprint | TEXT NOT NULL | HMAC konfigurasi autentikasi; versi >1 diturunkan lagi dengan account_id dan versi kredensial, bukan salinan hash sandi |
 | created_at | BIGINT NOT NULL | Waktu login server |
 | expires_at | BIGINT NOT NULL | created_at + tujuh hari; tidak diperpanjang setiap polling |
 
@@ -233,3 +233,9 @@ Constraint/trigger menaikkan revision periode induk untuk perubahan expense, tra
 - Perhitungan konsolidasi memakai external income/allocation dan expense aktif, tidak seluruh income turunan pribadi.
 - Uji concurrent upload untuk slot ke-10, hapus induk saat upload, kegagalan Neon Object Storage.put, kegagalan finalisasi PostgreSQL, objek yatim, serta pembacaan bukti induk terhapus.
 - Uji restore gabungan manifest objek Neon Object Storage dan ekspor PostgreSQL; backup SQL saja tidak dianggap memulihkan bukti.
+
+## Kredensial akun — migrasi 0003
+
+account_credentials memiliki account_id (PK partner-a/partner-b), scheme, hash, salt, iterations, pepper_id, version positif dan updated_at. Constraint memisahkan legacy_pbkdf2 (hex hash/salt, iterasi 100.000) dari bcrypt_hmac_sha384 (bcrypt cost12, pepper_id SHA-256 dari secret; salt/iterations NULL). pgcrypto dipasang eksplisit pada public. Tidak menyimpan sandi mentah atau pepper.
+
+accounts:init memindahkan dua hash bootstrap dengan INSERT ON CONFLICT DO NOTHING; menjalankannya ulang tidak mengembalikan sandi yang sudah diganti. Migrasi tidak mengubah sessions yang sudah ada. Versi sesi diikat dalam auth_fingerprint; versi satu mempertahankan sesi lama saat upgrade. CAS kredensial dan DELETE sesi hanya milik akun yang berhasil diubah dilakukan atomik.

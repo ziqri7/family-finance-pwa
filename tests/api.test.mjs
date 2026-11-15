@@ -79,10 +79,11 @@ before(async () => {
         LOCAL_DEV: "1",
         AUTH_USERS_JSON: JSON.stringify(auth.users),
         SESSION_SECRET: auth.secret,
+        PASSWORD_PEPPER: auth.pepper,
       },
     }),
   );
-  await reset();
+  await reset(auth.users);
   const template = JSON.parse(await readFile("data/template.json", "utf8"));
   for (const owner of ["partner-a", "partner-b"])
     for (const [position, item] of template[owner].entries())
@@ -573,6 +574,7 @@ test("HTTPS configuration uses host-only Secure cookies, hashed tokens and finge
         APP_ORIGIN: https,
         AUTH_USERS_JSON: JSON.stringify(auth.users),
         SESSION_SECRET: auth.secret,
+        PASSWORD_PEPPER: auth.pepper,
       },
     }),
   );

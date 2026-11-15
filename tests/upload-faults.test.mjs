@@ -60,11 +60,12 @@ test("upload storage faults and parent deletion recover without exposing incompl
         LOCAL_DEV: "1",
         AUTH_USERS_JSON: JSON.stringify(auth.users),
         SESSION_SECRET: auth.secret,
+        PASSWORD_PEPPER: auth.pepper,
       },
     }),
   );
   try {
-    await reset();
+    await reset(auth.users);
     await db
       .prepare("INSERT INTO default_items VALUES($1,$2,$3,$4,$5)")
       .bind(id(), "partner-a", "Allocation", "allocation", 0)

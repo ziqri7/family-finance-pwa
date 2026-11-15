@@ -1,4 +1,6 @@
-@import "tailwindcss";
+@import "tailwindcss" source(none);
+@source "./**/*.{ts,tsx}";
+@source "../index.html";
 @font-face {
   font-family: "Plus Jakarta Sans";
   font-style: normal;

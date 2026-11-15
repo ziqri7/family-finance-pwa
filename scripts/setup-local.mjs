@@ -3,6 +3,8 @@ import { writeFile, mkdir } from "node:fs/promises";
 import { credentials } from "./credentials.mjs";
 import { runtime, loadConfig, migrate } from "./neon-runtime.mjs";
 import { seed } from "./seed-template.mjs";
+import { initializeCredentials } from "./initialize-credentials.mjs";
+let initialUsers;
 const option = (name, fallback) => {
   const i = process.argv.indexOf(name);
   return i < 0 ? fallback : process.argv[i + 1];
@@ -21,7 +23,8 @@ if (!config.NEON_BRANCH || config.NEON_BRANCH === "production")
 await mkdir("private", { recursive: true });
 await mkdir("dist", { recursive: true });
 if (!existsSync(".dev.vars")) {
-  const { users, passwords, secret } = credentials();
+  const { users, passwords, secret, pepper } = credentials();
+  initialUsers = users;
   const vars = Object.fromEntries(
     Object.entries(config).filter(([key]) => !key.startsWith("NEON_")),
   );
@@ -29,6 +32,7 @@ if (!existsSync(".dev.vars")) {
     APP_ORIGIN: origin,
     LOCAL_DEV: "1",
     SESSION_SECRET: secret,
+    PASSWORD_PEPPER: pepper,
     AUTH_USERS_JSON: JSON.stringify(users),
   });
   await writeFile(
@@ -65,6 +69,7 @@ if (!existsSync(".dev.vars")) {
 const { Database } = await runtime(),
   db = new Database(config.DATABASE_URL);
 await migrate(db);
+await initializeCredentials(db, initialUsers);
 await seed(db);
 console.log(
   "Setup selesai. Backend lokal memakai cabang Neon online; memerlukan internet.",

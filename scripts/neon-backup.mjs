@@ -4,6 +4,16 @@ import { createHash, randomBytes } from "node:crypto";
 import { validateManifestObjects } from "./backup-contract.mjs";
 import { migrate } from "./neon-runtime.mjs";
 export const columns = {
+  account_credentials: [
+    "account_id",
+    "scheme",
+    "hash",
+    "salt",
+    "iterations",
+    "pepper_id",
+    "version",
+    "updated_at",
+  ],
   default_items: ["id", "owner_id", "label", "kind", "position"],
   periods: ["id", "revision", "created_at"],
   budgets: ["period_id", "owner_id", "created_at"],
@@ -68,7 +78,7 @@ export async function snapshot(db, includeMigrations = false) {
     rows = await db.batch([
       ...tables.map((t) =>
         db.prepare(
-          `SELECT * FROM ${t} ORDER BY ${columns[t].includes("id") ? "id" : "period_id,owner_id"}`,
+          `SELECT * FROM ${t} ORDER BY ${t === "account_credentials" ? "account_id" : columns[t].includes("id") ? "id" : "period_id,owner_id"}`,
         ),
       ),
       ...(includeMigrations
@@ -135,7 +145,7 @@ export async function createBackup(
     join(folder, "manifest.json"),
     JSON.stringify(
       {
-        version: 2,
+        version: 3,
         complete: true,
         createdAt: new Date().toISOString(),
         databaseSha256: digest(json),
@@ -154,11 +164,11 @@ export async function readBackup(folder) {
       await readFile(join(folder, "manifest.json"), "utf8"),
     ),
     bytes = await readFile(join(folder, "database.json"));
-  if (
-    manifest.version !== 2 ||
-    manifest.complete !== true ||
-    digest(bytes) !== manifest.databaseSha256
-  )
+  if (manifest.version !== 3)
+    throw Error(
+      "Format backup harus versi 3 yang memuat kredensial; gunakan panduan pemulihan versi lama secara terpisah.",
+    );
+  if (manifest.complete !== true || digest(bytes) !== manifest.databaseSha256)
     throw Error("Backup tidak lengkap atau checksum berbeda.");
   const data = JSON.parse(bytes);
   if (Object.keys(data).sort().join() !== Object.keys(columns).sort().join())
@@ -178,6 +188,16 @@ export async function readBackup(folder) {
       )
         throw Error("Kolom backup tidak valid.");
   }
+  if (
+    data.account_credentials.length !== 2 ||
+    data.account_credentials
+      .map((r) => r.account_id)
+      .sort()
+      .join() !== "partner-a,partner-b"
+  )
+    throw Error(
+      "Backup harus memuat dua kredensial akun; tidak boleh kembali ke sandi awal.",
+    );
   validateManifestObjects(requiredObjects(data), manifest);
   for (const f of manifest.objects) {
     const bytes = await readFile(join(folder, f.file));
@@ -186,8 +206,14 @@ export async function readBackup(folder) {
   }
   return { manifest, data: restoredData(data) };
 }
-export async function restoreBackup(db, storage, folder) {
+export async function restoreBackup(db, storage, folder, passwordPepper) {
   const { manifest, data } = await readBackup(folder);
+  for (const row of data.account_credentials)
+    if (
+      row.scheme === "bcrypt_hmac_sha384" &&
+      (!passwordPepper || digest(passwordPepper) !== row.pepper_id)
+    )
+      throw Error("Kunci PASSWORD_PEPPER pemulihan tidak sesuai.");
   await migrate(db);
   const versions = (
     await db

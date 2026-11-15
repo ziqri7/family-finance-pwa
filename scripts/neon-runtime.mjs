@@ -33,7 +33,7 @@ export function loadConfig(file = process.env.FINANCEE_ENV || ".dev.vars") {
   for (const key of names)
     if (!values[key]) throw Error("Konfigurasi belum lengkap: " + key);
   return Object.fromEntries(
-    [...names, "NEON_BRANCH", "NEON_BRANCH_ID"]
+    [...names, "NEON_BRANCH", "NEON_BRANCH_ID", "PASSWORD_PEPPER"]
       .filter((key) => values[key])
       .map((key) => [key, values[key]]),
   );

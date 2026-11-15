@@ -20,5 +20,10 @@ export function credentials() {
       iterations: 100000,
     };
   });
-  return { users, passwords, secret: randomBytes(32).toString("hex") };
+  return {
+    users,
+    passwords,
+    secret: randomBytes(32).toString("hex"),
+    pepper: randomBytes(32).toString("hex"),
+  };
 }

@@ -8,9 +8,11 @@ import {
   WifiOff,
   X,
   Plus,
+  KeyRound,
 } from "lucide-react";
 import { Button } from "./components/ui/button";
 import { Dialog } from "./components/ui/dialog";
+import { ChangePassword } from "./components/ChangePassword";
 import { Budget } from "./components/Budget";
 import { Dashboard, ExpenseList, EvidenceImages } from "./components/Dashboard";
 import {
@@ -126,6 +128,7 @@ function Login({
   );
 }
 export default function App() {
+  const [passwordOpen, setPasswordOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null),
     [lastUser, setLastUser] = useState<User | null>(null),
     [initial, setInitial] = useState(true),
@@ -147,6 +150,7 @@ export default function App() {
     setExpiredHandler(() => {
       setUser(null);
       setEvidence(null);
+      setPasswordOpen(false);
     });
     api<{ user: User }>("/me")
       .then((v) => {
@@ -340,6 +344,29 @@ export default function App() {
             </div>
             <Button
               variant="ghost"
+              aria-label="Ganti sandi"
+              disabled={store.busy}
+              onClick={async () => {
+                if (
+                  expense ||
+                  transferOpen ||
+                  monthOpen ||
+                  addKind ||
+                  !(await store.flush())
+                ) {
+                  store.setMessage(
+                    "Simpan atau selesaikan isian sebelum mengganti sandi.",
+                  );
+                  return;
+                }
+                setPasswordOpen(true);
+              }}
+            >
+              <KeyRound size={18} />
+              <span className="sr-only">Ganti sandi</span>
+            </Button>
+            <Button
+              variant="ghost"
               className="logout"
               aria-label="Keluar"
               disabled={store.busy}
@@ -350,6 +377,26 @@ export default function App() {
             </Button>
           </div>
         </header>
+        {user && passwordOpen && (
+          <ChangePassword
+            onClose={() => setPasswordOpen(false)}
+            onChanged={() => {
+              setPasswordOpen(false);
+              store.clear();
+              setUser(null);
+              setLastUser(null);
+              setView("dashboard");
+              setEvidence(null);
+              setExpense(null);
+              setTransferOpen(false);
+              setMonthOpen(false);
+              setAddKind(null);
+              store.setMessage(
+                "Sandi berhasil diganti. Silakan masuk kembali dengan sandi baru.",
+              );
+            }}
+          />
+        )}
         <main className="main-shell">
           <div className="page-heading">
             <div>

@@ -131,6 +131,16 @@ export const sessions = pgTable("sessions", {
   created_at: bigint({ mode: "number" }).notNull(),
   expires_at: bigint({ mode: "number" }).notNull(),
 });
+export const accountCredentials = pgTable("account_credentials", {
+  account_id: text().primaryKey(),
+  scheme: text().notNull(),
+  hash: text().notNull(),
+  salt: text(),
+  iterations: integer(),
+  pepper_id: text(),
+  version: integer().notNull().default(1),
+  updated_at: bigint({ mode: "number" }).notNull(),
+});
 export const loginAttempts = pgTable("login_attempts", {
   key: text().primaryKey(),
   attempts: integer().notNull(),

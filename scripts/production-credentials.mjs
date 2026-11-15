@@ -30,6 +30,9 @@ await writeFile(folder + "/AUTH_USERS_JSON.txt", JSON.stringify(bundle.users), {
   mode: 0o600,
 });
 await writeFile(folder + "/SESSION_SECRET.txt", bundle.secret, { mode: 0o600 });
+await writeFile(folder + "/PASSWORD_PEPPER.txt", bundle.pepper, {
+  mode: 0o600,
+});
 await writeFile(
   folder + "/credentials.txt",
   bundle.users

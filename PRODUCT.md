@@ -42,3 +42,7 @@ docs/KEBUTUHAN.md, docs/ALUR_PENGGUNAAN.md, docs/TESTING.md, kode dan pemetaan p
 - Perhitungan mengikuti sumber yang diperiksa.
 - Status penyimpanan harus jujur.
 - Setiap tahap berhenti untuk pemeriksaan pengguna sebelum tahap berikutnya.
+
+## Pergantian sandi yang disetujui
+
+Tombol kunci di area akun membuka dialog sandi lama/baru/konfirmasi. Sandi baru 15–128 karakter; seluruh sesi akun sendiri dicabut setelah sukses, pasangan tetap aktif. Hash aktif tersimpan Neon, kunci pelindung terpisah pada secret Cloudflare. Implementasi diuji memakai akun dummy sebelum tinjauan rilis baru.
