@@ -100,3 +100,11 @@ POST /api/account/password menolak properti tambahan, meminta sandi lama dan ori
 UPDATE hash memakai CAS versi dan sesi yang belum kedaluwarsa; pencabutan sesi akun sendiri berlangsung pada transaksi yang sama. DELETE terikat hash/versi hasil UPDATE agar request yang kalah tidak mencabut sesi baru. Login mengunci transaksi penyimpanan sesi dan memeriksa versi yang tadi diverifikasi. Fingerprint versi satu kompatibel dengan sesi lama; versi berikutnya terikat akun dan versi. Tabel sessions tetap lima kolom agar migrasi additive tidak merusak kode yang sedang berjalan. Pasangan tidak berubah.
 
 Pepper harus disimpan privat di luar database, terpisah dari SESSION_SECRET. Jika hilang, hash bcrypt tidak bisa dipulihkan hanya dengan backup data. UI tidak mengulang otomatis permintaan setelah respons hilang dan hanya menyatakan berhasil bila balasan sukses terkonfirmasi.
+
+## Laporan tahun — kandidat dashboard
+
+GET /api/reports/year/:year memakai middleware sesi yang sama, tahun 2000–2100 divalidasi dan SQL berparameter. Satu statement mempragregasi budget_items, budgets dan expenses, lalu menggabungkan12 bulan. Tidak mengambil gambar, catatan/nama pos atau object_key. Tidak membaca transfers untuk perhitungan. Soft-delete dan jenis pos diperiksa. Dengan preagregasi, relasi tidak menggandakan total.
+
+shared/year-report.ts menentukan kelengkapan, cakupan dan jumlah nominal. Total yang melebihi integer aman ditolak secara eksplisit; tidak dibulatkan. Saldo/rumus Excel lama tidak diubah. Tidak ada tabel, migrasi, layanan, secret atau dependensi baru. Frontend memakai grafik CSS ringan, label nilai, rincian yang dapat dipilih lewat keyboard dan scroll horizontal diHP.
+
+Laporan dimuat ulang ketika revisi periode tahun itu atau snapshot aktif berubah, saat tahun dipilih, serta melalui tombol Muat ulang. Memakai polling periode aplikasi yang sudah ada tanpa timer kedua. Request lama dibatalkan ketika tahun/sesi berubah; respons rusak atau gagal tidak menampilkan angka lama sebagai hasil baru. API/keuangan tidak dicache oleh service worker. Keterangan kelengkapan menjelaskan pengecualian dan pembagi nol.

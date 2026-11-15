@@ -70,3 +70,11 @@ Kode berlisensi [MIT](LICENSE). Arah visual mengadaptasi [Caku Finance App Mobil
 Plus Jakarta Sans disimpan lokal beserta SIL Open Font License dalam `public/fonts/`; ini pilihan adaptasi, bukan identifikasi font asli Caku. Komponen memakai pola shadcn/ui dan primitive Radix. Pustaka pihak ketiga mempertahankan lisensi masing-masing.
 
 Ganti sandi tersedia melalui tombol kunci di dekat Keluar. Masukkan sandi saat ini, sandi baru 15–128 karakter, lalu ulangi. Setelah berhasil, seluruh perangkat akun tersebut perlu masuk kembali; pasangan tetap masuk. Fitur ini sudah dirilis; lihat [catatan implementasi](docs/CHANGE_PASSWORD_PROPOSAL.md).
+
+## Ringkasan tahun
+
+Dashboard menampilkan persentase bulan aktif dan ringkasan tahun dengan tren12 bulan. Hanya bulan dengan anggaran kedua akun serta nominal pemasukan/alokasi lengkap yang masuk ringkasan. Isi 0 jika pos tidak dipakai. Persentase gabungan memakai total nominal dibagi total pemasukan anggaran, bukan rata-rata persentase bulan. Sisa adalah sisa anggaran, bukan saldo rekening. Kandidat dashboard belum dirilis; tidak memerlukan migrasi database.
+
+## Memasang pada iPhone
+
+Buka alamat instalasi sendiri melalui Safari, pilih Bagikan → Tambahkan ke Layar Utama. Jika ada pilihan Open as Web App, aktifkan lalu tekan Tambah. Ikon, manifest standalone dan service worker sudah tersedia; pengisian/sinkronisasi tetap membutuhkan internet. Lihat [panduan Apple](https://support.apple.com/guide/iphone/open-as-web-app-iphea86e5236/ios). Pemasangan pada iPhone fisik belum dibuktikan oleh pengujian viewport.

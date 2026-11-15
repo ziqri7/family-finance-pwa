@@ -5,6 +5,7 @@ import {
   NotebookPen,
 } from "lucide-react";
 import { Button } from "./ui/button";
+import { YearDashboard } from "./YearDashboard";
 import {
   ownerIds,
   ownerName,
@@ -128,6 +129,8 @@ export function EvidenceImages({ files }: { files: Attachment[] }) {
 }
 export function Dashboard({
   snapshot,
+  periods,
+  active = true,
   actor,
   onView,
   onExpense,
@@ -137,6 +140,8 @@ export function Dashboard({
   onEvidence,
 }: {
   snapshot: Snapshot;
+  periods: { id: string; revision: number }[];
+  active?: boolean;
   actor: Owner;
   onView: (owner: Owner) => void;
   onExpense: () => void;
@@ -246,6 +251,7 @@ export function Dashboard({
         ))}
         <p>Anggaran gabungan · kiriman internal tidak dihitung dua kali.</p>
       </section>
+      <YearDashboard snapshot={snapshot} periods={periods} active={active} />
       <div className="dashboard-columns">
         <div>
           <section className="records-panel" id="records">

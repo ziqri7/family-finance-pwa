@@ -46,3 +46,7 @@ docs/KEBUTUHAN.md, docs/ALUR_PENGGUNAAN.md, docs/TESTING.md, kode dan pemetaan p
 ## Pergantian sandi yang disetujui
 
 Tombol kunci di area akun membuka dialog sandi lama/baru/konfirmasi. Sandi baru 15–128 karakter; seluruh sesi akun sendiri dicabut setelah sukses, pasangan tetap aktif. Hash aktif tersimpan Neon, kunci pelindung terpisah pada secret Cloudflare. Implementasi diuji memakai akun dummy sebelum tinjauan rilis baru.
+
+## Ringkasan lintas bulan
+
+Pengguna menyetujui ringkasan tahun kalender dan satu grafik tren bulanan. Rasio berbobot total nominal, data keluarga gabungan, tanpa kiriman internal. Cakupan bulan terisi terlihat dan bulan belum lengkap tidak dianggap nol. Bahasa visual Caku/Plus Jakarta Sans dipertahankan. Fitur bukti pemasukan tetap ditahan dan tidak masuk perubahan dashboard ini.

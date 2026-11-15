@@ -115,3 +115,13 @@ Versi lokal tahap 6 sudah dibangun dan diperiksa dengan pengujian terarah. Tahap
 ## Tambahan disetujui: ganti sandi sendiri
 
 Dua akun dapat mengganti sandi masing-masing dari aplikasi: sandi saat ini, sandi baru minimal 15 dan maksimal 128 karakter, konfirmasi. Backend memverifikasi dan membatasi percobaan. Sukses mengakhiri semua sesi akun tersebut, pasangan tetap masuk. Tidak ada registrasi atau reset email. Detail, migrasi dan uji penerimaan: CHANGE_PASSWORD_PROPOSAL.md.
+
+## Ringkasan tahunan dan tren — disetujui pengguna
+
+Dashboard mempertahankan anggaran/perhitungan bulanan. Tambahan: persentase alokasi, sisa anggaran dan pengeluaran tercatat pada bulan aktif; ringkasan satu tahun kalender; grafik pengeluaran dibanding pemasukan anggaran untuk12 bulan dengan rincian saat bulan dipilih. Tahun yang memiliki anggaran dapat dipilih. Persentase gabungan dihitung dari jumlah nominal dibagi jumlah pemasukan anggaran, bukan mean persentase bulanan.
+
+Satu bulan masuk ringkasan jika anggaran kedua akun sudah dibuat dan seluruh pos aktif income/allocation memiliki nominal non-NULL. Nol berarti sengaja diisi 0; NULL belum diisi. Nilai transfer_out tidak menentukan kelengkapan karena kiriman internal tidak masuk total keluarga. Kelengkapan ini bukan status bulan sudah selesai. Bulan masa depan yang rencananya sudah lengkap tetap disertakan; belanja yang belum dicatat tidak terwakili. Tidak menambahkan penanda finalisasi bulan.
+
+Tampilkan jumlah bulan disertakan dan bulan ada tetapi belum lengkap. Bulan belum dibuat dan belum lengkap ditampilkan sebagai — pada grafik. Bulan lengkap dengan pemasukan0 ikut jumlah bulan terisi, tetapi rasio bulan itu —; nominal tercatat tetap ikut total tahun. Denominator tahunan0 menghasilkan —. Persentase boleh melebihi100 dan sisa boleh negatif. Kiriman internal dan catatan dihapus tidak ikut hitungan. Tidak menambahkan klaim tabungan/saldo atau transaksi pemasukan baru.
+
+Fitur bukti pemasukan tetap ditahan. Implementasi dashboard dibuat dari commit produksi8df6152 secara terpisah, tanpa migrasi0004/komponen bukti pemasukan.

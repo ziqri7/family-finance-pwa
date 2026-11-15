@@ -19,7 +19,7 @@
     "format:check": "prettier --check src worker shared scripts tests vite.config.ts tsconfig.json wrangler.jsonc package.json index.html",
     "db:seed": "node scripts/seed-template.mjs",
     "backup": "node scripts/backup.mjs",
-    "test:unit": "node --test tests/domain.test.mjs tests/save-queue.test.mjs tests/pwa.test.mjs tests/backup-contract.test.mjs tests/cleanup.test.mjs tests/public-files.test.mjs tests/pages-build.test.mjs",
+    "test:unit": "node --test tests/domain.test.mjs tests/save-queue.test.mjs tests/pwa.test.mjs tests/backup-contract.test.mjs tests/cleanup.test.mjs tests/public-files.test.mjs tests/pages-build.test.mjs tests/year-summary.test.mjs",
     "pretest": "npm run build",
     "pretest:unit": "npm run build"
   },

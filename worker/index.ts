@@ -8,6 +8,7 @@ import * as files from "./attachments";
 import { Database } from "./db/postgres";
 import { EvidenceStorage } from "./storage";
 import { changePassword } from "./passwords";
+import { yearReport } from "./reports";
 const app = new Hono<AppEnv>();
 app.use("/api/*", configure);
 app.use("/api/*", async (c, next) => {
@@ -24,6 +25,7 @@ app.get("/api/me", (c) =>
   }),
 );
 app.get("/api/periods", finance.listPeriods);
+app.get("/api/reports/year/:year", yearReport);
 app.post("/api/periods", finance.createPeriod);
 app.get("/api/periods/:id", finance.snapshot);
 app.post("/api/periods/:id/items", finance.createItem);

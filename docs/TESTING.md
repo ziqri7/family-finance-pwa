@@ -1,3 +1,11 @@
+## Dashboard tahun — kandidat 15 November 2026
+
+- Worktree terpisah dari produksi8df6152; fitur bukti pemasukan yang ditahan tidak ikut. Tidak ada migrasi database atau secret baru.
+- Suite lengkap50 tes lulus,0 gagal/dilewati. Setelah penanganan respons rusak dan keterangan skala diperjelas,19 tes unit/typecheck/build lulus (sebagian tumpang tindih). API Neon nyata pada cabang dummy: dua akun hasil sama, anonim401, tahun tidak valid400, tahun kosong12baris, kelengkapan kedua akun/NULL vs 0, scope tahun, transfer internal tidak menggandakan, soft-delete, serta API tidak menulis data. Perhitungan berbobot7/12 (58,3%), defisit, di atas100 dan overflow integer dibuktikan.
+- Browser komponen asli+API mock: viewport320/375/390/1366, nominal/rasio, pilih tahun/bulan, kosong vs0, incomplete,200%,defisit,error/retry,respons200rusak,pergantian tahun cepat dan keyboard lulus. Render desktop/mobile diperiksa langsung. Grafik menggunakan CSS, tanpa pustaka chart baru.
+- Browser dengan bundel Pages minified dan Neon dummy: dua akun login, ringkasan12juta/7juta=58,3%, lebar 375 tanpa luapan, perubahan catatan pada Januari saat bulan aktif Februari otomatis memperbarui rasio62,5%, lalu kembali58,3% setelah catatan uji dihapus. Kedua sesi verifikasi logout. Tidak membaca/menulis data produksi atau menggunakan sandi produksi.
+- Belum: persetujuan rilis dashboard, push/deploy dan pemeriksaan Cloudflare remote untuk endpoint ini. iPhone fisik/autofill/instalasi fisik tidak diuji. Bukti pemasukan tetap ditahan. Screenshot privat year-preview/mobile.png,desktop.png,e2e-mobile.png; log privat year-e2e-sync.log.
+
 ## Perbaikan bulan dan nominal pada HP — dirilis 15 November 2026
 
 Kontrol bulan/tanggal dibatasi dengan box sizing, min/max width dan aturan kontrol WebKit agar mengikuti lebar formulir. MoneyInput dipakai bersama untuk anggaran, pengeluaran dan kiriman: pemisah titik muncul saat mengetik, state tetap digit mentah, dan angka tidak dibulatkan melalui formatter. Penempatan kursor mengikuti jumlah digit; Backspace/Delete di dekat pemisah tetap menghapus digit. Tempelan desimal ambigu ditolak, bukan diubah menjadi nominal lain. Kosong tetap berbeda dari nol.

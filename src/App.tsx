@@ -535,6 +535,8 @@ export default function App() {
                 {view === "dashboard" ? (
                   <Dashboard
                     snapshot={s}
+                    periods={store.periods}
+                    active={Boolean(user)}
                     actor={actor}
                     onView={(v) => void navigate(v)}
                     onExpense={() => void openExpense()}
