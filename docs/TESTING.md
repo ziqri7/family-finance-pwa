@@ -1,5 +1,17 @@
 # Pengujian Financée
 
+## Rilis gabungan terverifikasi online — 16 November 2026
+
+Setelah persetujuan eksplisit pengguna, paket visual donut/batang, ringkasan tahun serta bukti pemasukan ditayangkan pada proyek Pages yang sama. Runtime commit `41508f5a74fe710d9fc9d347847f126ca344f736`; deployment `594b8309-81bb-48b9-87c0-fa2695067d00`, status success. Publikasi sumber GitHub cocok dengan commit tersebut; pembaruan dokumentasi sesudahnya tidak mengganti runtime.
+
+- Backup format 3 menggunakan kode immutable versi lama selesai dan diperiksa sebelum migrasi 0004. Sesudah migrasi, snapshot delapan tabel lama, hash/versi kedua akun dan dua sesi yang telah ada tetap identik. Tidak menjalankan provisioning, seed, inisialisasi akun atau perubahan secret.
+- Pemeriksaan Cloudflare nyata: HTML, JavaScript, CSS, service worker, manifest, ikon dan font identik byte dengan build yang diuji; header keamanan tersedia. API serta gambar privat tanpa sesi ditolak 401/no-store; bundel backend dan metadata routing tidak dapat diunduh sebagai aset. Tujuh secret produksi dipertahankan, preview tanpa secret produksi.
+- Dua akun berhasil login memakai sandi yang masih berlaku tanpa mengganti sandi. Cookie Secure/HttpOnly/SameSite=Strict/host-only, pembacaan data keluarga, endpoint tahun dan validasi tahun diperiksa. Laporan tiap tahun yang tersedia serta 2026 sama dengan hasil dari snapshot database; endpoint bukti pemasukan aktif dan menolak Origin asing. Sesi verifikasi saja yang logout; sesi pengguna sebelumnya tetap ada.
+- Snapshot sebelum/sesudah verifikasi membuktikan data keluarga dan kredensial tidak berubah. Tidak membuat bulan, nominal atau gambar contoh di produksi. Backup format 4 lengkap, sembilan tabel dan cakupan objek siap sesuai manifest. Pengujian unggah JPG/PNG baru dan pemulihan gambar tetap memakai cabang dummy terisolasi sebagaimana bukti di bawah.
+
+Belum diuji pada iPhone/Safari fisik, dua perangkat fisik, atau audit keamanan/aksesibilitas menyeluruh. Pemeriksaan online di atas adalah HTTP/API; render desktop/mobile dan alur unggah antarmuka menggunakan bundel yang sama pada cabang dummy. Bagian kandidat berikut adalah arsip sebelum rilis dan tidak lagi menandakan penahanan produksi.
+
+
 ## Kandidat gabungan — 16 November 2026
 
 Status: implementasi visual yang disetujui, dashboard tahun dan bukti pemasukan tergabung; belum push/deploy atau migrasi produksi. Bagian kandidat terpisah di bawah adalah arsip dan digantikan status gabungan ini.

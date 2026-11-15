@@ -2,7 +2,7 @@
 
 Kandidat gabungan memakai layanan dan dependensi yang sama. FinanceCharts dan YearDashboard merender diagram dengan CSS; shared/chart-data.ts mengelompokkan label alokasi identik, mempertahankan total, dan membedakan kosong dengan nol. Tiga kelompok terbesar serta kelompok sisa tampil pada donut. Diagram memiliki label/nominal dan rincian yang dapat dibaca tanpa mengandalkan warna. EvidenceGallery hanya memakai metadata ready dari snapshot bersesi; gambar tetap melalui proxy privat, dengan otorisasi backend.
 
-Integrasi Neon disetujui sebagai pengganti D1/R2. UI, hitungan dan hak akses tidak berubah. Versi dasar sudah dirilis; kandidat visual/tahun/bukti pemasukan 16 November 2026 diuji terpisah dan belum ditayangkan. Hasil aktual dan batas bukti ada di TESTING.md dan NEON_REVIEW.md.
+Integrasi Neon disetujui sebagai pengganti D1/R2. UI, hitungan dan hak akses tidak berubah. Versi dasar dan paket visual/tahun/bukti pemasukan sudah dirilis; pembaruan terakhir diperiksa online pada 16 November 2026. Hasil aktual dan batas bukti ada di TESTING.md dan NEON_REVIEW.md.
 
 ## Komponen
 

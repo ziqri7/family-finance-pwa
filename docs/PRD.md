@@ -1,6 +1,6 @@
 # PRD — family-finance-pwa
 
-Status terkini: kandidat gabungan 16 November 2026 sudah diimplementasikan dan diuji; belum ditayangkan. Catatan tahap awal di bawah adalah arsip. Beranda memakai donut pembagian alokasi dan batang pemasukan/pengeluaran; tab Tahun berisi rasio berbobot dan batang 12 bulan. Kedua bagian pemilik tetap menyediakan kolom langsung. Galeri Bukti menyatukan lampiran siap dengan filter Semua/Pengeluaran/Pemasukan. Penjelasan panjang dipindahkan ke tombol info tanpa menghilangkan status simpan, kesalahan, atau konfirmasi.
+Status terkini: paket gabungan 16 November 2026 sudah diimplementasikan, diuji, disetujui dan ditayangkan. Catatan tahap awal di bawah adalah arsip. Beranda memakai donut pembagian alokasi dan batang pemasukan/pengeluaran; tab Tahun berisi rasio berbobot dan batang 12 bulan. Kedua bagian pemilik tetap menyediakan kolom langsung. Galeri Bukti menyatukan lampiran siap dengan filter Semua/Pengeluaran/Pemasukan. Penjelasan panjang dipindahkan ke tombol info tanpa menghilangkan status simpan, kesalahan, atau konfirmasi.
 
 Pembaruan arsitektur yang disetujui: hosting/API tetap Cloudflare, database dan gambar privat memakai Neon milik keluarga yang sama. Instalasi kini memerlukan dua akun layanan. Fungsi dan hitungan MVP tetap; rincian di ARCHITECTURE.md.
 

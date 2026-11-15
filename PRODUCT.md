@@ -1,6 +1,6 @@
 # Financée
 
-Status 16 November 2026: seluruh paket yang disetujui sudah diterapkan pada kandidat uji. Penayangan produksi menunggu persetujuan rilis gabungan. Input langsung, rumus, batas kepemilikan, dan sandi aktif dipertahankan.
+Status 16 November 2026: seluruh paket yang disetujui sudah ditayangkan setelah persetujuan pengguna dan diperiksa online. Input langsung, rumus, batas kepemilikan, dan sandi aktif dipertahankan.
 
 <!-- impeccable:product-schema 1 -->
 
@@ -26,7 +26,7 @@ Struktur dan rumus mengikuti Keu.xlsx yang diperiksa pada tahap 2 dan diperiksa 
 
 ## Capabilities and Constraints
 
-Periode bulanan, salin rencana sendiri tanpa realisasi/bukti, dua akun dengan batas kepemilikan, polling online, aset PWA, self-host Cloudflare, MIT. Bukti JPG/PNG opsional beberapa gambar per pengeluaran; kedua pihak dapat melihatnya. Detail keputusan 1A–6B ada di docs/REVISI_KELUARGA.md. Versi dasar Pages/Neon sudah dirilis; kandidat visual, ringkasan tahun dan bukti pemasukan belum dirilis. Integrasi memakai akun Cloudflare dan Neon milik setiap keluarga, dengan Free tier yang dibatasi kuota. Tidak memindahkan nominal lama otomatis. Instalasi perangkat fisik dan batas runtime Cloudflare nyata belum dinyatakan lulus.
+Periode bulanan, salin rencana sendiri tanpa realisasi/bukti, dua akun dengan batas kepemilikan, polling online, aset PWA, self-host Cloudflare, MIT. Bukti JPG/PNG opsional beberapa gambar per pengeluaran; kedua pihak dapat melihatnya. Detail keputusan 1A–6B ada di docs/REVISI_KELUARGA.md. Versi Pages/Neon beserta visual, ringkasan tahun dan bukti pemasukan sudah dirilis; bukti aktual dan keterbatasan ada di TESTING.md. Integrasi memakai akun Cloudflare dan Neon milik setiap keluarga, dengan Free tier yang dibatasi kuota. Tidak memindahkan nominal lama otomatis. Instalasi perangkat fisik dan batas runtime Cloudflare nyata belum dinyatakan lulus.
 
 ## Brand Commitments
 

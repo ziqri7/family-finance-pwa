@@ -4,7 +4,7 @@ Aplikasi keuangan keluarga berbahasa Indonesia: isi anggaran langsung, catat pen
 
 Setiap keluarga memasang salinan sendiri pada **Cloudflare Pages + Functions + Neon** miliknya. Tidak ada server akun pusat, pendaftaran publik, koneksi bank atau pelaksanaan transfer uang. Pengisian dilakukan langsung pada aplikasi; tidak ada unggah Excel. Workbook sumber hanya dipakai saat pengembangan/provisioning privat.
 
-**Status:** versi dasar Cloudflare Pages + Neon sudah dirilis pada 15 November 2026. Kandidat 16 November menggabungkan desain donut/batang, ringkasan tahun dan bukti pemasukan; sudah diuji terpisah dan belum ditayangkan. Pengguna open-source memasang salinan serta akun layanan sendiri. Bukti serta batas pemeriksaan di [docs/NEON_REVIEW.md](docs/NEON_REVIEW.md). Aplikasi/data lokal D1/R2 lama bukan target migrasi otomatis.
+**Status:** desain donut/batang, ringkasan tahun dan bukti pemasukan sudah dirilis serta diperiksa online pada 16 November 2026. Versi berjalan commit `41508f5`; catatan verifikasi terbaru ada di [docs/TESTING.md](docs/TESTING.md). Pengguna open-source memasang salinan serta akun layanan sendiri. Bukti serta batas pemeriksaan di [docs/NEON_REVIEW.md](docs/NEON_REVIEW.md). Aplikasi/data lokal D1/R2 lama bukan target migrasi otomatis.
 
 ## Menjalankan
 
@@ -75,10 +75,10 @@ Ganti sandi tersedia melalui tombol kunci di dekat Keluar. Masukkan sandi saat i
 
 ## Ringkasan tahun
 
-Dashboard menampilkan persentase bulan aktif dan ringkasan tahun dengan grafik batang 12 bulan. Hanya bulan dengan anggaran kedua akun serta nominal pemasukan/alokasi lengkap yang masuk ringkasan. Isi 0 jika pos tidak dipakai. Persentase gabungan memakai total nominal dibagi total pemasukan anggaran, bukan rata-rata persentase bulan. Sisa adalah sisa anggaran, bukan saldo rekening. Dashboard ini tergabung dalam kandidat visual 16 November 2026; paket gabungan membutuhkan migrasi 0004 untuk bukti pemasukan.
+Dashboard menampilkan persentase bulan aktif dan ringkasan tahun dengan grafik batang 12 bulan. Hanya bulan dengan anggaran kedua akun serta nominal pemasukan/alokasi lengkap yang masuk ringkasan. Isi 0 jika pos tidak dipakai. Persentase gabungan memakai total nominal dibagi total pemasukan anggaran, bukan rata-rata persentase bulan. Sisa adalah sisa anggaran, bukan saldo rekening. Dashboard tergabung dalam rilis 16 November 2026. Upgrade instalasi lama membutuhkan migrasi 0004 untuk bukti pemasukan setelah backup format 3; lihat panduan deployment.
 
 ## Memasang pada iPhone
 
 Buka alamat instalasi sendiri melalui Safari, pilih Bagikan → Tambahkan ke Layar Utama. Jika ada pilihan Open as Web App, aktifkan lalu tekan Tambah. Ikon, manifest standalone dan service worker sudah tersedia; pengisian/sinkronisasi tetap membutuhkan internet. Lihat [panduan Apple](https://support.apple.com/guide/iphone/open-as-web-app-iphea86e5236/ios). Pemasangan pada iPhone fisik belum dibuktikan oleh pengujian viewport.
 
-Bukti pemasukan opsional tersedia pada masing-masing pos pemasukan melalui Tambah / lihat bukti. Hanya pemilik pos dapat mengunggah/menghapus; pasangan dapat melihat. Lampiran tidak mengubah nominal dan tidak ikut salin bulan. Kandidat ini belum dirilis; backup baru memakai format4, lihat panduan backup sebelum upgrade0004.
+Bukti pemasukan opsional tersedia pada masing-masing pos pemasukan melalui Tambah / lihat bukti. Hanya pemilik pos dapat mengunggah/menghapus; pasangan dapat melihat. Lampiran tidak mengubah nominal dan tidak ikut salin bulan. Fitur ini sudah dirilis pada 16 November 2026. Backup baru memakai format 4; lihat panduan backup sebelum upgrade 0004.
