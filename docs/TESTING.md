@@ -1,3 +1,15 @@
+# Rilis Pages online — 15 November 2026
+
+Rilis berhasil pada Cloudflare Pages production. Pemeriksaan baru: 16 tes unit, typecheck/build, format, dan pemindaian 93 berkas sumber/aset terhadap kredensial produksi lulus. Seluruh blob publik GitHub dibandingkan dengan sumber yang disetujui.
+
+Pengujian pada layanan Cloudflare nyata lulus untuk delapan kelompok alur: HTTPS/header keamanan/manifest/SW/API privat; dua login dan cookie Secure host-only; baca/simpan dua pemilik, penolakan perubahan pasangan serta dua penulis CAS; decode PNG/JPG, checksum, baca pasangan dan penolakan tanpa sesi; kiriman internal; salin rencana bulan sendiri tanpa realisasi/bukti; backup gabungan PostgreSQL dan dua gambar; serta logout yang mencabut kedua sesi. Ini pengujian HTTP/API pada runtime produksi, bukan pengujian interaksi layar dengan ponsel fisik. Keberhasilan login/decode pada sampel tersebut tidak menjadi benchmark seluruh ukuran gambar atau beban layanan.
+
+Backup lengkap disimpan privat, kemudian hanya bulan dummy Maret/April 2000 dan dua gambar uji dihapus. Hash data di luar dua bulan cocok sebelum/sesudah pembersihan. Pemeriksaan akhir: HTTP utama 200, API tanpa sesi 401, deployment success, 20 pos bawaan dan nol bulan/anggaran/pengeluaran/lampiran/sesi uji. Preview tidak memiliki secret produksi. Data November lokal tidak dipindahkan atau diubah.
+
+Pemasangan PWA pada ponsel fisik dan perpindahan data keluarga lokal masih belum dilakukan. Data akun, koneksi, label privat workbook dan backup tidak masuk kode publik. Catatan persiapan di bawah adalah arsip sebelum rilis; pernyataan belum-deploy di bagian arsip digantikan hasil ini.
+
+## Arsip persiapan
+
 # Pengujian integrasi Neon — 14 November 2026
 
 ## Penyesuaian Cloudflare Pages

@@ -1,3 +1,5 @@
+Status terbaru 15 November 2026: Cloudflare Pages + Neon sudah dirilis dan alur HTTP/API produksi telah lulus; hasil rinci pada TESTING.md. Catatan belum-deploy di bawah merupakan arsip persiapan.
+
 # Integrasi Neon yang disetujui
 
 Pengguna menyetujui penggantian D1/R2 dengan Neon PostgreSQL dan Object Storage privat. Cloudflare tetap hosting/frontend/API. Setiap keluarga memerlukan dua akun layanan sendiri; tidak ada server pusat. Tampilan Caku, font, hitungan dan alur MVP dipertahankan. Neon Auth/Functions/Realtime/AI Gateway tidak digunakan.

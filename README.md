@@ -4,7 +4,7 @@ Aplikasi keuangan keluarga berbahasa Indonesia: isi anggaran langsung, catat pen
 
 Setiap keluarga memasang salinan sendiri pada **Cloudflare Pages + Functions + Neon** miliknya. Tidak ada server akun pusat, pendaftaran publik, koneksi bank atau pelaksanaan transfer uang. Pengisian dilakukan langsung pada aplikasi; tidak ada unggah Excel. Workbook sumber hanya dipakai saat pengembangan/provisioning privat.
 
-**Status integrasi Neon:** kandidat backend PostgreSQL dan Object Storage privat tersedia; produksi belum dirilis. Bukti serta batas pemeriksaan di [docs/NEON_REVIEW.md](docs/NEON_REVIEW.md). Aplikasi/data lokal D1/R2 lama bukan target migrasi otomatis.
+**Status:** rilis Cloudflare Pages + Neon telah dijalankan dan diuji online pada 15 November 2026. Pengguna open-source memasang salinan serta akun layanan sendiri. Bukti serta batas pemeriksaan di [docs/NEON_REVIEW.md](docs/NEON_REVIEW.md). Aplikasi/data lokal D1/R2 lama bukan target migrasi otomatis.
 
 ## Menjalankan
 

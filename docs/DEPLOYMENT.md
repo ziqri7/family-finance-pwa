@@ -51,7 +51,7 @@ node scripts/production-credentials.mjs --suami alamat-pertama@example.com --ist
 
 Sandi acak hanya disimpan pada folder provisioning privat. Simpan pada pengelola sandi. Tidak ada registrasi bebas atau reset melalui email.
 
-Salin konfigurasi ke berkas privat wrangler.deploy.jsonc, atur nama proyek/account sendiri, AWS_REGION dari CLI Neon dan APP_ORIGIN ke https://NAMA_PROYEK.pages.dev. Jangan menambahkan LOCAL_DEV ke produksi. Build menghasilkan dist/_worker.js dan _routes.json; backend dijalankan Pages advanced mode dengan ASSETS bawaan.
+Salin konfigurasi ke berkas privat wrangler.deploy.jsonc, atur nama proyek sendiri, AWS_REGION dari CLI Neon dan APP_ORIGIN ke https://NAMA_PROYEK.pages.dev. Jangan menambahkan LOCAL_DEV ke produksi. Build menghasilkan dist/_worker.js dan _routes.json; backend dijalankan Pages advanced mode dengan ASSETS bawaan.
 
 ## 4. Siapkan proyek Pages lalu tinjau rilis
 
@@ -65,9 +65,10 @@ npm run build
 
 Pasang enam secret backend (DATABASE_URL, AWS_ENDPOINT_URL_S3, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AUTH_USERS_JSON, SESSION_SECRET) memakai Pages secrets/dashboard, khusus lingkungan production. Jangan masukkan secret ke vars publik atau VITE_*. EVIDENCE_BUCKET, AWS_REGION dan APP_ORIGIN adalah konfigurasi backend. Atur preview tanpa secret produksi agar URL preview tidak membuka data keluarga.
 
-Setelah konfigurasi dan rilis disetujui, letakkan konfigurasi produksi bernama wrangler.jsonc dalam private/pages-deploy/. Atur pages_build_output_dir menjadi ../../dist karena path relatif terhadap berkas tersebut. Folder private tetap dikecualikan dari Git. Jalankan deployment dari direktori konfigurasi privat:
+Setelah konfigurasi dan rilis disetujui, letakkan konfigurasi produksi bernama wrangler.jsonc dalam private/pages-deploy/. Atur pages_build_output_dir menjadi ../../dist karena path relatif terhadap berkas tersebut. Pages tidak menerima account_id dalam JSON konfigurasi; pilih akun melalui variabel lingkungan CLOUDFLARE_ACCOUNT_ID. Folder private tetap dikecualikan dari Git. Jalankan deployment dari direktori konfigurasi privat:
 
 ```powershell
+$env:CLOUDFLARE_ACCOUNT_ID='ID_AKUN_CLOUDFLARE_ANDA'
 npx wrangler pages deploy --cwd private/pages-deploy --project-name NAMA_PROYEK --branch main
 ```
 
