@@ -1,8 +1,8 @@
-## Perbaikan bulan dan nominal pada HP — kandidat 15 November 2026
+## Perbaikan bulan dan nominal pada HP — dirilis 15 November 2026
 
 Kontrol bulan/tanggal dibatasi dengan box sizing, min/max width dan aturan kontrol WebKit agar mengikuti lebar formulir. MoneyInput dipakai bersama untuk anggaran, pengeluaran dan kiriman: pemisah titik muncul saat mengetik, state tetap digit mentah, dan angka tidak dibulatkan melalui formatter. Penempatan kursor mengikuti jumlah digit; Backspace/Delete di dekat pemisah tetap menghapus digit. Tempelan desimal ambigu ditolak, bukan diubah menjadi nominal lain. Kosong tetap berbeda dari nol.
 
-Build/typecheck, 16 tes unit, format dan check-public lulus. Browser terpisah memakai komponen MonthForm/Budget/MoneyInput asli dengan store contoh tanpa backend: batas kontrol bulan pada 320/375/390/1366, pemilihan bulan, pengetikan satu/sepuluh juta, fokus, hapus pada pemisah, simpan digit mentah, nol/kosong, batas positif/maksimal serta penolakan tempelan desimal lulus. Screenshot ponsel diperiksa langsung. Ini simulasi viewport Chromium, bukan bukti pada Safari/ponsel fisik pengguna. Belum dirilis; tidak mengubah data atau skema produksi.
+Build/typecheck, 16 tes unit, format dan check-public lulus. Browser terpisah memakai komponen MonthForm/Budget/MoneyInput asli dengan store contoh tanpa backend: batas kontrol bulan pada 320/375/390/1366, pemilihan bulan, pengetikan satu/sepuluh juta, fokus, hapus pada pemisah, simpan digit mentah, nol/kosong, batas positif/maksimal serta penolakan tempelan desimal lulus. Screenshot ponsel diperiksa langsung. Ini simulasi viewport Chromium, bukan bukti pada Safari/ponsel fisik pengguna. Dirilis setelah persetujuan pemilik, runtime cfbf9f6. Pemeriksaan situs utama berhasil: HTML memuat aset baru, JS/CSS/service worker byte-identik dengan build yang diuji, deployment Pages success, API tanpa sesi tetap401 dan kode backend tidak dilayani sebagai aset. Tidak ada penulisan database atau sandi pada rilis ini. Pengguna perlu memperbarui PWA untuk memuat antarmuka baru.
 
 ## Ganti sandi — rilis produksi 15 November 2026
 
