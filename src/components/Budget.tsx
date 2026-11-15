@@ -1,16 +1,9 @@
-import { useState } from "react";
+import { MoneyInput } from "./MoneyInput";
 import { Trash2, Plus, Check, LoaderCircle } from "lucide-react";
 import { Button } from "./ui/button";
 import type { FinanceStore } from "../lib/use-finance";
 import type { Item, Owner, Kind } from "../../shared/domain";
-import {
-  totals,
-  rupiah,
-  digits,
-  ratio,
-  other,
-  ownerName,
-} from "../../shared/domain";
+import { totals, rupiah, ratio, other, ownerName } from "../../shared/domain";
 function FieldError({
   item,
   field,
@@ -77,8 +70,7 @@ function BudgetRow({
   store: FinanceStore;
   income: number;
 }) {
-  const [focused, setFocused] = useState(false),
-    label = store.drafts.get(item.id + ":label"),
+  const label = store.drafts.get(item.id + ":label"),
     amount = store.drafts.get(item.id + ":amount");
   const disabled =
     !canEdit || !store.online || store.busy || Boolean(item.deleted_at);
@@ -112,7 +104,7 @@ function BudgetRow({
         </div>
         <div className="amount-field">
           <span aria-hidden="true">Rp</span>
-          <input
+          <MoneyInput
             aria-label={"Nominal " + item.label}
             aria-invalid={
               amount?.status === "error" ||
@@ -129,17 +121,10 @@ function BudgetRow({
             disabled={disabled}
             placeholder="Belum diisi"
             value={
-              amount?.value ??
-              (item.amount === null
-                ? ""
-                : focused
-                  ? String(item.amount)
-                  : digits.format(item.amount))
+              amount?.value ?? (item.amount === null ? "" : String(item.amount))
             }
-            onFocus={() => setFocused(true)}
-            onChange={(e) => store.edit(item, "amount", e.target.value)}
+            onValueChange={(value) => store.edit(item, "amount", value)}
             onBlur={() => {
-              setFocused(false);
               if (amount) void store.commit(item.id + ":amount");
             }}
             onKeyDown={(e) => {

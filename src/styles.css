@@ -895,7 +895,10 @@ input[aria-invalid="true"] {
 .dialog-content select,
 .login-form-panel input {
   display: block;
+  box-sizing: border-box;
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
   min-height: 44px;
   background: white;
   color: #22242a;
@@ -903,6 +906,16 @@ input[aria-invalid="true"] {
   border-radius: 8px;
   padding: 10px 12px;
   font-size: 14px;
+}
+.dialog-content input[type="month"],
+.dialog-content input[type="date"] {
+  appearance: none;
+  -webkit-appearance: none;
+  overflow: hidden;
+}
+.dialog-content input::-webkit-date-and-time-value {
+  min-width: 0;
+  text-align: left;
 }
 .dialog-content input[type="file"] {
   font-size: 12px;

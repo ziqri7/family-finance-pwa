@@ -1,3 +1,9 @@
+## Perbaikan bulan dan nominal pada HP — kandidat 15 November 2026
+
+Kontrol bulan/tanggal dibatasi dengan box sizing, min/max width dan aturan kontrol WebKit agar mengikuti lebar formulir. MoneyInput dipakai bersama untuk anggaran, pengeluaran dan kiriman: pemisah titik muncul saat mengetik, state tetap digit mentah, dan angka tidak dibulatkan melalui formatter. Penempatan kursor mengikuti jumlah digit; Backspace/Delete di dekat pemisah tetap menghapus digit. Tempelan desimal ambigu ditolak, bukan diubah menjadi nominal lain. Kosong tetap berbeda dari nol.
+
+Build/typecheck, 16 tes unit, format dan check-public lulus. Browser terpisah memakai komponen MonthForm/Budget/MoneyInput asli dengan store contoh tanpa backend: batas kontrol bulan pada 320/375/390/1366, pemilihan bulan, pengetikan satu/sepuluh juta, fokus, hapus pada pemisah, simpan digit mentah, nol/kosong, batas positif/maksimal serta penolakan tempelan desimal lulus. Screenshot ponsel diperiksa langsung. Ini simulasi viewport Chromium, bukan bukti pada Safari/ponsel fisik pengguna. Belum dirilis; tidak mengubah data atau skema produksi.
+
 ## Ganti sandi — rilis produksi 15 November 2026
 
 Fitur dirilis ke [Financée](https://financees.pages.dev) setelah persetujuan eksplisit pemilik. Commit runtime b5ba0e6; deployment Pages success. Backup versi 2 dibuat dan diperiksa sebelum migrasi 0003, kemudian dua hash akun awal diinisialisasi tanpa mengganti sandi. Snapshot tujuh tabel keuangan cocok sebelum/sesudah migrasi. PASSWORD_PEPPER terpisah dipasang sebagai secret produksi; preview tetap tanpa secret produksi.

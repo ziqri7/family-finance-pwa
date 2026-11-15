@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { Dialog } from "./ui/dialog";
 import { Button } from "./ui/button";
+import { MoneyInput } from "./MoneyInput";
 import { api, upload } from "../lib/api";
 import type { FinanceStore } from "../lib/use-finance";
 import {
@@ -348,16 +349,15 @@ export function ExpenseForm({
             onChange={(e) => setNote(e.target.value)}
           />
           <label htmlFor="expense-amount">Nominal (Rp)</label>
-          <input
+          <MoneyInput
             id="expense-amount"
-            type="number"
             inputMode="numeric"
             min="1"
             max="1000000000000"
             step="1"
             required
             value={amount}
-            onChange={(e) => setAmount(e.target.value)}
+            onValueChange={setAmount}
           />
           <label htmlFor="expense-files">
             Bukti JPG/PNG (opsional, boleh beberapa)
@@ -553,16 +553,15 @@ export function TransferForm({
           onChange={(e) => setDate(e.target.value)}
         />
         <label htmlFor="transfer-amount">Nominal yang dikirim (Rp)</label>
-        <input
+        <MoneyInput
           id="transfer-amount"
-          type="number"
           inputMode="numeric"
           required
           min="1"
           max="1000000000000"
           step="1"
           value={amount}
-          onChange={(e) => setAmount(e.target.value)}
+          onValueChange={setAmount}
         />
         <p className="helper-note">
           Catat uang yang sudah Anda kirim ke pasangan. Transfer tetap dilakukan
