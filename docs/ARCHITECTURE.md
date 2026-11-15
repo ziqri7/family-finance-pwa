@@ -1,6 +1,8 @@
 # Arsitektur Financée — Cloudflare Pages + Neon
 
-Integrasi Neon disetujui sebagai pengganti D1/R2. UI, hitungan dan hak akses tidak berubah. Implementasi berada pada kandidat terisolasi; produksi belum dirilis. Hasil aktual dan batas bukti ada di TESTING.md dan NEON_REVIEW.md.
+Kandidat gabungan memakai layanan dan dependensi yang sama. FinanceCharts dan YearDashboard merender diagram dengan CSS; shared/chart-data.ts mengelompokkan label alokasi identik, mempertahankan total, dan membedakan kosong dengan nol. Tiga kelompok terbesar serta kelompok sisa tampil pada donut. Diagram memiliki label/nominal dan rincian yang dapat dibaca tanpa mengandalkan warna. EvidenceGallery hanya memakai metadata ready dari snapshot bersesi; gambar tetap melalui proxy privat, dengan otorisasi backend.
+
+Integrasi Neon disetujui sebagai pengganti D1/R2. UI, hitungan dan hak akses tidak berubah. Versi dasar sudah dirilis; kandidat visual/tahun/bukti pemasukan 16 November 2026 diuji terpisah dan belum ditayangkan. Hasil aktual dan batas bukti ada di TESTING.md dan NEON_REVIEW.md.
 
 ## Komponen
 
@@ -87,7 +89,7 @@ Workbook, template privat, .env*, .dev.vars, konfigurasi deployment nyata, akun,
 
 Migrasi SQL bernomor mempunyai registry SHA-256; file yang sudah diterapkan tidak boleh berubah. Tidak ada migrasi otomatis pada request pengguna. Tabel domain sembilan, ditambah registry schema_migrations.
 
-Backup format 3 membaca tujuh tabel keuangan dan account_credentials secara konsisten dan gambar siap dengan checksum. Sesi/percobaan login tidak diekspor. Restore hanya ke database/bucket terpisah, tujuan kosong dan versi migrasi sama. Seluruh nilai diperiksa kembali; reservasi belum siap menjadi deleting. Tidak ada transaksi tunggal PostgreSQL/S3 atau backup terjadwal. Lihat BACKUP.md. D1 lokal lama dipertahankan; tidak ada cutover data otomatis.
+Backup format 4 membaca sembilan tabel, termasuk account_credentials dan income_attachments, secara konsisten serta gambar siap dengan checksum. Sesi/percobaan login tidak diekspor. Restore hanya ke database/bucket terpisah, tujuan kosong dan versi migrasi sama. Seluruh nilai diperiksa kembali; reservasi belum siap menjadi deleting. Tidak ada transaksi tunggal PostgreSQL/S3 atau backup terjadwal. Lihat BACKUP.md. D1 lokal lama dipertahankan; tidak ada cutover data otomatis.
 
 ## Gerbang produksi
 
@@ -108,3 +110,11 @@ GET /api/reports/year/:year memakai middleware sesi yang sama, tahun 2000–2100
 shared/year-report.ts menentukan kelengkapan, cakupan dan jumlah nominal. Total yang melebihi integer aman ditolak secara eksplisit; tidak dibulatkan. Saldo/rumus Excel lama tidak diubah. Tidak ada tabel, migrasi, layanan, secret atau dependensi baru. Frontend memakai grafik CSS ringan, label nilai, rincian yang dapat dipilih lewat keyboard dan scroll horizontal diHP.
 
 Laporan dimuat ulang ketika revisi periode tahun itu atau snapshot aktif berubah, saat tahun dipilih, serta melalui tombol Muat ulang. Memakai polling periode aplikasi yang sudah ada tanpa timer kedua. Request lama dibatalkan ketika tahun/sesi berubah; respons rusak atau gagal tidak menampilkan angka lama sebagai hasil baru. API/keuangan tidak dicache oleh service worker. Keterangan kelengkapan menjelaskan pengecualian dan pembagi nol.
+
+## Bukti pemasukan — kandidat migrasi 0004
+
+income_attachments terpisah dari attachments pengeluaran agar induk dan constraint lama tetap utuh. Handler validasi gambar/storage/otorisasi digunakan bersama melalui pemetaan tabel/induk konstan; tidak mengambil identifier SQL dari input. POST /income-items/:id/attachments, PUT/GET /income-attachments/:id/content, DELETE /income-attachments/:id memakai autentikasi, Origin dan batas yang sama. Snapshot bulanan mengambil kedua koleksi dalam satu transaksi Drizzle dan menggabungkan metadata publik; key objek tidak dikirim ke frontend.
+
+Trigger menjaga pemilik+kind income+induk aktif, kuota10pending/ready, serta ID unik lintas kedua koleksi di bawah advisory lock keluarga. Perubahan metadata menaikkan revisi bulan untuk sinkronisasi. Penghapusan pos menandai bukti deleting; download mengharuskan induk aktif. Cleanup meliputi kedua tabel. Tidak ada transaksi tunggal DB/storage; retry idempotent dan status pending/ready/deleting tetap dipakai. Tidak ada perubahan hitungan, provider, registrasi atau kredensial.
+
+Backup format4 menambah tabel income_attachments dan objek siap dengan induk income aktif. Backup lama dipulihkan dengan kode yang cocok pada tujuan terisolasi, lalu diupgrade; jangan dipaksakan pada format baru. Rilis memerlukan backup format3 dengan kode lama sebelum migrasi, lalu backup format4 setelah rilis. Tidak mengubah sandi.

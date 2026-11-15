@@ -12,12 +12,17 @@ export const db = new Database(config.DATABASE_URL),
   bucket = new EvidenceStorage(config);
 export async function reset(users) {
   await migrate(db);
-  for (const f of (await db.prepare("SELECT object_key FROM attachments").all())
-    .results)
+  for (const f of (
+    await db
+      .prepare(
+        "SELECT object_key FROM attachments UNION ALL SELECT object_key FROM income_attachments",
+      )
+      .all()
+  ).results)
     await bucket.delete(f.object_key);
   await db
     .prepare(
-      "TRUNCATE attachments,transfers,expenses,budget_items,budgets,periods,default_items,sessions,login_attempts,account_credentials",
+      "TRUNCATE income_attachments,attachments,transfers,expenses,budget_items,budgets,periods,default_items,sessions,login_attempts,account_credentials",
     )
     .run();
   if (users) await initializeCredentials(db, users);

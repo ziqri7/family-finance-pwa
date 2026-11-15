@@ -124,6 +124,22 @@ export const attachments = pgTable("attachments", {
   created_at: bigint({ mode: "number" }).notNull(),
   updated_at: bigint({ mode: "number" }).notNull(),
 });
+export const incomeAttachments = pgTable("income_attachments", {
+  id: text().primaryKey(),
+  income_item_id: text()
+    .notNull()
+    .references(() => budgetItems.id),
+  owner_id: owner(),
+  object_key: text().notNull().unique(),
+  content_type: text().notNull(),
+  byte_size: integer().notNull(),
+  sha256: text().notNull(),
+  width: integer(),
+  height: integer(),
+  status: text().notNull(),
+  created_at: bigint({ mode: "number" }).notNull(),
+  updated_at: bigint({ mode: "number" }).notNull(),
+});
 export const sessions = pgTable("sessions", {
   token_hash: text().primaryKey(),
   account_id: text().notNull(),

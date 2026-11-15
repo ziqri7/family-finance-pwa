@@ -1,3 +1,17 @@
+# Pengujian Financée
+
+## Kandidat gabungan — 16 November 2026
+
+Status: implementasi visual yang disetujui, dashboard tahun dan bukti pemasukan tergabung; belum push/deploy atau migrasi produksi. Bagian kandidat terpisah di bawah adalah arsip dan digantikan status gabungan ini.
+
+- **60 tes lulus, 0 gagal/dilewati** pada suite lengkap dengan dua cabang Neon dummy khusus. Mencakup perhitungan, kepemilikan, API, ganti sandi, persaingan simpan, bukti dua koleksi, migrasi, backup/pemulihan dan laporan tahun. Setelah perbaikan warna kartu/copy, 21 tes unit serta build/typecheck kembali lulus; angka ini tumpang tindih dengan suite lengkap.
+- Browser terisolasi → bundel Pages minified → Neon dummy: dua akun login, pos langsung/pemisah ribuan, donut 40/30/20/10, rasio tahunan 58,3% pada fixture awal, unggah pemasukan PNG/JPG oleh kedua pemilik, pengeluaran JPEG, akses pasangan hanya baca, galeri tiga gambar aktual dan logout. Lebar 320/375/390/1366 tidak meluap. Nominal/grafik mengikuti catatan uji yang ditambahkan, bukan gambar statis.
+- Capture akhir memastikan tiga thumbnail selesai dimuat, font lokal dan warna nominal kartu suami putih. Render bulan/tahun/pemilik/galeri serta desktop diperiksa. Penjelasan rumus ada dalam dialog info; kosong tetap — dan nol tetap 0.
+- Backup/pemulihan data yang dibuat melalui layar: **sembilan tabel dan tiga objek gambar** dipulihkan dan dibandingkan pada cabang restore dummy terpisah. Bukti pribadi tidak dipakai. Tidak mengubah sandi, data November lokal atau workbook.
+- Instalasi bersih dari paket sumber: npm ci, build/typecheck dan 21 tes unit lulus. Ketiga belas berkas build identik byte dengan build yang dipakai browser; seluruh migrasi SQL juga identik. Format dan pemeriksaan 114 berkas publik lulus. Nilai akun/sandi/koneksi produksi yang diketahui tidak ditemukan pada sumber atau build. Detektor desain memberi 42 saran palet, radius dan ukuran huruf; tidak ada temuan utama. Pemeriksaan pola ini bukan audit aksesibilitas atau performa menyeluruh.
+
+Belum dibuktikan untuk kandidat ini: upgrade dan endpoint baru pada Cloudflare produksi, pemasangan Safari/iPhone fisik, dua perangkat fisik, beban gambar maksimum pada runtime Cloudflare, audit keamanan/aksesibilitas lengkap. Pengujian versi dasar online di bagian arsip tidak menggantikan verifikasi rilis baru.
+
 ## Dashboard tahun — kandidat 15 November 2026
 
 - Worktree terpisah dari produksi8df6152; fitur bukti pemasukan yang ditahan tidak ikut. Tidak ada migrasi database atau secret baru.
@@ -5,6 +19,14 @@
 - Browser komponen asli+API mock: viewport320/375/390/1366, nominal/rasio, pilih tahun/bulan, kosong vs0, incomplete,200%,defisit,error/retry,respons200rusak,pergantian tahun cepat dan keyboard lulus. Render desktop/mobile diperiksa langsung. Grafik menggunakan CSS, tanpa pustaka chart baru.
 - Browser dengan bundel Pages minified dan Neon dummy: dua akun login, ringkasan12juta/7juta=58,3%, lebar 375 tanpa luapan, perubahan catatan pada Januari saat bulan aktif Februari otomatis memperbarui rasio62,5%, lalu kembali58,3% setelah catatan uji dihapus. Kedua sesi verifikasi logout. Tidak membaca/menulis data produksi atau menggunakan sandi produksi.
 - Belum: persetujuan rilis dashboard, push/deploy dan pemeriksaan Cloudflare remote untuk endpoint ini. iPhone fisik/autofill/instalasi fisik tidak diuji. Bukti pemasukan tetap ditahan. Screenshot privat year-preview/mobile.png,desktop.png,e2e-mobile.png; log privat year-e2e-sync.log.
+
+## Bukti pemasukan — kandidat 15 November 2026
+
+Pengguna menyetujui bukti JPG/PNG opsional langsung pada pos pemasukan. Implementasi memakai income_attachments pada Neon dan bucket privat yang sudah ada; backend gambar digunakan bersama dengan pengeluaran. Tidak mengubah hitungan atau menambah pemasukan/realisasi kedua. Calon migrasi0004 belum diterapkan ke produksi; sumber belum dipush/deploy.
+
+Suite lengkap52tes lulus, nol gagal/dilewati. Pemeriksaan khusus terakhir8tes lulus setelah fixture backup ditambah satu gambar pengeluaran (sebagian mengulang suite, bukan60tes unik). Bukti khusus: kedua pemilik dapat unggah PNG/JPG dan melihat bukti pasangan; mutasi pihak lain ditolak; induk wajib income aktif; retry idempotent; revisi bulan naik; gambar rusak/checksum/oversize ditolak; reservasi serentak maksimal10; ID tidak bentrok lintas koleksi; salin bulan tidak membawa gambar; backup format4 memulihkan sembilan tabel dan tiga gambar (dua pemasukan, satu pengeluaran); hapus pos menonaktifkan bukti dan mencabut akses baca.
+
+Browser terpisah memakai komponen asli dan API mock: viewport320/375/1366 tanpa luapan, pilihPNG, respons unggah sengaja diputus lalu retry memakai ID yang sama, preview gambar, pasangan hanya baca, pemilik menghapus, serta tombol pada Budget membuka dialog bukti. Render desktop/mobile diperiksa. Ini bukan pengujian end-to-end UI ke Neon atau ponsel fisik; API ke Neon diuji terpisah dengan data dummy. Build/typecheck/format/check-public lulus. Detektor TSX hanya regex, bukan audit aksesibilitas penuh. Backup lama format3 harus dibuat dengan kode lama sebelum migrasi; sandi dan data produksi belum diubah.
 
 ## Perbaikan bulan dan nominal pada HP — dirilis 15 November 2026
 

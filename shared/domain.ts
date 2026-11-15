@@ -127,7 +127,8 @@ export interface Transfer {
 }
 export interface Attachment {
   id: string;
-  expense_id: string;
+  expense_id: string | null;
+  income_item_id?: string;
   owner_id: Owner;
   content_type: string;
   byte_size: number;

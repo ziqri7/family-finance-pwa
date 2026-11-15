@@ -36,7 +36,7 @@ export function MonthForm({
     <Dialog
       open
       title="Buat anggaran bulan"
-      description="Buat anggaran untuk bulan ini. Jika menyalin bulan lain, hanya rencananya yang disalin; pengeluaran dan bukti tetap di bulan asal."
+      description="Salin rencana saja; pengeluaran dan bukti tetap di bulan asal."
       busy={busy}
       onOpenChange={(v) => {
         if (!v) onClose();
@@ -180,7 +180,7 @@ const lastDay = (period: string) => {
   return period + "-" + new Date(y, m, 0).getDate();
 };
 type Picked = { id: string; file: File; status: "waiting" | "done" | "failed" };
-async function validateFile(file: File) {
+export async function validateFile(file: File) {
   if (
     !["image/jpeg", "image/png"].includes(file.type) ||
     !file.size ||
@@ -564,9 +564,7 @@ export function TransferForm({
           onValueChange={setAmount}
         />
         <p className="helper-note">
-          Catat uang yang sudah Anda kirim ke pasangan. Transfer tetap dilakukan
-          melalui bank atau dompet digital Anda; catatan ini tidak menambah
-          belanja keluarga.
+          Hanya pencatatan. Transfer tetap melalui bank atau dompet digital.
         </p>
         {error && (
           <p className="error" role="alert">

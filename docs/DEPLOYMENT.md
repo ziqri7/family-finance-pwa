@@ -1,5 +1,18 @@
 # Deployment Cloudflare dan Neon milik sendiri
 
+## Upgrade kandidat visual, tahun dan bukti pemasukan — 16 November 2026
+
+Untuk instalasi yang sudah memiliki migrasi 0001–0003 dan fitur ganti sandi:
+
+1. Cadangkan database/gambar dengan kode **format 3 yang sama dengan instalasi lama**, sebelum menerapkan 0004. Pada repositori ini referensi immutable-nya commit `8df6152f69a09c9fe7ac7822198ec641836346af`. Simpan kode versi itu bersama backup agar pemulihan tidak bergantung pada skrip format 4. Verifikasi manifest lengkap dan checksum; simpan PASSWORD_PEPPER terpisah.
+2. Tinjau sumber baru dan migrasi additive 0004. Periksa bahwa seluruh migrasi lama tetap byte-identik; `.gitattributes` menonaktifkan konversi akhir baris SQL agar SHA-256 sama pada Windows/Linux.
+3. Jalankan hanya `npm run db:migrate` dengan konfigurasi produksi privat yang sudah ada. **Jangan** menjalankan provisioning, seed atau accounts:init ulang untuk upgrade ini. Tidak ada kunci, akun atau sandi baru. Bandingkan snapshot tabel lama dan hash/versi kredensial sebelum/sesudah; jangan menimpa perubahan pengguna yang berjalan bersamaan.
+4. Setelah rilis disetujui, build/deploy paket yang sudah diuji memakai proyek Pages dan tujuh secret yang sudah ada. Jangan rollback ke backend lama yang tidak mengetahui bukti pemasukan setelah fitur dipakai.
+5. Periksa aset/PWA, API privat, skema, serta hash kredensial yang tetap. Jangan mengganti sandi pengguna atau membuat bulan dummy di database keluarga. Buat backup format 4 dan periksa seluruh bukti siap. Pemasangan iPhone fisik tetap perlu dicoba oleh pemilik.
+
+Langkah instalasi baru di bawah berbeda dari upgrade: provisioning dan inisialisasi akun hanya diperlukan saat memasang keluarga baru.
+
+
 Satu keluarga menggunakan akun Cloudflare sendiri untuk frontend/API dan akun Neon sendiri untuk PostgreSQL serta gambar privat. Tidak ada server akun pusat. Pilih paket Free; jangan mengaktifkan paket berbayar atau fitur tambahan untuk mengikuti panduan ini. R2/D1 tidak diperlukan.
 
 ## 1. Siapkan Neon

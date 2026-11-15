@@ -13,6 +13,8 @@ import {
 import { Button } from "./components/ui/button";
 import { Dialog } from "./components/ui/dialog";
 import { ChangePassword } from "./components/ChangePassword";
+import { EvidenceGallery } from "./components/EvidenceGallery";
+import { IncomeEvidence } from "./components/IncomeEvidence";
 import { Budget } from "./components/Budget";
 import { Dashboard, ExpenseList, EvidenceImages } from "./components/Dashboard";
 import {
@@ -31,6 +33,7 @@ import {
   type Owner,
   type Expense,
   type Kind,
+  type Item,
 } from "../shared/domain";
 function Login({
   onLogin,
@@ -128,11 +131,15 @@ function Login({
   );
 }
 export default function App() {
+  const [incomeEvidence, setIncomeEvidence] = useState<Item | null>(null);
+  const [dashboardMode, setDashboardMode] = useState<"bulan" | "tahun">(
+    "bulan",
+  );
   const [passwordOpen, setPasswordOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null),
     [lastUser, setLastUser] = useState<User | null>(null),
     [initial, setInitial] = useState(true),
-    [view, setView] = useState<"dashboard" | Owner>("dashboard");
+    [view, setView] = useState<"dashboard" | "evidence" | Owner>("dashboard");
   const [monthOpen, setMonthOpen] = useState(false),
     [addKind, setAddKind] = useState<Kind | null>(null),
     [expense, setExpense] = useState<{
@@ -150,6 +157,7 @@ export default function App() {
     setExpiredHandler(() => {
       setUser(null);
       setEvidence(null);
+      setIncomeEvidence(null);
       setPasswordOpen(false);
     });
     api<{ user: User }>("/me")
@@ -271,6 +279,7 @@ export default function App() {
       setExpense(null);
       setTransferOpen(false);
       setEvidence(null);
+      setIncomeEvidence(null);
       setMonthOpen(false);
       setAddKind(null);
     } catch (e) {
@@ -387,6 +396,7 @@ export default function App() {
               setLastUser(null);
               setView("dashboard");
               setEvidence(null);
+              setIncomeEvidence(null);
               setExpense(null);
               setTransferOpen(false);
               setMonthOpen(false);
@@ -403,15 +413,22 @@ export default function App() {
               <h1>
                 {view === "dashboard"
                   ? "Keuangan keluarga"
-                  : "Anggaran " + ownerName[view].toLowerCase()}
+                  : view === "evidence"
+                    ? "Bukti"
+                    : "Anggaran " + ownerName[view].toLowerCase()}
               </h1>
-              <p>Rencana dan pengeluaran keluarga dalam satu tempat.</p>
             </div>
             <div className="period-controls">
               <label htmlFor="period" className="sr-only">
                 Bulan anggaran
               </label>
               <select
+                style={{
+                  display:
+                    view === "dashboard" && dashboardMode === "tahun"
+                      ? "none"
+                      : undefined,
+                }}
                 id="period"
                 disabled={store.busy}
                 value={store.period}
@@ -435,6 +452,14 @@ export default function App() {
               </Button>
             </div>
           </div>
+          {incomeEvidence && user && (
+            <IncomeEvidence
+              item={incomeEvidence}
+              store={store}
+              canEdit={incomeEvidence.owner_id === user.id}
+              onClose={() => setIncomeEvidence(null)}
+            />
+          )}
           <nav className="app-nav" aria-label="Bagian aplikasi">
             <button
               aria-label="Dashboard keluarga"
@@ -470,15 +495,9 @@ export default function App() {
               <span>Istri</span>
             </button>
             <button
-              aria-label="Bukti pengeluaran"
-              onClick={async () => {
-                if (await navigate("dashboard"))
-                  requestAnimationFrame(() =>
-                    document
-                      .getElementById("records")
-                      ?.scrollIntoView({ block: "start" }),
-                  );
-              }}
+              aria-label="Galeri bukti"
+              aria-pressed={view === "evidence"}
+              onClick={() => void navigate("evidence")}
             >
               <Images />
               <span>Bukti</span>
@@ -534,6 +553,8 @@ export default function App() {
               <div className="view-content" key={view + ":" + s.id}>
                 {view === "dashboard" ? (
                   <Dashboard
+                    mode={dashboardMode}
+                    onMode={(mode) => setDashboardMode(mode)}
                     snapshot={s}
                     periods={store.periods}
                     active={Boolean(user)}
@@ -545,9 +566,16 @@ export default function App() {
                     onDelete={(e) => void removeExpense(e)}
                     onEvidence={setEvidence}
                   />
+                ) : view === "evidence" ? (
+                  <EvidenceGallery
+                    snapshot={s}
+                    onExpense={setEvidence}
+                    onIncome={setIncomeEvidence}
+                  />
                 ) : (
                   <>
                     <Budget
+                      active={Boolean(user)}
                       store={store}
                       owner={view}
                       actor={actor}
@@ -560,10 +588,7 @@ export default function App() {
                           <div className="section-heading">
                             <div>
                               <h2>Pengeluaran nyata</h2>
-                              <p>
-                                Catat saat uang dipakai. Bukti boleh
-                                dikosongkan.
-                              </p>
+                              <p>Bukti opsional.</p>
                             </div>
                             {view === actor && (
                               <Button
@@ -587,10 +612,7 @@ export default function App() {
                           <div className="section-heading">
                             <div>
                               <h2>Kiriman antar pasangan</h2>
-                              <p>
-                                Catat uang yang sudah dikirim ke pasangan.
-                                Kiriman ini tidak menambah belanja keluarga.
-                              </p>
+                              <p>Hanya pencatatan, bukan transfer uang.</p>
                             </div>
                             {view === actor && (
                               <Button
@@ -716,6 +738,7 @@ export default function App() {
         wide
         onOpenChange={(v) => {
           if (!v) setEvidence(null);
+          setIncomeEvidence(null);
         }}
       >
         <EvidenceImages

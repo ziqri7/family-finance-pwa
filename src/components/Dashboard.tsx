@@ -1,3 +1,4 @@
+import { MonthCharts } from "./FinanceCharts";
 import {
   ArrowUpRight,
   ReceiptText,
@@ -7,12 +8,8 @@ import {
 import { Button } from "./ui/button";
 import { YearDashboard } from "./YearDashboard";
 import {
-  ownerIds,
   ownerName,
-  totals,
-  familyTotals,
   rupiah,
-  monthName,
   type Snapshot,
   type Owner,
   type Expense,
@@ -118,8 +115,16 @@ export function EvidenceImages({ files }: { files: Attachment[] }) {
       {files.map((f, i) => (
         <figure key={f.id}>
           <img
-            src={"/api/attachments/" + f.id + "/content"}
-            alt={"Bukti pengeluaran " + (i + 1)}
+            src={
+              "/api/" +
+              (f.income_item_id ? "income-attachments/" : "attachments/") +
+              f.id +
+              "/content"
+            }
+            alt={
+              (f.income_item_id ? "Bukti pemasukan " : "Bukti pengeluaran ") +
+              (i + 1)
+            }
           />
           <figcaption>Bukti {i + 1}</figcaption>
         </figure>
@@ -138,6 +143,8 @@ export function Dashboard({
   onEdit,
   onDelete,
   onEvidence,
+  mode,
+  onMode,
 }: {
   snapshot: Snapshot;
   periods: { id: string; revision: number }[];
@@ -149,79 +156,29 @@ export function Dashboard({
   onEdit: (e: Expense) => void;
   onDelete: (e: Expense) => void;
   onEvidence: (e: Expense) => void;
+  mode: "bulan" | "tahun";
+  onMode: (mode: "bulan" | "tahun") => void;
 }) {
-  const f = familyTotals(snapshot);
+  if (!active) return null;
   return (
     <>
-      <section aria-label="Anggaran suami dan istri">
-        <div className="section-heading">
-          <h2>Anggaran kita</h2>
-          <Button variant="ghost" onClick={() => onView(actor)}>
-            Isi bagian saya
-          </Button>
-        </div>
-        <div
-          className="account-deck"
-          tabIndex={0}
-          aria-label="Kartu anggaran; gunakan panah kanan atau kiri untuk bergeser"
-          onKeyDown={(e) => {
-            if (
-              e.target === e.currentTarget &&
-              ["ArrowLeft", "ArrowRight"].includes(e.key)
-            ) {
-              e.preventDefault();
-              e.currentTarget.scrollBy({
-                left:
-                  e.currentTarget.clientWidth *
-                  (e.key === "ArrowRight" ? 1 : -1),
-                behavior: matchMedia("(prefers-reduced-motion: reduce)").matches
-                  ? "auto"
-                  : "smooth",
-              });
-            }
-          }}
-        >
-          {ownerIds.map((owner) => {
-            const t = totals(snapshot, owner),
-              exists = snapshot.budgets.some((b) => b.owner_id === owner);
-            return (
-              <article
-                className={
-                  "budget-card " + (owner === "partner-a" ? "husband" : "wife")
-                }
-                key={owner}
-              >
-                <div className="card-face">
-                  <h3>{ownerName[owner]}</h3>
-                  <p>{exists ? "Sisa anggaran" : "Anggaran bulan ini"}</p>
-                  <strong
-                    className={
-                      "card-amount" + (t.remaining < 0 ? " card-negative" : "")
-                    }
-                  >
-                    {exists ? rupiah.format(t.remaining) : "Belum dibuat"}
-                  </strong>
-                  <div className="card-details">
-                    <span>Dana anggaran</span>
-                    <strong>{exists ? rupiah.format(t.income) : "—"}</strong>
-                  </div>
-                </div>
-                <div className="card-footer">
-                  <span>
-                    {exists
-                      ? "Alokasi + kiriman " +
-                        rupiah.format(t.allocation + t.outgoing)
-                      : "Belum ada rencana"}
-                  </span>
-                  <button onClick={() => onView(owner)}>
-                    Buka {ownerName[owner].toLowerCase()}
-                  </button>
-                </div>
-              </article>
-            );
-          })}
-        </div>
-      </section>
+      <div
+        className="finance-switch"
+        role="group"
+        aria-label="Periode ringkasan"
+      >
+        <button aria-pressed={mode === "bulan"} onClick={() => onMode("bulan")}>
+          Bulan
+        </button>
+        <button aria-pressed={mode === "tahun"} onClick={() => onMode("tahun")}>
+          Tahun
+        </button>
+      </div>
+      {mode === "bulan" ? (
+        <MonthCharts snapshot={snapshot} />
+      ) : (
+        <YearDashboard snapshot={snapshot} periods={periods} active={active} />
+      )}
       <div className="quick-actions">
         <Button variant="secondary" onClick={() => onView(actor)}>
           <NotebookPen size={17} />
@@ -236,106 +193,20 @@ export function Dashboard({
           Catat kiriman
         </Button>
       </div>
-      <section className="family-strip" aria-label="Ringkasan keluarga">
-        {[
-          ["Sisa keluarga", f.remaining],
-          ["Pemasukan", f.income],
-          ["Alokasi", f.allocation],
-        ].map(([label, value]) => (
-          <div key={label}>
-            <span>{label}</span>
-            <strong className={Number(value) < 0 ? "negative" : ""}>
-              {rupiah.format(Number(value))}
-            </strong>
-          </div>
-        ))}
-        <p>Anggaran gabungan · kiriman internal tidak dihitung dua kali.</p>
-      </section>
-      <YearDashboard snapshot={snapshot} periods={periods} active={active} />
-      <div className="dashboard-columns">
-        <div>
-          <section className="records-panel" id="records">
-            <div className="section-heading">
-              <div>
-                <h2>Catatan bulan ini</h2>
-                <p>{monthName(snapshot.id)} · suami dan istri</p>
-              </div>
-              <Button onClick={onExpense}>+ Catat</Button>
-            </div>
-            <ExpenseList
-              snapshot={snapshot}
-              owner={null}
-              actor={actor}
-              onEdit={onEdit}
-              onDelete={onDelete}
-              onEvidence={onEvidence}
-            />
-          </section>
-          <section className="actual-stats" aria-label="Realisasi keluarga">
-            {[
-              [
-                "Pengeluaran tercatat",
-                rupiah.format(f.spent),
-                "Total belanja suami dan istri. Kiriman antar pasangan tidak ikut dihitung.",
-              ],
-              [
-                "Sisa setelah pengeluaran",
-                rupiah.format(f.income - f.spent),
-                "Pemasukan dikurangi pengeluaran tercatat. Angka ini bukan saldo rekening.",
-              ],
-              [
-                "Bukti pengeluaran",
-                snapshot.attachments.filter((a) => a.status === "ready")
-                  .length + " gambar",
-                "Ketuk bukti pada catatan untuk melihat gambarnya.",
-              ],
-            ].map(([label, value, hint]) => (
-              <div key={label}>
-                <span>{label}</span>
-                <strong>{value}</strong>
-                <small>{hint}</small>
-              </div>
-            ))}
-          </section>
+      <section className="records-panel" id="records">
+        <div className="section-heading">
+          <h2>Catatan bulan ini</h2>
+          <Button onClick={onExpense}>+ Catat</Button>
         </div>
-        <aside className="family-detail">
-          <h2>Rincian keluarga</h2>
-          {ownerIds.map((owner) => {
-            const t = totals(snapshot, owner);
-            return (
-              <section key={owner}>
-                <div className="section-heading">
-                  <h3>{ownerName[owner]}</h3>
-                  <Button variant="ghost" onClick={() => onView(owner)}>
-                    Lihat bagian
-                  </Button>
-                </div>
-                <dl>
-                  {[
-                    ["Pemasukan sendiri", t.external],
-                    ["Rencana kiriman masuk", t.incoming],
-                    ["Alokasi sendiri", t.allocation],
-                    ["Rencana kiriman keluar", t.outgoing],
-                    ["Sisa anggaran", t.remaining],
-                    ["Pengeluaran tercatat", t.spent],
-                  ].map(([label, value]) => (
-                    <div key={label}>
-                      <dt>{label}</dt>
-                      <dd className={Number(value) < 0 ? "negative" : ""}>
-                        {rupiah.format(Number(value))}
-                      </dd>
-                    </div>
-                  ))}
-                </dl>
-              </section>
-            );
-          })}
-          <p className="helper-note">
-            Rencana kiriman dan uang yang sudah dikirim dicatat terpisah.
-            Keduanya bisa dilihat di bagian suami dan istri.
-          </p>
-        </aside>
-      </div>
+        <ExpenseList
+          snapshot={snapshot}
+          owner={null}
+          actor={actor}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onEvidence={onEvidence}
+        />
+      </section>
     </>
   );
 }

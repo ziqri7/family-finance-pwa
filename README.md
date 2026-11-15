@@ -4,7 +4,7 @@ Aplikasi keuangan keluarga berbahasa Indonesia: isi anggaran langsung, catat pen
 
 Setiap keluarga memasang salinan sendiri pada **Cloudflare Pages + Functions + Neon** miliknya. Tidak ada server akun pusat, pendaftaran publik, koneksi bank atau pelaksanaan transfer uang. Pengisian dilakukan langsung pada aplikasi; tidak ada unggah Excel. Workbook sumber hanya dipakai saat pengembangan/provisioning privat.
 
-**Status:** rilis Cloudflare Pages + Neon telah dijalankan dan diuji online pada 15 November 2026. Pengguna open-source memasang salinan serta akun layanan sendiri. Bukti serta batas pemeriksaan di [docs/NEON_REVIEW.md](docs/NEON_REVIEW.md). Aplikasi/data lokal D1/R2 lama bukan target migrasi otomatis.
+**Status:** versi dasar Cloudflare Pages + Neon sudah dirilis pada 15 November 2026. Kandidat 16 November menggabungkan desain donut/batang, ringkasan tahun dan bukti pemasukan; sudah diuji terpisah dan belum ditayangkan. Pengguna open-source memasang salinan serta akun layanan sendiri. Bukti serta batas pemeriksaan di [docs/NEON_REVIEW.md](docs/NEON_REVIEW.md). Aplikasi/data lokal D1/R2 lama bukan target migrasi otomatis.
 
 ## Menjalankan
 
@@ -27,7 +27,9 @@ Backend berjalan lokal, tetapi data/gambar memakai cabang Neon online sehingga m
 2. Tekan Enter atau pindah kolom untuk menyimpan. **Tersimpan** muncul setelah server mengonfirmasi; isian gagal/konflik tetap terlihat.
 3. Tambah, ubah atau hapus pos. Salin bulan membawa rencana sendiri, tanpa pengeluaran, kiriman nyata atau gambar.
 4. Catat pengeluaran pada alokasi sendiri. Bukti JPG/PNG opsional, maksimal 10 gambar per catatan dan 5 MiB per gambar; gambar rusak atau berdimensi berlebihan ditolak.
-5. Catat kiriman yang sudah dilakukan. Pasangan melihat referensi masuk otomatis. Aplikasi tidak menjalankan transfer uang.
+5. Pada pos pemasukan, pilih Tambah / lihat bukti untuk lampiran JPG/PNG opsional dengan batas yang sama. Galeri Bukti menampilkan gambar pemasukan/pengeluaran bulan terpilih; pasangan dapat melihat.
+6. Di Beranda, pilih Bulan untuk donut alokasi dan batang pemasukan/pengeluaran, atau Tahun untuk ringkasan 12 bulan. Penjelasan hitungan tersedia melalui tombol info.
+7. Catat kiriman yang sudah dilakukan. Pasangan melihat referensi masuk otomatis. Aplikasi tidak menjalankan transfer uang.
 
 Kedua akun membaca data keluarga; masing-masing hanya mengubah bagiannya. Backend memeriksa pembatasan ini. Sinkronisasi diperiksa setiap 10 detik saat tab terlihat dan online. Saat offline, pengisian baru ditahan; cache PWA berisi antarmuka saja. Draf tidak disimpan permanen pada perangkat.
 
@@ -59,7 +61,7 @@ Aplikasi tidak meminta unggah Excel. Label workbook sumber dipetakan secara priv
 
 `node scripts/prepare-public.mjs` menyalin allowlist sumber ke folder privat baru beserta manifest SHA-256. Tidak membawa workbook, akun, `.env*`, `.dev.vars`, backup, `.wrangler/`, dependensi atau build. Pemeriksaan publik mencakup nilai koneksi/kunci lokal yang diketahui; bukan audit seluruh riwayat Git. Tinjau paket sebelum publikasi dan hindari `git add .` pada workspace yang berisi data keluarga.
 
-[Backup/pemulihan](docs/BACKUP.md) memakai snapshot tujuh tabel keuangan, kredensial akun dan gambar dengan checksum. Sesi tidak disalin. Pemulihan hanya ke tujuan kosong. Data D1 lama tidak dipindahkan otomatis.
+[Backup/pemulihan](docs/BACKUP.md) memakai snapshot sembilan tabel (termasuk kredensial serta bukti pemasukan) dan gambar dengan checksum. Sesi tidak disalin. Pemulihan hanya ke tujuan kosong. Data D1 lama tidak dipindahkan otomatis.
 
 Free tier memiliki kuota; aplikasi tidak menjanjikan biaya selalu nol atau uptime tanpa batas. Neon bangun otomatis setelah idle, dengan kemungkinan jeda pada permintaan pertama. Tab yang tetap terbuka melakukan polling dan dapat membuat compute tetap aktif. Periksa [harga Neon](https://neon.com/pricing) dan [Workers](https://developers.cloudflare.com/workers/platform/pricing/) saat memasang.
 
@@ -73,8 +75,10 @@ Ganti sandi tersedia melalui tombol kunci di dekat Keluar. Masukkan sandi saat i
 
 ## Ringkasan tahun
 
-Dashboard menampilkan persentase bulan aktif dan ringkasan tahun dengan tren12 bulan. Hanya bulan dengan anggaran kedua akun serta nominal pemasukan/alokasi lengkap yang masuk ringkasan. Isi 0 jika pos tidak dipakai. Persentase gabungan memakai total nominal dibagi total pemasukan anggaran, bukan rata-rata persentase bulan. Sisa adalah sisa anggaran, bukan saldo rekening. Kandidat dashboard belum dirilis; tidak memerlukan migrasi database.
+Dashboard menampilkan persentase bulan aktif dan ringkasan tahun dengan grafik batang 12 bulan. Hanya bulan dengan anggaran kedua akun serta nominal pemasukan/alokasi lengkap yang masuk ringkasan. Isi 0 jika pos tidak dipakai. Persentase gabungan memakai total nominal dibagi total pemasukan anggaran, bukan rata-rata persentase bulan. Sisa adalah sisa anggaran, bukan saldo rekening. Dashboard ini tergabung dalam kandidat visual 16 November 2026; paket gabungan membutuhkan migrasi 0004 untuk bukti pemasukan.
 
 ## Memasang pada iPhone
 
 Buka alamat instalasi sendiri melalui Safari, pilih Bagikan → Tambahkan ke Layar Utama. Jika ada pilihan Open as Web App, aktifkan lalu tekan Tambah. Ikon, manifest standalone dan service worker sudah tersedia; pengisian/sinkronisasi tetap membutuhkan internet. Lihat [panduan Apple](https://support.apple.com/guide/iphone/open-as-web-app-iphea86e5236/ios). Pemasangan pada iPhone fisik belum dibuktikan oleh pengujian viewport.
+
+Bukti pemasukan opsional tersedia pada masing-masing pos pemasukan melalui Tambah / lihat bukti. Hanya pemilik pos dapat mengunggah/menghapus; pasangan dapat melihat. Lampiran tidak mengubah nominal dan tidak ikut salin bulan. Kandidat ini belum dirilis; backup baru memakai format4, lihat panduan backup sebelum upgrade0004.

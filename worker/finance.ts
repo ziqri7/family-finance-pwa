@@ -25,7 +25,7 @@ export const rowId = (c: C) => idSchema.parse(c.req.param("id"));
 export const periodId = (c: C) => periodSchema.parse(c.req.param("id"));
 export async function owned<T extends { owner_id: Owner }>(
   c: C,
-  table: "budget_items" | "expenses" | "attachments",
+  table: "budget_items" | "expenses" | "attachments" | "income_attachments",
   id: string,
 ) {
   const row = await c.env.DB.prepare(
@@ -40,63 +40,92 @@ export async function owned<T extends { owner_id: Owner }>(
 export async function snapshot(c: C) {
   const id = periodId(c),
     db = drizzle(c.env.DB.client);
-  const [, period, budgets, items, expenses, transfers, attachments] =
-    await db.batch([
-      db.execute(sql`SELECT pg_advisory_xact_lock(61324017)`),
-      db.select().from(schema.periods).where(eq(schema.periods.id, id)),
-      db
-        .select({ owner_id: schema.budgets.owner_id })
-        .from(schema.budgets)
-        .where(eq(schema.budgets.period_id, id)),
-      db
-        .select()
-        .from(schema.budgetItems)
-        .where(
-          and(
-            eq(schema.budgetItems.period_id, id),
-            isNull(schema.budgetItems.deleted_at),
-          ),
-        )
-        .orderBy(asc(schema.budgetItems.position), asc(schema.budgetItems.id)),
-      db
-        .select()
-        .from(schema.expenses)
-        .where(
-          and(
-            eq(schema.expenses.period_id, id),
-            isNull(schema.expenses.deleted_at),
-          ),
+  const [
+    ,
+    period,
+    budgets,
+    items,
+    expenses,
+    transfers,
+    attachments,
+    incomeFiles,
+  ] = await db.batch([
+    db.execute(sql`SELECT pg_advisory_xact_lock(61324017)`),
+    db.select().from(schema.periods).where(eq(schema.periods.id, id)),
+    db
+      .select({ owner_id: schema.budgets.owner_id })
+      .from(schema.budgets)
+      .where(eq(schema.budgets.period_id, id)),
+    db
+      .select()
+      .from(schema.budgetItems)
+      .where(
+        and(
+          eq(schema.budgetItems.period_id, id),
+          isNull(schema.budgetItems.deleted_at),
         ),
-      db
-        .select()
-        .from(schema.transfers)
-        .where(
-          and(
-            eq(schema.transfers.period_id, id),
-            isNull(schema.transfers.deleted_at),
-          ),
+      )
+      .orderBy(asc(schema.budgetItems.position), asc(schema.budgetItems.id)),
+    db
+      .select()
+      .from(schema.expenses)
+      .where(
+        and(
+          eq(schema.expenses.period_id, id),
+          isNull(schema.expenses.deleted_at),
         ),
-      db
-        .select({
-          id: schema.attachments.id,
-          expense_id: schema.attachments.expense_id,
-          owner_id: schema.attachments.owner_id,
-          content_type: schema.attachments.content_type,
-          byte_size: schema.attachments.byte_size,
-          status: schema.attachments.status,
-        })
-        .from(schema.attachments)
-        .innerJoin(
-          schema.expenses,
-          eq(schema.attachments.expense_id, schema.expenses.id),
-        )
-        .where(
-          and(
-            eq(schema.expenses.period_id, id),
-            isNull(schema.expenses.deleted_at),
-          ),
+      ),
+    db
+      .select()
+      .from(schema.transfers)
+      .where(
+        and(
+          eq(schema.transfers.period_id, id),
+          isNull(schema.transfers.deleted_at),
         ),
-    ]);
+      ),
+    db
+      .select({
+        id: schema.attachments.id,
+        expense_id: schema.attachments.expense_id,
+        owner_id: schema.attachments.owner_id,
+        content_type: schema.attachments.content_type,
+        byte_size: schema.attachments.byte_size,
+        status: schema.attachments.status,
+      })
+      .from(schema.attachments)
+      .innerJoin(
+        schema.expenses,
+        eq(schema.attachments.expense_id, schema.expenses.id),
+      )
+      .where(
+        and(
+          eq(schema.expenses.period_id, id),
+          isNull(schema.expenses.deleted_at),
+        ),
+      ),
+    db
+      .select({
+        id: schema.incomeAttachments.id,
+        expense_id: sql<null>`NULL`,
+        income_item_id: schema.incomeAttachments.income_item_id,
+        owner_id: schema.incomeAttachments.owner_id,
+        content_type: schema.incomeAttachments.content_type,
+        byte_size: schema.incomeAttachments.byte_size,
+        status: schema.incomeAttachments.status,
+      })
+      .from(schema.incomeAttachments)
+      .innerJoin(
+        schema.budgetItems,
+        eq(schema.incomeAttachments.income_item_id, schema.budgetItems.id),
+      )
+      .where(
+        and(
+          eq(schema.budgetItems.period_id, id),
+          isNull(schema.budgetItems.deleted_at),
+        ),
+      ),
+  ]);
   if (!period[0]) fail(404, "PERIOD_NOT_FOUND", "Bulan belum dibuat.");
   if (c.req.query("revision") === String(period[0].revision))
     return c.json({ unchanged: true, revision: period[0].revision });
@@ -107,7 +136,10 @@ export async function snapshot(c: C) {
     items,
     expenses,
     transfers,
-    attachments: attachments.filter((a) => a.status !== "deleting"),
+    attachments: [
+      ...attachments.filter((a) => a.status !== "deleting"),
+      ...incomeFiles.filter((a) => a.status !== "deleting"),
+    ],
   });
 }
 export async function listPeriods(c: C) {

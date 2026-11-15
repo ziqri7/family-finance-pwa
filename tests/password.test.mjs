@@ -277,7 +277,7 @@ test("password changes: ownership, validation, revocation, concurrency, rollback
         await migrate(dest);
         await dest
           .prepare(
-            "TRUNCATE attachments,transfers,expenses,budget_items,budgets,periods,default_items,sessions,login_attempts,account_credentials",
+            "TRUNCATE income_attachments,attachments,transfers,expenses,budget_items,budgets,periods,default_items,sessions,login_attempts,account_credentials",
           )
           .run();
         await assert.rejects(
@@ -290,7 +290,7 @@ test("password changes: ownership, validation, revocation, concurrency, rollback
         );
         assert.deepEqual(
           await restoreBackup(dest, storage, folder, auth.pepper),
-          { tables: 8, objects: 0 },
+          { tables: 9, objects: 0 },
         );
         assert.deepEqual(
           await dest

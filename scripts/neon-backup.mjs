@@ -72,6 +72,9 @@ export const columns = {
     "updated_at",
   ],
 };
+columns.income_attachments = columns.attachments.map((k) =>
+  k === "expense_id" ? "income_item_id" : k,
+);
 export const digest = (data) => createHash("sha256").update(data).digest("hex");
 export async function snapshot(db, includeMigrations = false) {
   const tables = Object.keys(columns),
@@ -94,21 +97,31 @@ export function requiredObjects(data) {
   const live = new Set(
     data.expenses.filter((e) => e.deleted_at === null).map((e) => e.id),
   );
-  return data.attachments
-    .filter((a) => a.status === "ready" && live.has(a.expense_id))
-    .map((a) =>
-      Object.fromEntries(
-        ["id", "object_key", "sha256", "byte_size", "content_type"].map((k) => [
-          k,
-          a[k],
-        ]),
-      ),
-    );
+  const income = new Set(
+    data.budget_items
+      .filter((i) => i.deleted_at === null && i.kind === "income")
+      .map((i) => i.id),
+  );
+  return [
+    ...data.attachments.filter(
+      (a) => a.status === "ready" && live.has(a.expense_id),
+    ),
+    ...(data.income_attachments || []).filter(
+      (a) => a.status === "ready" && income.has(a.income_item_id),
+    ),
+  ].map((a) =>
+    Object.fromEntries(
+      ["id", "object_key", "sha256", "byte_size", "content_type"].map((k) => [
+        k,
+        a[k],
+      ]),
+    ),
+  );
 }
 export function restoredData(data) {
   const copy = structuredClone(data),
     required = new Set(requiredObjects(copy).map((a) => a.id));
-  for (const a of copy.attachments)
+  for (const a of [...copy.attachments, ...(copy.income_attachments || [])])
     if (!required.has(a.id)) a.status = "deleting";
   return copy;
 }
@@ -145,7 +158,7 @@ export async function createBackup(
     join(folder, "manifest.json"),
     JSON.stringify(
       {
-        version: 3,
+        version: 4,
         complete: true,
         createdAt: new Date().toISOString(),
         databaseSha256: digest(json),
@@ -164,9 +177,9 @@ export async function readBackup(folder) {
       await readFile(join(folder, "manifest.json"), "utf8"),
     ),
     bytes = await readFile(join(folder, "database.json"));
-  if (manifest.version !== 3)
+  if (manifest.version !== 4)
     throw Error(
-      "Format backup harus versi 3 yang memuat kredensial; gunakan panduan pemulihan versi lama secara terpisah.",
+      "Format backup harus versi 4 yang memuat kredensial; gunakan panduan pemulihan versi lama secara terpisah.",
     );
   if (manifest.complete !== true || digest(bytes) !== manifest.databaseSha256)
     throw Error("Backup tidak lengkap atau checksum berbeda.");

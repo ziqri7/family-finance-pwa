@@ -9,6 +9,7 @@ type C = Context<AppEnv>;
 interface FileRow {
   id: string;
   expense_id: string;
+  income_item_id: string;
   owner_id: Owner;
   object_key: string;
   content_type: string;
@@ -16,14 +17,35 @@ interface FileRow {
   sha256: string;
   status: string;
 }
+const source = (c: C) =>
+  c.req.path.includes("/income-") || c.req.path.startsWith("/api/income-items/")
+    ? {
+        table: "income_attachments" as const,
+        parent: "budget_items" as const,
+        key: "income_item_id" as const,
+      }
+    : {
+        table: "attachments" as const,
+        parent: "expenses" as const,
+        key: "expense_id" as const,
+      };
 export async function reserve(c: C) {
+  const src = source(c);
   const expenseId = rowId(c),
     v = await json(c, attachmentSchema),
-    expense = await owned<Expense>(c, "expenses", expenseId);
-  if (expense.deleted_at)
-    fail(409, "EXPENSE_DELETED", "Pengeluaran telah dihapus.");
+    expense = await owned<Expense>(c, src.parent, expenseId);
+  if (
+    expense.deleted_at ||
+    (src.parent === "budget_items" &&
+      (expense as unknown as { kind: string }).kind !== "income")
+  )
+    fail(
+      409,
+      "EXPENSE_DELETED",
+      "Pos atau catatan tidak dapat menerima bukti.",
+    );
   const existing = await c.env.DB.prepare(
-    "SELECT * FROM attachments WHERE id=$1",
+    `SELECT * FROM ${src.table} WHERE id=$1`,
   )
     .bind(v.id)
     .first<FileRow>();
@@ -31,7 +53,7 @@ export async function reserve(c: C) {
     if (existing.owner_id !== c.get("user").id)
       fail(404, "NOT_FOUND", "Bukti tidak ditemukan.");
     if (
-      existing.expense_id !== expenseId ||
+      existing[src.key] !== expenseId ||
       existing.sha256 !== v.sha256 ||
       existing.content_type !== v.contentType ||
       existing.byte_size !== v.byteSize ||
@@ -41,7 +63,7 @@ export async function reserve(c: C) {
     return c.json({ id: v.id, status: existing.status });
   }
   await c.env.DB.prepare(
-    "INSERT INTO attachments(id,expense_id,owner_id,object_key,content_type,byte_size,sha256,status,created_at,updated_at) VALUES($1,$2,$3,$4,$5,$6,$7,'pending',$8,$9)",
+    `INSERT INTO ${src.table}(id,${src.key},owner_id,object_key,content_type,byte_size,sha256,status,created_at,updated_at) VALUES($1,$2,$3,$4,$5,$6,$7,'pending',$8,$9)`,
   )
     .bind(
       v.id,
@@ -58,11 +80,12 @@ export async function reserve(c: C) {
   return c.json({ id: v.id, status: "pending" }, 201);
 }
 export async function upload(c: C) {
+  const src = source(c);
   const id = rowId(c),
-    file = await owned<FileRow>(c, "attachments", id),
-    expense = await owned<Expense>(c, "expenses", file.expense_id);
+    file = await owned<FileRow>(c, src.table, id),
+    expense = await owned<Expense>(c, src.parent, file[src.key]);
   if (expense.deleted_at || file.status === "deleting")
-    fail(409, "EXPENSE_DELETED", "Pengeluaran atau bukti sudah dihapus.");
+    fail(409, "EXPENSE_DELETED", "Pos, catatan, atau bukti sudah dihapus.");
   if (c.req.header("content-type") !== file.content_type)
     fail(415, "IMAGE_TYPE", "Format gambar tidak sesuai reservasi.");
   const data = await bytes(c.req.raw, 5 * 1024 * 1024);
@@ -79,7 +102,7 @@ export async function upload(c: C) {
   });
   try {
     const result = await c.env.DB.prepare(
-      "UPDATE attachments SET status='ready',width=$1,height=$2,updated_at=$3 WHERE id=$4 AND status IN ('pending','failed','ready') AND EXISTS(SELECT 1 FROM expenses WHERE id=expense_id AND deleted_at IS NULL)",
+      `UPDATE ${src.table} SET status='ready',width=$1,height=$2,updated_at=$3 WHERE id=$4 AND status IN ('pending','failed','ready') AND EXISTS(SELECT 1 FROM ${src.parent} WHERE id=${src.key} AND deleted_at IS NULL)`,
     )
       .bind(dimensions.width, dimensions.height, Date.now(), id)
       .run();
@@ -88,7 +111,7 @@ export async function upload(c: C) {
       fail(
         409,
         "EXPENSE_DELETED",
-        "Pengeluaran dihapus saat unggahan berlangsung.",
+        "Pos atau catatan dihapus saat unggahan berlangsung.",
       );
     }
   } catch (e) {
@@ -97,9 +120,10 @@ export async function upload(c: C) {
   return c.json({ id, status: "ready" });
 }
 export async function download(c: C) {
+  const src = source(c);
   const id = rowId(c),
     file = await c.env.DB.prepare(
-      "SELECT a.* FROM attachments a JOIN expenses e ON e.id=a.expense_id WHERE a.id=$1 AND a.status='ready' AND e.deleted_at IS NULL",
+      `SELECT a.* FROM ${src.table} a JOIN ${src.parent} e ON e.id=a.${src.key} WHERE a.id=$1 AND a.status='ready' AND e.deleted_at IS NULL`,
     )
       .bind(id)
       .first<FileRow>();
@@ -114,10 +138,11 @@ export async function download(c: C) {
   return c.body(object.body);
 }
 export async function remove(c: C) {
+  const src = source(c);
   const id = rowId(c),
-    file = await owned<FileRow>(c, "attachments", id);
+    file = await owned<FileRow>(c, src.table, id);
   await c.env.DB.prepare(
-    "UPDATE attachments SET status='deleting',updated_at=$1 WHERE id=$2 AND owner_id=$3",
+    `UPDATE ${src.table} SET status='deleting',updated_at=$1 WHERE id=$2 AND owner_id=$3`,
   )
     .bind(Date.now(), id, c.get("user").id)
     .run();

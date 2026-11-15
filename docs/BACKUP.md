@@ -7,7 +7,7 @@ $env:FINANCEE_ENV='.env.neon-production'
 npm run backup
 ```
 
-Hasil: `backups/<waktu>-<acak>/database.json`, `objects/`, dan `manifest.json` versi 3. Tujuh tabel keuangan dan account_credentials dibaca dalam transaksi yang mengunci penulis keluarga. Sesi dan percobaan login tidak diekspor. Setiap gambar siap pada pengeluaran aktif diunduh dan diperiksa ukuran/SHA-256. `complete:true` baru ditulis setelah semuanya cocok. Jika penghapusan gambar bersamaan membuat unduhan gagal, backup belum lengkap dan harus diulang. Backup D1 lama dengan `database.sql` adalah format berbeda, jangan dimasukkan ke pemulihan Neon.
+Hasil: `backups/<waktu>-<acak>/database.json`, `objects/`, dan `manifest.json` versi 4. Tujuh tabel keuangan awal, account_credentials dan income_attachments dibaca dalam transaksi yang mengunci penulis keluarga. Sesi dan percobaan login tidak diekspor. Setiap gambar siap pada pengeluaran atau pos pemasukan aktif diunduh dan diperiksa ukuran/SHA-256. `complete:true` baru ditulis setelah semuanya cocok. Jika penghapusan gambar bersamaan membuat unduhan gagal, backup belum lengkap dan harus diulang. Backup D1 lama dengan `database.sql` adalah format berbeda, jangan dimasukkan ke pemulihan Neon.
 
 Untuk latihan pemulihan, buat cabang kosong dari cabang produksi yang masih kosong atau proyek Neon baru. **Jangan membuat cabang dari database yang sudah berisi data**, karena cabang tersebut menyalin data sumber. Bucket `evidence` harus Private. Ambil koneksi dan kredensial storage untuk cabang tujuan ke berkas privat baru.
 
@@ -33,4 +33,8 @@ Perintah pertama hanya menghitung. `--apply` menandai reservasi kedaluwarsa seba
 
 Simpan PASSWORD_PEPPER terpisah di pengelola rahasia pemilik; nilainya tidak dimasukkan ke ZIP backup database. Skrip menolak pepper kosong/berbeda sebelum menulis tujuan bila snapshot memuat hash bcrypt. Dua baris kredensial wajib ada; pemulihan tidak boleh diam-diam kembali ke sandi bootstrap.
 
-Backup Neon versi 2 tidak memuat kredensial aktif. Skrip versi 3 menolaknya. Untuk data lama, gunakan commit aplikasi yang cocok dengan backup pada tujuan terisolasi, pulihkan versi 2 dahulu, lalu ikuti upgrade 0003 dan accounts:init menggunakan konfigurasi awal yang cocok. Jangan menimpa produksi atau hash aktif memakai backup lama. Setelah sandi mulai diganti, gunakan backup versi 3 dan kode yang mendukungnya; rollback ke kode login bootstrap lama akan menerima kembali sandi lama dan dilarang.
+Backup Neon versi 2 tidak memuat kredensial aktif. Skrip versi 3 menolaknya. Untuk data lama, gunakan commit aplikasi yang cocok dengan backup pada tujuan terisolasi, pulihkan versi 2 dahulu, lalu ikuti upgrade 0003 dan accounts:init menggunakan konfigurasi awal yang cocok. Jangan menimpa produksi atau hash aktif memakai backup lama. Setelah sandi mulai diganti, gunakan backup yang memuat kredensial aktif (format 3 sebelum migrasi 0004; format 4 sesudahnya) dan kode yang cocok; rollback ke kode login bootstrap lama akan menerima kembali sandi lama dan dilarang.
+
+## Backup dengan bukti pemasukan
+
+Format4 memuat sembilan tabel beserta bukti pemasukan dan pengeluaran yang siap. Gambar di bawah pos yang dihapus tidak dipulihkan menjadi ready. Jalankan cleanup untuk membersihkan objek deleting kedua koleksi. Backup format2/3 ditolak skrip format4; pulihkan memakai versi kode/migrasi yang sesuai pada tujuan kosong terisolasi dahulu, lalu upgrade. Jangan menimpa kredensial aktif atau kehilangan PASSWORD_PEPPER. Sebelum upgrade0004, gunakan kode format3 untuk backup; simpan hasil privat sebelum menerapkan migrasi.

@@ -1,5 +1,7 @@
 # Financée
 
+Status 16 November 2026: seluruh paket yang disetujui sudah diterapkan pada kandidat uji. Penayangan produksi menunggu persetujuan rilis gabungan. Input langsung, rumus, batas kepemilikan, dan sandi aktif dipertahankan.
+
 <!-- impeccable:product-schema 1 -->
 
 ## Platform
@@ -8,7 +10,7 @@ web
 
 ## Stack
 
-React, Vite, TypeScript, Tailwind CSS, komponen berpola shadcn/Radix, Cloudflare Pages Functions/Hono, Neon PostgreSQL, Drizzle serta Neon Object Storage privat. Integrasi disetujui; kandidat diuji terpisah, tanpa mengubah UI atau data lokal lama.
+React, Vite, TypeScript, Tailwind CSS, komponen berpola shadcn/Radix, Cloudflare Pages Functions/Hono, Neon PostgreSQL, Drizzle serta Neon Object Storage privat. Integrasi dasar sudah dirilis. Kandidat visual 16 November 2026 diuji terpisah dari data keluarga.
 
 ## Users
 
@@ -24,7 +26,7 @@ Struktur dan rumus mengikuti Keu.xlsx yang diperiksa pada tahap 2 dan diperiksa 
 
 ## Capabilities and Constraints
 
-Periode bulanan, salin rencana sendiri tanpa realisasi/bukti, dua akun dengan batas kepemilikan, polling online, aset PWA, self-host Cloudflare, MIT. Bukti JPG/PNG opsional beberapa gambar per pengeluaran; kedua pihak dapat melihatnya. Detail keputusan 1A–6B ada di docs/REVISI_KELUARGA.md. Versi D1/R2 awal sudah dipublikasikan; kandidat Neon belum dirilis. Integrasi memakai akun Cloudflare dan Neon milik setiap keluarga, dengan Free tier yang dibatasi kuota. Tidak memindahkan nominal lama otomatis. Instalasi perangkat fisik dan batas runtime Cloudflare nyata belum dinyatakan lulus.
+Periode bulanan, salin rencana sendiri tanpa realisasi/bukti, dua akun dengan batas kepemilikan, polling online, aset PWA, self-host Cloudflare, MIT. Bukti JPG/PNG opsional beberapa gambar per pengeluaran; kedua pihak dapat melihatnya. Detail keputusan 1A–6B ada di docs/REVISI_KELUARGA.md. Versi dasar Pages/Neon sudah dirilis; kandidat visual, ringkasan tahun dan bukti pemasukan belum dirilis. Integrasi memakai akun Cloudflare dan Neon milik setiap keluarga, dengan Free tier yang dibatasi kuota. Tidak memindahkan nominal lama otomatis. Instalasi perangkat fisik dan batas runtime Cloudflare nyata belum dinyatakan lulus.
 
 ## Brand Commitments
 
@@ -49,4 +51,8 @@ Tombol kunci di area akun membuka dialog sandi lama/baru/konfirmasi. Sandi baru 
 
 ## Ringkasan lintas bulan
 
-Pengguna menyetujui ringkasan tahun kalender dan satu grafik tren bulanan. Rasio berbobot total nominal, data keluarga gabungan, tanpa kiriman internal. Cakupan bulan terisi terlihat dan bulan belum lengkap tidak dianggap nol. Bahasa visual Caku/Plus Jakarta Sans dipertahankan. Fitur bukti pemasukan tetap ditahan dan tidak masuk perubahan dashboard ini.
+Pengguna menyetujui ringkasan tahun kalender dan satu grafik tren bulanan. Rasio berbobot total nominal, data keluarga gabungan, tanpa kiriman internal. Cakupan bulan terisi terlihat dan bulan belum lengkap tidak dianggap nol. Bahasa visual Caku/Plus Jakarta Sans dipertahankan. Pada 16 November 2026 pengguna menginstruksikan “kerjakan semua”: dashboard, visual yang telah disetujui, dan bukti pemasukan digabung sebagai satu kandidat.
+
+## Bukti pemasukan yang disetujui
+
+JPG/PNG opsional langsung pada pos pemasukan bulanan, pemilik mengunggah/menghapus dan kedua akun melihat. Memakai pola bukti pengeluaran, layanan dan bucket privat yang sama. Tidak membuat transaksi kedua atau mengubah rumus. Salin bulan membawa rencana saja.

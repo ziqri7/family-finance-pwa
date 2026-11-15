@@ -1,9 +1,8 @@
-import { useEffect, useState } from "react";
-import "./year-dashboard.css";
+import { useEffect, useState, useRef } from "react";
 import { api } from "../lib/api";
 import { Button } from "./ui/button";
+import { ChartInfo, ChartNumbers, compactMoney } from "./FinanceCharts";
 import {
-  familyTotals,
   monthName,
   ratio,
   rupiah,
@@ -31,34 +30,10 @@ const status = (m: ReportMonth) =>
     : m.missingOwners
       ? "Anggaran kedua akun belum lengkap"
       : m.missingAmounts
-        ? `${m.missingAmounts} nominal belum diisi`
+        ? m.missingAmounts + " nominal belum diisi"
         : m.income === 0
           ? "Pemasukan anggaran nol"
           : "Masuk ringkasan";
-function Metrics({
-  values,
-  money = false,
-}: {
-  values: [string, number | null][];
-  money?: boolean;
-}) {
-  return (
-    <dl className={money ? "year-totals" : "year-ratios"}>
-      {values.map(([label, value]) => (
-        <div key={label}>
-          <dt>{label}</dt>
-          <dd className={value !== null && value < 0 ? "negative" : undefined}>
-            {value === null
-              ? "—"
-              : money
-                ? rupiah.format(value)
-                : ratio(value, 1)}
-          </dd>
-        </div>
-      ))}
-    </dl>
-  );
-}
 export function YearDashboard({
   snapshot,
   periods,
@@ -118,194 +93,193 @@ export function YearDashboard({
   ]
     .sort()
     .reverse();
-  const totals = familyTotals(snapshot),
-    complete =
-      new Set(snapshot.budgets.map((b) => b.owner_id)).size === 2 &&
-      !snapshot.items.some(
-        (i) =>
-          !i.deleted_at &&
-          ["income", "allocation"].includes(i.kind) &&
-          i.amount === null,
-      );
-  const monthly = (n: number) =>
-    complete && totals.income > 0 ? n / totals.income : null;
-  const data = report?.year === year && !error ? report : null;
-  const yearly = (n: number) =>
-    data && data.included && data.income > 0 ? n / data.income : null;
-  const peak = Math.max(
-      100,
+
+  const graph = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = graph.current,
+      button = el?.querySelector("[aria-pressed=true]");
+    if (el && button) {
+      const a = button.getBoundingClientRect(),
+        b = el.getBoundingClientRect();
+      el.scrollLeft += a.left - b.left - el.clientWidth / 2 + a.width / 2;
+    }
+  }, [selected, report]);
+  const data = report?.year === year && !error ? report : null,
+    chosen = data?.months.find((m) => m.id === selected),
+    peak = Math.max(
+      1,
       ...(data?.months
-        .filter((m) => m.complete && m.income > 0)
-        .map((m) => (100 * m.spent) / m.income) || []),
-    ),
-    chosen = data?.months.find((m) => m.id === selected);
+        .filter((m) => m.complete)
+        .flatMap((m) => [m.income, m.spent]) || []),
+    );
   return (
-    <>
-      <section
-        className="month-percentages"
-        aria-label="Persentase bulan aktif"
-      >
-        <h2>Persentase bulan ini</h2>
-        <p>{monthName(snapshot.id)} · dibandingkan pemasukan anggaran</p>
-        <Metrics
-          values={[
-            ["Alokasi", monthly(totals.allocation)],
-            ["Sisa anggaran", monthly(totals.remaining)],
-            ["Pengeluaran tercatat", monthly(totals.spent)],
-          ]}
-        />
-        {!complete && (
-          <p>
-            Lengkapi anggaran kedua akun untuk melihat persentase. Isi 0 untuk
-            pos yang tidak dipakai.
-          </p>
-        )}
-        {complete && totals.income === 0 && (
-          <p>Pemasukan anggaran nol; persentase belum dapat dihitung.</p>
-        )}
-      </section>
-      <section className="year-report" aria-label="Ringkasan tahunan">
-        <div className="section-heading">
-          <div>
-            <h2>Ringkasan tahun</h2>
-            <p>Gabungan suami dan istri, tanpa kiriman internal.</p>
-          </div>
-          <div className="year-controls">
-            <label htmlFor="report-year">Tahun</label>
-            <select
-              id="report-year"
-              value={year}
-              onChange={(e) => {
-                setYear(e.target.value);
-                setSelected(e.target.value + "-01");
-              }}
-            >
-              {years.map((y) => (
-                <option key={y}>{y}</option>
-              ))}
-            </select>
-            <Button
-              variant="ghost"
-              onClick={() => setRetry((n) => n + 1)}
-              disabled={loading}
-            >
-              Muat ulang
-            </Button>
-          </div>
+    <section
+      className="finance-panel year-report"
+      aria-label="Ringkasan tahunan"
+    >
+      <div className="finance-heading">
+        <h2>Pengeluaran tahun {year}</h2>
+        <div className="year-controls">
+          <label className="sr-only" htmlFor="report-year">
+            Tahun
+          </label>
+          <select
+            id="report-year"
+            value={year}
+            onChange={(e) => {
+              setYear(e.target.value);
+              setSelected(e.target.value + "-01");
+            }}
+          >
+            {years.map((y) => (
+              <option key={y}>{y}</option>
+            ))}
+          </select>
+          <Button
+            variant="ghost"
+            onClick={() => setRetry((n) => n + 1)}
+            disabled={loading}
+          >
+            Muat ulang
+          </Button>
         </div>
-        {loading && <p role="status">Memuat ringkasan {year}…</p>}
-        {error && (
-          <p role="alert" className="error">
-            {error} Tekan Muat ulang untuk mencoba lagi.
-          </p>
-        )}
-        {data && (
-          <>
-            <p className="year-coverage">
-              <strong>{data.included} bulan terisi</strong> masuk ringkasan
-              {data.excluded > 0
-                ? ` · ${data.excluded} bulan belum lengkap tidak disertakan`
-                : ""}
-              .
-            </p>
-            <p className="helper-note">
-              Kedua akun sudah membuat anggaran dan semua nominal pemasukan
-              serta alokasi terisi. Ini bukan penanda bulan sudah selesai. Tidak
-              ada catatan pengeluaran berarti belum ada pengeluaran yang
-              dicatat.
-            </p>
-            <Metrics
-              money
-              values={[
-                ["Pemasukan anggaran", data.included ? data.income : null],
-                ["Alokasi", data.included ? data.allocation : null],
-                ["Sisa anggaran", data.included ? data.remaining : null],
-                ["Pengeluaran tercatat", data.included ? data.spent : null],
-              ]}
-            />
-            <Metrics
-              values={[
-                ["Alokasi / pemasukan", yearly(data.allocation)],
-                ["Sisa / pemasukan", yearly(data.remaining)],
-                ["Pengeluaran / pemasukan", yearly(data.spent)],
-              ]}
-            />
-            {!data.included && (
-              <p className="empty-note">
-                Belum ada bulan dengan anggaran lengkap pada {year}. Lengkapi
-                nominal di bagian Suami dan Istri; isi 0 jika tidak dipakai.
-              </p>
-            )}
-            <h3>Tren pengeluaran terhadap pemasukan anggaran</h3>
-            <p className="helper-note">
-              Ketuk bulan untuk melihat rincian. Geser ke samping untuk bulan
-              lainnya. Persentase bisa melebihi 100%. Tanda — berarti belum
-              dapat dihitung. Skala grafik 0–
-              {ratio(peak, 100)}.
-            </p>
-            <div
-              className="trend-scroll"
-              tabIndex={0}
-              aria-label="Grafik bulanan; geser ke samping untuk bulan lainnya"
-            >
-              <ol className="month-trend">
-                {data.months.map((m, i) => {
-                  const valid = m.complete && m.income > 0,
-                    pct = valid ? (100 * m.spent) / m.income : 0;
-                  return (
-                    <li key={m.id}>
-                      <button
-                        type="button"
-                        aria-pressed={m.id === selected}
-                        aria-label={
-                          monthName(m.id) +
-                          ": " +
-                          (valid ? ratio(m.spent, m.income) : status(m))
-                        }
-                        onClick={() => setSelected(m.id)}
-                      >
-                        <span className="trend-value">
-                          {valid ? ratio(m.spent, m.income) : "—"}
-                        </span>
-                        <span className="trend-track" aria-hidden="true">
-                          <span
-                            className={
-                              pct > 100 ? "trend-bar over-budget" : "trend-bar"
-                            }
-                            style={{
-                              height: valid ? `${(pct / peak) * 100}%` : "0%",
-                            }}
-                          />
-                        </span>
-                        <span>{names[i]}</span>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ol>
+      </div>
+      {loading && <p role="status">Memuat ringkasan…</p>}
+      {error && (
+        <p className="error" role="alert">
+          {error} Tekan Muat ulang untuk mencoba lagi.
+        </p>
+      )}
+      {data && (
+        <>
+          <div className="finance-year-overview">
+            <div>
+              <strong
+                className={
+                  "year-rate " + (data.spent > data.income ? "negative" : "")
+                }
+              >
+                {data.included ? ratio(data.spent, data.income) : "—"}
+              </strong>
+              <p>dari pemasukan anggaran</p>
             </div>
-            {chosen && (
-              <div className="month-report-detail" aria-live="polite">
-                <strong>{monthName(chosen.id)}</strong>
-                <p>{status(chosen)}</p>
-                {chosen.complete && (
-                  <p>
-                    Pemasukan {rupiah.format(chosen.income)} · pengeluaran{" "}
-                    {rupiah.format(chosen.spent)} ·{" "}
-                    {ratio(chosen.spent, chosen.income)}
-                  </p>
-                )}
-              </div>
-            )}
-            <p className="helper-note">
-              Persentase gabungan = total nominal ÷ total pemasukan anggaran
-              dari bulan yang disertakan. Bukan rata-rata persentase bulanan.
-              Pengeluaran yang belum dicatat tidak terwakili; sisa bukan saldo
-              rekening.
+            <span className="finance-badge">
+              {data.included} bulan terisi
+              {data.excluded ? " · " + data.excluded + " belum lengkap" : ""}
+            </span>
+          </div>
+          <ChartNumbers
+            values={[
+              ["Pemasukan anggaran", data.included ? data.income : null],
+              ["Pengeluaran", data.included ? data.spent : null],
+            ]}
+          />
+          {!data.included && (
+            <p className="chart-status">
+              Belum ada bulan dengan anggaran lengkap. Isi nominal kedua akun,
+              termasuk 0 untuk pos yang tidak dipakai.
             </p>
-          </>
-        )}
-      </section>
-    </>
+          )}
+          <div className="finance-heading">
+            <h3>Perjalanan tiap bulan</h3>
+            <ChartInfo title="Ringkasan tahun">
+              <p>
+                Persentase = total pengeluaran dibagi total pemasukan anggaran
+                dari bulan yang disertakan. Bukan rata-rata persentase bulan.
+              </p>
+              <p>
+                Bulan disertakan jika kedua akun membuat anggaran dan seluruh
+                nominal pemasukan serta alokasi aktif terisi. Anggaran lengkap
+                bukan berarti bulan selesai. Bulan tanpa data tidak dihitung
+                sebagai nol.
+              </p>
+              <p>
+                Pengeluaran yang belum dicatat tidak terwakili. Kiriman internal
+                tidak ikut. Persentase boleh melebihi 100%; pemasukan nol
+                menghasilkan —.
+              </p>
+              <p>
+                Alokasi: {data.included ? rupiah.format(data.allocation) : "—"}{" "}
+                · sisa anggaran:{" "}
+                {data.included ? rupiah.format(data.remaining) : "—"}. Sisa
+                bukan saldo rekening.
+              </p>
+            </ChartInfo>
+          </div>
+          <div className="finance-chart-legend">
+            <span>
+              <i />
+              Pemasukan anggaran
+            </span>
+            <span>
+              <i className="spent" />
+              Pengeluaran
+            </span>
+          </div>
+          <div
+            className="finance-year-scroll"
+            tabIndex={0}
+            ref={graph}
+            aria-label="Grafik bulanan; geser untuk bulan lainnya"
+          >
+            <ol className="finance-year-chart">
+              {data.months.map((m, i) => (
+                <li key={m.id}>
+                  <button
+                    aria-pressed={selected === m.id}
+                    aria-label={
+                      monthName(m.id) +
+                      ": " +
+                      (m.complete && m.income > 0
+                        ? ratio(m.spent, m.income)
+                        : status(m))
+                    }
+                    onClick={() => setSelected(m.id)}
+                  >
+                    <span className="finance-pair" aria-hidden="true">
+                      {m.complete ? (
+                        <>
+                          <i
+                            style={{ height: (m.income / peak) * 100 + "%" }}
+                          />
+                          <i
+                            className="spent"
+                            style={{ height: (m.spent / peak) * 100 + "%" }}
+                          />
+                        </>
+                      ) : (
+                        <span>—</span>
+                      )}
+                    </span>
+                    <span>{names[i]}</span>
+                  </button>
+                </li>
+              ))}
+            </ol>
+          </div>
+          {chosen && (
+            <div className="finance-month-detail" aria-live="polite">
+              <div>
+                <strong>{monthName(chosen.id)}</strong>
+                <p>
+                  {chosen.complete
+                    ? compactMoney(chosen.income) +
+                      " masuk · " +
+                      compactMoney(chosen.spent) +
+                      " pengeluaran"
+                    : status(chosen)}
+                </p>
+              </div>
+              <strong>
+                {chosen.complete ? ratio(chosen.spent, chosen.income) : "—"}
+              </strong>
+            </div>
+          )}
+          <p className="chart-caption">
+            Geser grafik untuk melihat bulan lainnya.
+          </p>
+        </>
+      )}
+    </section>
   );
 }

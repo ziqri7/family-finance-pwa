@@ -39,6 +39,7 @@ export async function publicFiles() {
     "index.html",
     ".env.example",
     ".gitignore",
+    ".gitattributes",
   ])
     if (existsSync(file)) files.push(file);
   return files.sort();

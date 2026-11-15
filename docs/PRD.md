@@ -1,5 +1,7 @@
 # PRD — family-finance-pwa
 
+Status terkini: kandidat gabungan 16 November 2026 sudah diimplementasikan dan diuji; belum ditayangkan. Catatan tahap awal di bawah adalah arsip. Beranda memakai donut pembagian alokasi dan batang pemasukan/pengeluaran; tab Tahun berisi rasio berbobot dan batang 12 bulan. Kedua bagian pemilik tetap menyediakan kolom langsung. Galeri Bukti menyatukan lampiran siap dengan filter Semua/Pengeluaran/Pemasukan. Penjelasan panjang dipindahkan ke tombol info tanpa menghilangkan status simpan, kesalahan, atau konfirmasi.
+
 Pembaruan arsitektur yang disetujui: hosting/API tetap Cloudflare, database dan gambar privat memakai Neon milik keluarga yang sama. Instalasi kini memerlukan dua akun layanan. Fungsi dan hitungan MVP tetap; rincian di ARCHITECTURE.md.
 
 Acuan tahap 5, revisi keluarga. Perluasan kebutuhan telah dikonfirmasi dan implementasi lokal tahap 6 tersedia. Hasil serta bagian yang belum diverifikasi ada di [TESTING.md](TESTING.md); dokumen kebutuhan tidak berarti seluruh gerbang produksi lulus. Rincian formula gabungan, transfer dan bukti berada di [REVISI_KELUARGA.md](REVISI_KELUARGA.md) dan menjadi bagian PRD ini.
@@ -108,7 +110,7 @@ Nama pos keluarga disiapkan sekali melalui konfigurasi privat pemilik. Kode publ
 
 Kriteria A1/A6 berlaku per pemilik dan tidak menyalin pengeluaran, kiriman nyata atau bukti. A7 menguji konflik dua sesi milik akun yang sama; akses pasangan diuji dengan B1/B2. Kriteria B1–B10 dalam REVISI_KELUARGA.md wajib ditambahkan pada penerimaan. Bukti JPG/PNG memerlukan penyimpanan objek privat; aktivasi layanan dan potensi biaya harus diperiksa sebelum deployment.
 
-## Tahap berikutnya
+## Arsip tahapan awal
 
 Versi lokal tahap 6 sudah dibangun dan diperiksa dengan pengujian terarah. Tahap 7 melengkapi gerbang pengujian teknis, tahap 8 uji bersama pengguna, tahap 9 menyiapkan publikasi, tahap 10 deployment setelah persetujuan, tahap 11 menguji produksi dan serah terima. Akun serta database saat ini hanya lokal; repositori dan deployment baru belum dibuat.
 
@@ -124,4 +126,8 @@ Satu bulan masuk ringkasan jika anggaran kedua akun sudah dibuat dan seluruh pos
 
 Tampilkan jumlah bulan disertakan dan bulan ada tetapi belum lengkap. Bulan belum dibuat dan belum lengkap ditampilkan sebagai — pada grafik. Bulan lengkap dengan pemasukan0 ikut jumlah bulan terisi, tetapi rasio bulan itu —; nominal tercatat tetap ikut total tahun. Denominator tahunan0 menghasilkan —. Persentase boleh melebihi100 dan sisa boleh negatif. Kiriman internal dan catatan dihapus tidak ikut hitungan. Tidak menambahkan klaim tabungan/saldo atau transaksi pemasukan baru.
 
-Fitur bukti pemasukan tetap ditahan. Implementasi dashboard dibuat dari commit produksi8df6152 secara terpisah, tanpa migrasi0004/komponen bukti pemasukan.
+Keputusan 16 November 2026 menggabungkan dashboard tahunan, desain visual yang disetujui dan bukti pemasukan sebagai satu kandidat. Migrasi 0004 hanya menambah metadata bukti pemasukan; rumus dan akun tetap.
+
+## Bukti pemasukan
+
+Pada bagian Suami/Istri, pos jenis income memiliki tombol Tambah / lihat bukti dengan jumlah gambar siap. Pasangan mendapat Lihat bukti tanpa kontrol mutasi. Dialog JPG/PNG opsional mengikuti pola pengeluaran. Unggahan gagal dapat diulang dengan ID tetap; yang berhasil tetap tersimpan. Keluar/sesi habis menutup akses dialog. Penyalinan anggaran tidak membawa bukti.

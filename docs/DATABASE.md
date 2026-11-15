@@ -1,6 +1,6 @@
 # Rancangan database PostgreSQL
 
-Integrasi Neon menggantikan D1/SQLite. Sembilan tabel aplikasi awal tetap, ditambah account_credentials dan schema_migrations untuk nomor/hash migrasi. Skema Drizzle pg-core dan SQL bernomor adalah sumber implementasi; data keluarga lokal lama tidak dipindahkan otomatis. Nominal/waktu memakai BIGINT, versi/posisi INTEGER. Semua transaksi mengambil advisory lock keluarga sebelum query data dalam READ COMMITTED; snapshot dan kuota konsisten untuk dua penulis. Hasil serta batas pengujian pada TESTING.md.
+Integrasi Neon menggantikan D1/SQLite. Sembilan tabel aplikasi awal tetap, ditambah account_credentials, income_attachments dan schema_migrations untuk nomor/hash migrasi. Skema Drizzle pg-core dan SQL bernomor adalah sumber implementasi; data keluarga lokal lama tidak dipindahkan otomatis. Nominal/waktu memakai BIGINT, versi/posisi INTEGER. Semua transaksi mengambil advisory lock keluarga sebelum query data dalam READ COMMITTED; snapshot dan kuota konsisten untuk dua penulis. Hasil serta batas pengujian pada TESTING.md.
 
 ## Konvensi
 
@@ -239,3 +239,7 @@ Constraint/trigger menaikkan revision periode induk untuk perubahan expense, tra
 account_credentials memiliki account_id (PK partner-a/partner-b), scheme, hash, salt, iterations, pepper_id, version positif dan updated_at. Constraint memisahkan legacy_pbkdf2 (hex hash/salt, iterasi 100.000) dari bcrypt_hmac_sha384 (bcrypt cost12, pepper_id SHA-256 dari secret; salt/iterations NULL). pgcrypto dipasang eksplisit pada public. Tidak menyimpan sandi mentah atau pepper.
 
 accounts:init memindahkan dua hash bootstrap dengan INSERT ON CONFLICT DO NOTHING; menjalankannya ulang tidak mengembalikan sandi yang sudah diganti. Migrasi tidak mengubah sessions yang sudah ada. Versi sesi diikat dalam auth_fingerprint; versi satu mempertahankan sesi lama saat upgrade. CAS kredensial dan DELETE sesi hanya milik akun yang berhasil diubah dilakukan atomik.
+
+## Migrasi 0004: income_attachments
+
+Kolom id, income_item_id FK budget_items, owner_id, object_key, content_type, byte_size, sha256, width/height, status dan created_at/updated_at. Constraint format/ukuran/dimensi/status mengikuti attachments. Guard trigger memeriksa income aktif milik pemilik yang sama dan kuota10. ID bukti tidak dapat sama dengan ID pada tabel attachments; trigger kedua sisi mengunci transaksi keluarga. Trigger revisi menaikkan periods.revision, trigger retire menandai bukti deleting saat pos dihapus. Tabel/record pengeluaran dan kredensial yang sudah ada tidak dimigrasi ulang.

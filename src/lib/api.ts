@@ -73,10 +73,14 @@ export async function api<T>(
   }
   return data as T;
 }
-export async function upload(id: string, file: File) {
+export async function upload(
+  id: string,
+  file: File,
+  collection: "attachments" | "income-attachments" = "attachments",
+) {
   let response: Response;
   try {
-    response = await fetch(`/api/attachments/${id}/content`, {
+    response = await fetch(`/api/${collection}/${id}/content`, {
       method: "PUT",
       credentials: "same-origin",
       headers: { "Content-Type": file.type },

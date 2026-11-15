@@ -79,13 +79,13 @@ components:
 
 **Creative North Star: "Anggaran berdua, terbaca sekali lihat"**
 
-Arah aktif adalah adaptasi Caku yang dipilih pengguna melalui “caku tapi fontnya juga diupdate, sudah berapa design contoh fontnya masih sama, dan juga animasinya tapi tetap ringan”. Karakternya berupa kartu anggaran berwarna, ruang abu terang, catatan putih yang padat, dan navigasi yang mudah dikenali di ponsel. Caku beserta font dan gerak ringan telah diterima melalui permintaan lanjut ke tahap 6. Implementasi lokal sekarang tersedia; produksi belum dirilis.
+Arah aktif adalah adaptasi Caku yang dipilih pengguna melalui “caku tapi fontnya juga diupdate, sudah berapa design contoh fontnya masih sama, dan juga animasinya tapi tetap ringan”. Karakternya berupa kartu anggaran berwarna, ruang abu terang, catatan putih yang padat, dan navigasi yang mudah dikenali di ponsel. Caku beserta font dan gerak ringan telah diterima melalui permintaan lanjut ke tahap 6. Versi dasar telah dirilis; kandidat visual 16 November 2026 belum ditayangkan.
 
 Referensi tepat: [Caku Finance App Mobile](https://www.figma.com/community/file/1341326234352864806/caku-finance-app-mobile), Asril Mochammad / Getah Creative. Peninjauan mencakup cover dan preview, bukan seluruh frame. Font asli referensi belum diidentifikasi. Kartu pada adaptasi menunjukkan anggaran pemilik; semua ringkasan memakai hitungan aplikasi yang sama dan transfer internal dikeluarkan dari total eksternal keluarga. Keputusan produk tetap mengikuti PRODUCT.md dan docs/REVISI_KELUARGA.md.
 
 **Key Characteristics:**
 
-Implementasi aktif tahap 6 berada pada `src/styles.css` dan komponen React di `src/`; rujukan `prototype/` di dokumen ini adalah arsip arah visual. Aplikasi aktual memakai animasi `view-enter` 160 ms serta API/penyimpanan lokal. Bukti render dan batas verifikasi terbaru dicatat pada `docs/TESTING.md`.
+Implementasi aktif tahap 6 berada pada `src/styles.css` dan komponen React di `src/`; rujukan `prototype/` di dokumen ini adalah arsip arah visual. Aplikasi aktual memakai animasi `view-enter` 160 ms serta API bersesi dan penyimpanan Neon privat. Bukti render dan batas verifikasi terbaru dicatat pada `docs/TESTING.md`.
 
 - Kartu suami ungu dan istri hijau dengan bagian bawah gelap.
 - Catatan pengeluaran ringkas, bukti terlihat, nominal mudah dipindai.
@@ -155,7 +155,7 @@ Dua kartu anggaran menampilkan pemilik, nominal, rincian dan akses membuka bagia
 
 ### Inputs / Fields
 
-Nominal terisi langsung dalam bidang putih; fokus mengubah batas menjadi ungu dengan outline 1 px tanpa glow. Nilai tidak sah memakai penanda error dan pesan. Simulasi penyimpanan tetap dijelaskan sebagai memori tab; tampilan ini belum membuktikan penyimpanan server atau otorisasi nyata.
+Nominal terisi langsung dalam bidang putih; fokus mengubah batas menjadi ungu dengan outline 1 px tanpa glow. Nilai tidak sah memakai penanda error dan pesan. Kolom memakai antrean simpan backend dengan status tersimpan/gagal/konflik; draf dipertahankan dalam sesi tab. Status hanya baca mengikuti pemilik dan diperiksa kembali di backend.
 
 ### Navigation
 
@@ -180,3 +180,9 @@ Daftar putih padat memakai ikon bundar, nama, konteks, nominal dan tindakan. Thu
 - **Don't** menghitung kiriman internal sebagai pemasukan atau pengeluaran eksternal keluarga.
 - **Don't** mengklaim font asli Caku, inspeksi seluruh frame, atau audit visual menyeluruh.
 - **Don't** menganggap prototipe memori tab sebagai aplikasi produksi yang sudah tersinkron.
+
+## Penerapan visual yang disetujui — 16 November 2026
+
+Beranda memakai tab Bulan/Tahun, tiga nominal ringkas, donut pembagian alokasi terisi (tiga pos terbesar dan kelompok sisanya), serta batang pemasukan anggaran/pengeluaran nyata. Tahun memakai rasio berbobot dan batang 12 bulan dengan detail bulan. Angka dan label tetap menjelaskan data tanpa mengandalkan warna; metode tersedia dalam dialog info. Kosong tetap —, nol tetap nol.
+
+Kartu Suami ungu/Istri hijau, kolom langsung dan pemisah ribuan dipertahankan; tiap pos alokasi mendapat batang proporsi. Galeri Bukti menyatukan gambar pemasukan/pengeluaran siap dengan filter jenis. Gambar melalui API privat. CSS aktif di src/styles.css dan src/components/visual-finance.css; diagram tanpa dependensi baru. Plus Jakarta Sans dan reduced motion tetap berlaku. Kandidat ini belum ditayangkan; bukti render dan fungsi ada di docs/TESTING.md.

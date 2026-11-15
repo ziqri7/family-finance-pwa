@@ -1,4 +1,6 @@
 import { MoneyInput } from "./MoneyInput";
+import { useState } from "react";
+import { IncomeEvidence } from "./IncomeEvidence";
 import { Trash2, Plus, Check, LoaderCircle } from "lucide-react";
 import { Button } from "./ui/button";
 import type { FinanceStore } from "../lib/use-finance";
@@ -64,12 +66,15 @@ function BudgetRow({
   canEdit,
   store,
   income,
+  active,
 }: {
   item: Item;
   canEdit: boolean;
   store: FinanceStore;
   income: number;
+  active: boolean;
 }) {
+  const [evidenceOpen, setEvidenceOpen] = useState(false);
   const label = store.drafts.get(item.id + ":label"),
     amount = store.drafts.get(item.id + ":amount");
   const disabled =
@@ -132,7 +137,9 @@ function BudgetRow({
             }}
           />
         </div>
-        <span className="row-ratio">{ratio(item.amount ?? 0, income)}</span>
+        <span className="row-ratio">
+          {item.amount === null ? "—" : ratio(item.amount, income)}
+        </span>
         {canEdit && (
           <button
             className="icon-button delete-item"
@@ -158,8 +165,50 @@ function BudgetRow({
           </button>
         )}
       </div>
+      {item.kind !== "income" && (
+        <div className="budget-progress" aria-hidden="true">
+          <span
+            className={
+              item.amount !== null && item.amount > income ? "over" : ""
+            }
+            style={{
+              width:
+                income > 0
+                  ? Math.min(100, ((item.amount || 0) / income) * 100) + "%"
+                  : "0%",
+            }}
+          />
+        </div>
+      )}
       <FieldError item={item} field="label" store={store} />
       <FieldError item={item} field="amount" store={store} />
+      {item.kind === "income" && (
+        <Button
+          variant="ghost"
+          className="income-evidence-action"
+          disabled={!active || store.busy || !store.online}
+          onClick={async () => {
+            if (await store.flush()) setEvidenceOpen(true);
+          }}
+        >
+          {canEdit ? "Tambah / lihat bukti" : "Lihat bukti"} (
+          {
+            store.snapshot!.attachments.filter(
+              (f) => f.income_item_id === item.id && f.status === "ready",
+            ).length
+          }
+          )
+        </Button>
+      )}
+      {active && evidenceOpen && (
+        <IncomeEvidence
+          key={item.id}
+          item={item}
+          store={store}
+          canEdit={canEdit}
+          onClose={() => setEvidenceOpen(false)}
+        />
+      )}
     </div>
   );
 }
@@ -169,12 +218,14 @@ export function Budget({
   actor,
   onCreate,
   onAdd,
+  active = true,
 }: {
   store: FinanceStore;
   owner: Owner;
   actor: Owner;
   onCreate: () => void;
   onAdd: (kind: Kind) => void;
+  active?: boolean;
 }) {
   const s = store.snapshot!;
   const stats = totals(s, owner),
@@ -195,7 +246,14 @@ export function Budget({
         </section>
       ) : (
         <>
-          <section className="budget-summary" aria-label="Ringkasan anggaran">
+          <section
+            className={
+              "budget-summary visual-owner " +
+              (owner === "partner-b" ? "owner-wife " : "") +
+              (stats.remaining < 0 ? "has-deficit" : "")
+            }
+            aria-label="Ringkasan anggaran"
+          >
             <div className="budget-remaining">
               <span>Sisa anggaran</span>
               <strong className={stats.remaining < 0 ? "negative" : ""}>
@@ -286,6 +344,7 @@ export function Budget({
                         canEdit={canEdit}
                         store={store}
                         income={stats.income}
+                        active={active}
                       />
                     ))}
                   {kind === "income" && stats.incoming > 0 && (
@@ -317,8 +376,7 @@ export function Budget({
             )}
           </section>
           <p className="helper-note">
-            Perubahan hanya untuk bulan ini. Kiriman internal tidak dihitung
-            sebagai belanja keluarga.
+            Untuk bulan ini. Kiriman internal tidak menambah belanja keluarga.
           </p>
         </>
       )}

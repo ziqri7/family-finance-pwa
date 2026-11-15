@@ -92,4 +92,8 @@ Suami memiliki pemasukan eksternal 10.000.000, alokasi eksternal 6.500.000, dan 
 | B9 | Backup/restore memulihkan metadata dan gambar yang sama; pemeriksaan objek hilang dan checksum gagal dilaporkan |
 | B10 | Dashboard dan kedua bagian lulus pemeriksaan desktop/ponsel, status unggah jelas dan bukti dapat ditutup memakai keyboard |
 
-Pengujian prototipe hanya membuktikan interaksi lokal. Otorisasi backend, R2, sinkronisasi dan pemulihan belum diimplementasikan dalam revisi tahap ini.
+Catatan tahap prototipe di atas bersifat arsip. Versi dasar kini memakai backend Pages/Neon dengan otorisasi, sinkronisasi dan backup yang sudah diuji. Kandidat 16 November 2026 menggabungkan visual donut/batang, dashboard tahun serta bukti pemasukan di bawah; status dan batas pemeriksaan terkini ada di TESTING.md.
+
+## Tambahan disetujui: bukti pos pemasukan bulanan
+
+Pengguna menyetujui JPG/PNG opsional langsung pada pos pemasukan. Kedua akun dapat melihat, hanya pemilik pos yang mengunggah/menghapus. Maksimal10gambar/pos,5MB/gambar, batas dimensi dan decode sama dengan bukti pengeluaran. Lampiran tidak membuat realisasi/pemasukan kedua, tidak mengubah nominal dan tidak ikut salin bulan. Pos dihapus: bukti dinonaktifkan dan objek privat menunggu pembersihan. Data baru memakai Neon yang sama dan bucket privat evidence yang sudah ada; tidak menambah layanan atau akun.
