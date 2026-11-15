@@ -1,3 +1,11 @@
+## Ganti sandi — rilis produksi 15 November 2026
+
+Fitur dirilis ke [Financée](https://financees.pages.dev) setelah persetujuan eksplisit pemilik. Commit runtime b5ba0e6; deployment Pages success. Backup versi 2 dibuat dan diperiksa sebelum migrasi 0003, kemudian dua hash akun awal diinisialisasi tanpa mengganti sandi. Snapshot tujuh tabel keuangan cocok sebelum/sesudah migrasi. PASSWORD_PEPPER terpisah dipasang sebagai secret produksi; preview tetap tanpa secret produksi.
+
+Pemeriksaan HTTP/API pada Cloudflare nyata lulus: frontend dan service worker cocok byte dengan bundel yang diuji; HTTPS/header keamanan/manifest valid; backend tidak dapat diunduh sebagai aset; API dan endpoint ganti sandi tanpa sesi ditolak. Dua akun lama berhasil masuk, membaca data keluarga dan mendapat cookie Secure/HttpOnly/SameSite=Strict host-only. Endpoint ganti sandi menolak input pendek dan Origin asing tanpa menulis hash. Kedua hash/versi akun tetap identik setelah pemeriksaan. Hanya sesi yang dibuat untuk verifikasi yang dikeluarkan.
+
+Backup format 3 sesudah migrasi memuat dua kredensial serta gambar yang diverifikasi dengan checksum. Tiga migrasi tercatat. Data keluarga, sandi, koneksi, kunci dan backup tetap privat. Pergantian sandi sukses/konkurensi/pemulihan tetap dibuktikan memakai akun dummy; sandi produksi tidak diganti untuk tes. Ponsel fisik dan autofill pengelola sandi nyata belum diuji. Catatan kandidat di bawah bersifat arsip dan tidak menggambarkan status rilis terkini.
+
 # Rilis Pages online — 15 November 2026
 
 Rilis berhasil pada Cloudflare Pages production. Pemeriksaan baru: 16 tes unit, typecheck/build, format, dan pemindaian 93 berkas sumber/aset terhadap kredensial produksi lulus. Seluruh blob publik GitHub dibandingkan dengan sumber yang disetujui.
@@ -114,7 +122,7 @@ Review source independen menutup dua temuan tentang versi hapus setelah autosave
 
 Perintah untuk pengulangan terarah ada di README dan BACKUP.md. Jangan mengulangi pemeriksaan yang lulus tanpa perubahan atau risiko baru; lengkapi celah bukti pada tahap pengujian berikutnya.
 
-## Ganti sandi — kandidat pembaruan 15 November 2026
+## Arsip kandidat ganti sandi — sebelum persetujuan rilis 15 November 2026
 
 - Implementasi berada pada branch feature/change-password, belum dipublikasikan atau diterapkan ke produksi. Rancangan disetujui pengguna. Produksi diperiksa baca-saja: masih dua migrasi, belum ada account_credentials/PASSWORD_PEPPER, deployment lama tetap aktif.
 - Seluruh suite sebelum dua pemeriksaan tambahan: 43 lulus, nol gagal/dilewati. Pemeriksaan terarah setelah perubahan terakhir backend/backup: 11 lulus, nol gagal/dilewati, termasuk sesi lima kolom yang sudah ada dan penolakan format backup lama. Ini mencakup sebagian tes yang sama, bukan 54 tes unik.

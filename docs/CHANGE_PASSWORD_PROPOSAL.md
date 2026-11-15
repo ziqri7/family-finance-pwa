@@ -1,6 +1,6 @@
 # Usulan ganti sandi dalam aplikasi
 
-Status: rancangan disetujui pengguna; implementasi pada branch feature/change-password, terverifikasi dengan data dummy dan siap tinjauan rilis. Produksi dan sandi pengguna belum diubah. Fitur diminta pengguna setelah rilis Pages. Acuan UI Caku dan font Plus Jakarta Sans dipertahankan.
+Status: rancangan disetujui pengguna; fitur dirilis pada 15 November 2026 ke https://financees.pages.dev. Produksi memakai migrasi 0003 dan kunci pelindung terpisah. Dua login lama tetap berhasil; pengujian rilis tidak mengganti sandi pengguna. Hasil lengkap pada TESTING.md. Fitur diminta pengguna setelah rilis Pages. Acuan UI Caku dan font Plus Jakarta Sans dipertahankan.
 
 ## Alur yang diusulkan
 

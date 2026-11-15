@@ -69,4 +69,4 @@ Kode berlisensi [MIT](LICENSE). Arah visual mengadaptasi [Caku Finance App Mobil
 
 Plus Jakarta Sans disimpan lokal beserta SIL Open Font License dalam `public/fonts/`; ini pilihan adaptasi, bukan identifikasi font asli Caku. Komponen memakai pola shadcn/ui dan primitive Radix. Pustaka pihak ketiga mempertahankan lisensi masing-masing.
 
-Ganti sandi tersedia melalui tombol kunci di dekat Keluar. Masukkan sandi saat ini, sandi baru 15–128 karakter, lalu ulangi. Setelah berhasil, seluruh perangkat akun tersebut perlu masuk kembali; pasangan tetap masuk. Fitur ini sedang disiapkan untuk pembaruan produksi; lihat [catatan implementasi](docs/CHANGE_PASSWORD_PROPOSAL.md).
+Ganti sandi tersedia melalui tombol kunci di dekat Keluar. Masukkan sandi saat ini, sandi baru 15–128 karakter, lalu ulangi. Setelah berhasil, seluruh perangkat akun tersebut perlu masuk kembali; pasangan tetap masuk. Fitur ini sudah dirilis; lihat [catatan implementasi](docs/CHANGE_PASSWORD_PROPOSAL.md).
