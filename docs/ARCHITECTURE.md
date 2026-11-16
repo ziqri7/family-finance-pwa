@@ -1,12 +1,12 @@
 # Arsitektur Financée — Cloudflare Pages + Neon
 
-## Kandidat kelompok penyerahan — skema 0006
+## Kelompok penyerahan — skema 0006
 
 allocation_groups dan allocation_group_items mengorganisasikan pos, group_attachments menyimpan satu gambar privat per bukti, allocation_group_operations menyimpan receipt idempotensi immutable. Ledger tetap mengambil nominal actual dari budget_items. Tidak menjumlahkan header kelompok sebagai transaksi tambahan.
 
 Fungsi apply_allocation_group mengambil family lock dalam DB.batch, memvalidasi semua versi/revisi/anggota terlebih dahulu, lalu menulis nominal, histori, status dan receipt atomik. Operation ID/payload hash mengenali jawaban hilang dan menolak reuse berbeda. Jalur per-pos dijaga database agar koreksi melalui kelompok. Bukti diunggah sesudah commit keuangan; gagal unggah dapat dicoba ulang tanpa commit uang kedua. Versi bukti menandai gambar sebelum koreksi.
 
-Snapshot memuat metadata kelompok dan gambar tanpa object_key. Salin bulan memetakan ID pos lama→baru secara deterministik dari target bulan/pemilik/ID asal, lalu menyalin hubungan dengan nominal/tanggal/bukti kosong. Backup format6 mencakup14tabel dan4koleksi gambar, read/restoreformat5 diuji sebagai upgrade. Lihat UX_RINGKAS_PROPOSAL.md untuk aturan terperinci. Kandidat belum dirilis.
+Snapshot memuat metadata kelompok dan gambar tanpa object_key. Salin bulan memetakan ID pos lama→baru secara deterministik dari target bulan/pemilik/ID asal, lalu menyalin hubungan dengan nominal/tanggal/bukti kosong. Backup format6 mencakup14tabel dan4koleksi gambar, read/restoreformat5 diuji sebagai upgrade. Lihat UX_RINGKAS_PROPOSAL.md untuk aturan terperinci. Rilis disetujui dan diperiksa online pada 16 November 2026.
 
 
 ## Penyederhanaan peninjauan — dirilis tanpa perubahan backend

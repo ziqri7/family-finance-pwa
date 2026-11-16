@@ -1,6 +1,6 @@
 # Rancangan database PostgreSQL
 
-## Kandidat migrasi 0006 — kelompok penyerahan
+## Migrasi 0006 — kelompok penyerahan
 
 Empat tabel baru allocation_groups, allocation_group_items, allocation_group_operations dan group_attachments. Indeks unique partial menjaga satu keanggotaan aktif per pos. Guard memvalidasi owner/bulan, ID bukti lintas koleksi, kuota dan penulisan pos kelompok. Commit/cancel menyimpan seluruh anggota dalam transaksi yang sama, cutover mempertahankan histori, receipt tidak dapat diperbarui/dihapus. Grup/anggota yang dilepas tetap dapat dipulihkan sebagai histori. Jenis reserve tetap untuk tabungan sendiri dan data lama.
 

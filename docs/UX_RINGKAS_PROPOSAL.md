@@ -1,6 +1,6 @@
 # Rancangan UX ringkas dan bukti bersama
 
-Status 16 November 2026 — preview dan rancangan penyimpanan disetujui pengguna. Implementasi telah diuji pada data contoh, menunggu persetujuan rilis. Acuan kode `718103ba876a17b580b88cd34797df9a922787f8`, skema 0001–0005, backup format 5. Preview berada di `private/ux-preview`, http://127.0.0.1:5208.
+Status 16 November 2026 — preview dan rancangan penyimpanan disetujui pengguna. Implementasi, pengujian dan rilis telah disetujui serta terverifikasi online. Runtime ed9d09bbebd33665908570f22dafa3828b0dcbae, skema 0006 dan backup format 6. Acuan kode `718103ba876a17b580b88cd34797df9a922787f8`, skema 0001–0005, backup format 5. Preview berada di `private/ux-preview`, http://127.0.0.1:5208.
 
 ## Hasil yang dituju
 

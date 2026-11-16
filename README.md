@@ -1,10 +1,10 @@
 # Financée
 
-## Kandidat UX ringkas dan bukti bersama — belum ditayangkan
+## UX ringkas dan bukti bersama — dirilis 16 November 2026
 
 Beranda membuka bagian akun sendiri, dengan konteks Saya/Pasangan/Keluarga dan tiga menu Beranda, Catat, Bukti. Kelompok penyerahan memuat beberapa pos dan satu bukti bersama. Satu konfirmasi menyimpan seluruh nominal secara atomik, koreksi memakai sumber yang sama, dan galeri menampilkan gambar sekali. Tabungan yang dikirim ke pasangan mengikuti tujuan kelompok; tabungan sendiri memakai aksi Sudah ditabung.
 
-Kode cabang ini memerlukan migrasi 0006 dan backup format 6. Data lama dikelompokkan melalui review pemilik, salin bulan membawa struktur kosong. Belum ada perubahan produksi dari kandidat ini. [Rancangan disetujui](docs/UX_RINGKAS_PROPOSAL.md), [upgrade](docs/DEPLOYMENT.md) dan [pengujian](docs/TESTING.md) menjelaskan penerapannya. Bagian rilis di bawah mencatat versi yang sudah tayang sebelumnya.
+Versi ini memakai migrasi 0006 dan backup format 6. Data lama dikelompokkan melalui review pemilik, salin bulan membawa struktur kosong. Pembaruan telah ditayangkan dan diperiksa online; nilai lama tetap utuh sampai pemilik meninjau pengelompokannya. [Rancangan disetujui](docs/UX_RINGKAS_PROPOSAL.md), [upgrade](docs/DEPLOYMENT.md) dan [pengujian](docs/TESTING.md) menjelaskan penerapannya. Bagian rilis di bawah mencatat versi yang sudah tayang sebelumnya.
 
 
 ## Perbaikan HP dan penandaan sekaligus — dirilis 16 November 2026
@@ -25,7 +25,7 @@ Aplikasi keuangan keluarga berbahasa Indonesia: isi anggaran langsung, catat pen
 
 Setiap keluarga memasang salinan sendiri pada **Cloudflare Pages + Functions + Neon** miliknya. Tidak ada server akun pusat, pendaftaran publik, koneksi bank atau pelaksanaan transfer uang. Pengisian dilakukan langsung pada aplikasi; tidak ada unggah Excel. Workbook sumber hanya dipakai saat pengembangan/provisioning privat.
 
-**Status:** desain donut/batang, ringkasan tahun dan bukti pemasukan sudah dirilis serta diperiksa online pada 16 November 2026. Versi berjalan commit `79b20e5`; catatan verifikasi terbaru ada di [docs/TESTING.md](docs/TESTING.md). Pengguna open-source memasang salinan serta akun layanan sendiri. Bukti serta batas pemeriksaan di [docs/NEON_REVIEW.md](docs/NEON_REVIEW.md). Aplikasi/data lokal D1/R2 lama bukan target migrasi otomatis.
+**Status:** desain donut/batang, ringkasan tahun dan bukti pemasukan sudah dirilis serta diperiksa online pada 16 November 2026. Versi berjalan commit `ed9d09b`; catatan verifikasi terbaru ada di [docs/TESTING.md](docs/TESTING.md). Pengguna open-source memasang salinan serta akun layanan sendiri. Bukti serta batas pemeriksaan di [docs/NEON_REVIEW.md](docs/NEON_REVIEW.md). Aplikasi/data lokal D1/R2 lama bukan target migrasi otomatis.
 
 ## Menjalankan
 

@@ -1,10 +1,10 @@
 # Financée
 
-## UX ringkas dan bukti bersama — implementasi kandidat
+## UX ringkas dan bukti bersama — dirilis 16 November 2026
 
 Preview dan rancangan disetujui pada 16 November 2026. Halaman utama membuka bagian pemilik dan sisa dibagi. Saya/Pasangan/Keluarga mengganti konteks; grafik bulan/tahun di Keluarga. Tiga menu utama Beranda/Catat/Bukti. Pemasukan, struktur pos, bulan/salin bulan, akun/sandi dan rincian lama tetap tersedia melalui kontrol terkait.
 
-Pemilik mengatur tujuan kelompok sekali, memeriksa beberapa nominal lalu mengonfirmasi seluruh penyerahan sekaligus. JPG/PNG opsional melekat pada kelompok dan terlihat dari pos terkait. Nominal tetap sumber pada budget_items, penerima membaca turunan kiriman. Tujuan Pembayaran/Ke pasangan/Tabungan sendiri dipilih saat mengatur kelompok; formulir rutin tidak meminta klasifikasi tiap pos. Data lama masuk kelompok setelah review. Belum rilis produksi.
+Pemilik mengatur tujuan kelompok sekali, memeriksa beberapa nominal lalu mengonfirmasi seluruh penyerahan sekaligus. JPG/PNG opsional melekat pada kelompok dan terlihat dari pos terkait. Nominal tetap sumber pada budget_items, penerima membaca turunan kiriman. Tujuan Pembayaran/Ke pasangan/Tabungan sendiri dipilih saat mengatur kelompok; formulir rutin tidak meminta klasifikasi tiap pos. Data lama masuk kelompok setelah review. Rilis produksi disetujui dan terverifikasi pada 16 November 2026.
 
 
 ## Keputusan Alokasi aktual — 16 November 2026

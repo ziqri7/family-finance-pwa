@@ -1,5 +1,17 @@
 # Pengujian Financée
 
+## UX ringkas dan bukti bersama terverifikasi online — 16 November 2026
+
+Pengguna menyetujui penayangan. Runtime `ed9d09bbebd33665908570f22dafa3828b0dcbae` ditayangkan pada proyek Pages yang sama, deployment `c07c8f3c-ae18-4ec1-aeca-7bc36d9c1539` success. Sumber GitHub cocok dengan runtime; pembaruan dokumentasi sesudahnya tidak mengubah build. Bagian kandidat di bawah merupakan arsip sebelum rilis.
+
+- Backup sebelum migrasi menggunakan sumber immutable718103b yang sesuai format5, lengkap dengan10tabel dan5objek bukti. Migrasi0006 menambah penyimpanan kelompok. Seluruh nilai lama, hash sandi, ledger efektif dan3sesi yang sudah ada dipertahankan. Tabel kelompok baru kosong, tidak ada pengelompokan/konversi otomatis atau data contoh produksi.
+- HTML/JS/CSS/serviceworker/manifest/ikon/font online identik byte dengan build yang diuji. Header keamanan dan privasi API/group/bukti anonim lulus; backendmetadata tidak terbuka. Tujuh secret tetap dan preview tanpa secret produksi.
+- Kedua akun login dengan sandi yang masih berlaku dan membaca bulan/laporan tahun yang cocok dengan data efektif. Review sendiri terbaca, review pasangan ditolak. Lima gambar lama dibaca/checksum oleh kedua akun,10pembacaan. Hanya sesi verifikasi logout, sesi pengguna valid tetap ada.
+- Snapshot14tabel sesudah pemeriksaan HTTP identik dengan keadaan sesudah migrasi, termasuk kredensial. Backup sesudah rilis format6 lengkap,14tabel dan5objek sesuai manifest. Tidak menulis penyerahan atau gambar pada data keluarga untuk pengujian.
+
+Alur tulis kelompok, bukti bersama, koreksi, batal dan restore diuji memakai cabang dummy serta bundel yang identik. iPhone/Safari fisik belum diuji. Pengguna menyelesaikan draf lalu memperbarui PWA, memilih Atur kelompok sekali pada bagian sendiri, meninjau tujuan/nominal pos lama, dan mengonfirmasi penyerahan. Salin bulan membawa struktur kelompok dengan nominal/bukti kosong.
+
+
 ## Kandidat UX ringkas dan bukti bersama — 16 November 2026
 
 Implementasi sesuai preview dan rancangan disetujui, belum ditayangkan. Sumber nominal tetap pada pos. Kelompok/anggota/receipt operasi/bukti bersama ditambahkan melalui migrasi0006. Backupformat6 memuat14tabel danempat koleksi gambar. Data lama dikelompokkan melalui review pemilik.

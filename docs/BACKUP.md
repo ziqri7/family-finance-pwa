@@ -1,6 +1,6 @@
 # Backup dan pemulihan Neon
 
-## Kandidat format 6 — kelompok dan bukti bersama
+## Format 6 — kelompok dan bukti bersama
 
 Format6 menambahkan4tabel kelompok pada10tabel format5. Bukti wajib mencakup group_attachments ready dari kelompok posted yang masih aktif, termasuk gambar sebelum koreksi, serta ketiga koleksi sebelumnya. Operasi idempotensi, keanggotaan aktif/retired, hash sandi dan metadata bukti ikut snapshot. Objek pending/failed/deleting dipulihkan sebagai deleting dan dibersihkan melalui cleanup.
 
