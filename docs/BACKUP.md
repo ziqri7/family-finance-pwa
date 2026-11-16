@@ -1,8 +1,8 @@
 # Backup dan pemulihan Neon
 
-## Format 5 untuk kandidat Alokasi aktual
+## Format 5 untuk Alokasi aktual
 
-Kandidat ini menghasilkan manifest versi 5, sepuluh tabel termasuk allocation_attachments, metadata mode/jenis/tanggal dan penanda histori digantikan. View effective_postings dibentuk oleh migrasi dan tidak disalin sebagai data. Seluruh bukti siap yang masih dapat dibaca, termasuk arsip expense yang sudah terwakili Alokasi, dicakup manifest dan checksum. Pembatalan pos actual tidak menghidupkan kembali expense superseded saat restore.
+Versi ini menghasilkan manifest versi 5, sepuluh tabel termasuk allocation_attachments, metadata mode/jenis/tanggal dan penanda histori digantikan. View effective_postings dibentuk oleh migrasi dan tidak disalin sebagai data. Seluruh bukti siap yang masih dapat dibaca, termasuk arsip expense yang sudah terwakili Alokasi, dicakup manifest dan checksum. Pembatalan pos actual tidak menghidupkan kembali expense superseded saat restore.
 
 Sebelum upgrade 0005, cadangkan instalasi 0004 dengan kode **format 4** yang cocok (runtime immutable 41508f5a74fe710d9fc9d347847f126ca344f736). Simpan PASSWORD_PEPPER terpisah. Backup format 4 hanya dipulihkan memakai kode versi itu ke tujuan kosong terisolasi lalu diupgrade. Skrip format 5 menolak format lama; jangan menimpa hash/sandi aktif atau menjalankan accounts:init ulang untuk upgrade ini. Sesudah rilis ambil backup format 5. Bagian format 4 di bawah merupakan arsip prosedur versi sebelumnya.
 

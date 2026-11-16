@@ -1,6 +1,6 @@
 # Alokasi sebagai pembayaran atau penyerahan yang sudah terjadi
 
-Status 16 November 2026: **rancangan disetujui pengguna; kandidat implementasi terverifikasi, belum dirilis**, setelah pengguna menyetujui preview visual di port 5206. Skema kandidat 0005 dan antarmuka baru sudah dibangun pada cabang pengembangan; produksi belum diubah. Acuan sumber saat diperiksa: `f75dfc5b9d30d75e1ab88b1a0110b39e85c0b928`; runtime terakhir `41508f5`. Tidak memerlukan layanan, akun, dependensi, atau kunci baru.
+Status 16 November 2026: **rancangan, implementasi dan rilis disetujui pengguna serta terverifikasi online**. Runtime `bc59ec6833ac21d71c62b9d62a94bef6bb0f2c06`, skema 0005. Nilai lama tetap legacy dan tidak dikonversi oleh proses rilis. Acuan awal penyusunan: `f75dfc5`; backend sebelumnya `41508f5`. Tidak ada layanan, akun, dependensi, atau kunci baru.
 
 ## Masalah dan keputusan pengguna
 
@@ -36,7 +36,7 @@ Alternatif membuat expense/transfer salinan setiap kali nominal berubah tidak di
 
 ## Data dan aturan yang diusulkan
 
-Migrasi additive berikutnya (calon 0005, belum dibuat) menambah metadata pencatatan pada `budget_items`: mode `legacy`/`actual`, jenis aktual `external`/`internal`/`reserve`, tanggal opsional, serta versi yang diperlukan untuk koreksi metadata. Nama teknis akhir mengikuti konvensi saat implementasi; aturan berikut wajib tetap:
+Migrasi additive 0005 menambah metadata pencatatan pada `budget_items`: mode `legacy`/`actual`, jenis aktual `external`/`internal`/`reserve`, tanggal opsional, serta versi yang diperlukan untuk koreksi metadata. Nama teknis akhir mengikuti konvensi saat implementasi; aturan berikut wajib tetap:
 
 - Semua pos lama mulai `legacy`. Migrasi tidak mengubah nominal, jenis lama, tanggal, gambar, kredensial atau histori.
 - Pos non-income baru memakai `actual`. Jenis dipilih sekali saat membuat pos: **Pembayaran**, **Kiriman pasangan**, atau **Disisihkan**. Pemilik dapat mengoreksi klasifikasi lewat tindakan eksplisit dengan versi dan ringkasan dampak hitungan; tidak ditebak dari nama. Template publik boleh membawa klasifikasi eksplisit; template privat lama perlu dipetakan/tinjau dahulu.
@@ -106,6 +106,6 @@ Perubahan semantik memerlukan penanda versi protokol klien. Backend menolak penu
 6. Uji end-to-end dua akun dengan contoh 12 juta pemasukan/2,55 juta pembayaran/2 juta kiriman; sisa suami6,45juta/istri3juta/keluarga9,45juta. Tambah reserve500ribu menurunkan sisa keluarga menjadi8,95juta tanpa menaikkan pembayaran eksternal. Konversi rencana450ribu dengan catatanlama400ribu harus meminta keputusan, bukan otomatis menghasilkan850ribu.
 7. Build/format/allowlist/scan rahasia/instalasi bersih, paket tinjauan, persetujuan rilis, backup4/migrate/deploy/verifikasi nyata/backup5. Hindari contoh baru pada database keluarga.
 
-## Hal yang dimintakan persetujuan
+## Arsip cakupan persetujuan
 
 Rancangan satu sumber nominal dengan catatan turunan; peninjauan eksplisit data lama; pemisahan pembayaran/kiriman/disisihkan; salin struktur dengan nominal kosong. Persetujuan rancangan ini mengizinkan implementasi dan uji terisolasi, **bukan penayangan produksi atau konversi data keluarga otomatis**. Bukti yang sudah ada dipertahankan.

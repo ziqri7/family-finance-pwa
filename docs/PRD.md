@@ -1,6 +1,6 @@
 # PRD — family-finance-pwa
 
-## Revisi berlaku pada kandidat Alokasi aktual
+## Revisi Alokasi aktual — sudah dirilis 16 November 2026
 
 Preview dan engineering disetujui pada 16 November 2026. Nominal pos baru menyatakan pembayaran/penyerahan yang sudah terjadi; catatan otomatis dibentuk dari pos tersebut. Pilih jenis Pembayaran/Kiriman pasangan/Disisihkan sekali; jenis dan tanggal opsional dapat dikoreksi dengan pemeriksaan versi. Tanggal yang kosong ditampilkan sebagai konteks bulan.
 

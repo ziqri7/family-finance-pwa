@@ -1,8 +1,8 @@
 # Arsitektur Financée — Cloudflare Pages + Neon
 
-## Kandidat Alokasi aktual — belum dirilis
+## Alokasi aktual — dirilis 16 November 2026
 
-Migrasi additive 0005 menambah metadata budget_items (recording_mode, posting_kind, posting_date, posting_version), metadata superseded pada expenses/transfers, klasifikasi default_items dan allocation_attachments. Semua baris lama tetap legacy. View effective_postings menjadi proyeksi PostgreSQL dari pos actual dan catatan manual yang belum digantikan; tidak menyimpan salinan transaksi otomatis. shared/ledger.ts memberikan proyeksi UI setara, jumlah aman dan pemisahan external/internal/reserve; laporan tahun melakukan preagregasi view agar join tidak menggandakan.
+Migrasi additive 0005 menambah metadata budget_items (recording_mode, posting_kind, posting_date, posting_version), metadata superseded pada expenses/transfers, klasifikasi default_items dan allocation_attachments. Migrasi mempertahankan baris lama dalam mode legacy; konversi dilakukan pemilik melalui peninjauan. View effective_postings menjadi proyeksi PostgreSQL dari pos actual dan catatan manual yang belum digantikan; tidak menyimpan salinan transaksi otomatis. shared/ledger.ts memberikan proyeksi UI setara, jumlah aman dan pemisahan external/internal/reserve; laporan tahun melakukan preagregasi view agar join tidak menggandakan.
 
 Tinjau/konversi melalui GET/PATCH /api/items/:id/posting, owner-only, CAS row_version dan revisi periode. Perubahan sumber dan penandaan anak terjadi dalam satu statement CTE/transaction dengan lock keluarga. Retry konversi yang sudah sama tidak menandai tambahan baru. Koreksi metadata mempertahankan identitas; histori yang digantikan tidak otomatis hidup setelah pembatalan. Guard histori mencegah penulisan ulang metadata lama. Nominal tetap pada endpoint edit kolom yang ada.
 

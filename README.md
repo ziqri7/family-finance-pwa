@@ -1,17 +1,17 @@
 # Financée
 
-## Kandidat Alokasi aktual — belum dirilis
+## Alokasi aktual — dirilis 16 November 2026
 
 Alur baru yang disetujui: isi nominal sesudah pembayaran/penyerahan, catatan otomatis dari pos yang sama, bukti JPG/PNG langsung pada Alokasi, serta pembeda Pembayaran/Kiriman pasangan/Disisihkan. Data lama diberi penanda dan ditinjau pemilik sebelum konversi; histori dan buktinya tetap disimpan. Salin bulan membawa struktur dengan nominal kosong. Pengeluaran tambahan memakai menu Catat tanpa mengulang nominal Alokasi.
 
-Kode pada cabang pengembangan ini membutuhkan migrasi 0005 dan backup format 5. Jangan menerapkannya langsung pada instalasi keluarga; ikuti [upgrade](docs/DEPLOYMENT.md), [rancangan disetujui](docs/ALOKASI_REALISASI_PROPOSAL.md) dan [bukti uji](docs/TESTING.md). Versi dasar yang disebut di bawah tetap merupakan rilis sebelumnya sampai kandidat ini ditayangkan.
+Versi ini memakai migrasi 0005 dan backup format 5. Untuk memperbarui instalasi sendiri, ikuti [upgrade](docs/DEPLOYMENT.md), [rancangan disetujui](docs/ALOKASI_REALISASI_PROPOSAL.md) dan [bukti uji](docs/TESTING.md). Pembaruan telah ditayangkan dan diperiksa online. Nilai lama tetap legacy sampai pemilik meninjaunya melalui aplikasi; sandi dan sesi aktif dipertahankan.
 
 
 Aplikasi keuangan keluarga berbahasa Indonesia: isi anggaran langsung, catat pengeluaran dan bukti JPG/PNG, serta lihat ringkasan suami–istri tanpa menghitung kiriman internal dua kali.
 
 Setiap keluarga memasang salinan sendiri pada **Cloudflare Pages + Functions + Neon** miliknya. Tidak ada server akun pusat, pendaftaran publik, koneksi bank atau pelaksanaan transfer uang. Pengisian dilakukan langsung pada aplikasi; tidak ada unggah Excel. Workbook sumber hanya dipakai saat pengembangan/provisioning privat.
 
-**Status:** desain donut/batang, ringkasan tahun dan bukti pemasukan sudah dirilis serta diperiksa online pada 16 November 2026. Versi berjalan commit `41508f5`; catatan verifikasi terbaru ada di [docs/TESTING.md](docs/TESTING.md). Pengguna open-source memasang salinan serta akun layanan sendiri. Bukti serta batas pemeriksaan di [docs/NEON_REVIEW.md](docs/NEON_REVIEW.md). Aplikasi/data lokal D1/R2 lama bukan target migrasi otomatis.
+**Status:** desain donut/batang, ringkasan tahun dan bukti pemasukan sudah dirilis serta diperiksa online pada 16 November 2026. Versi berjalan commit `bc59ec6`; catatan verifikasi terbaru ada di [docs/TESTING.md](docs/TESTING.md). Pengguna open-source memasang salinan serta akun layanan sendiri. Bukti serta batas pemeriksaan di [docs/NEON_REVIEW.md](docs/NEON_REVIEW.md). Aplikasi/data lokal D1/R2 lama bukan target migrasi otomatis.
 
 ## Menjalankan
 

@@ -2,10 +2,10 @@
 
 ## Keputusan Alokasi aktual — 16 November 2026
 
-Pengguna mengisi nominal Alokasi setelah uang dibayar atau diserahkan. Preview dan rancangan implementasi telah disetujui. Kandidat lokal menerapkan sumber nominal tunggal dengan catatan turunan, bukti langsung, peninjauan data lama, tiga jenis pembagian dan salin struktur tanpa nominal. Rumus rencana dari workbook tetap sebagai referensi historis yang teruji; sumber ringkasan aktual kini mengikuti catatan efektif, bukan rencana lama. Ini keputusan produk eksplisit, bukan klaim rumus baru dari Excel. Kandidat belum dirilis.
+Pengguna mengisi nominal Alokasi setelah uang dibayar atau diserahkan. Preview dan rancangan implementasi telah disetujui. Rilis 16 November 2026 menerapkan sumber nominal tunggal dengan catatan turunan, bukti langsung, peninjauan data lama, tiga jenis pembagian dan salin struktur tanpa nominal. Rumus rencana dari workbook tetap sebagai referensi historis yang teruji; sumber ringkasan aktual kini mengikuti catatan efektif, bukan rencana lama. Ini keputusan produk eksplisit, bukan klaim rumus baru dari Excel. Implementasi dan rilis telah disetujui pengguna serta diperiksa online.
 
 
-Status 16 November 2026: seluruh paket yang disetujui sudah ditayangkan setelah persetujuan pengguna dan diperiksa online. Input langsung, rumus, batas kepemilikan, dan sandi aktif dipertahankan.
+Status 16 November 2026: seluruh paket yang disetujui sudah ditayangkan setelah persetujuan pengguna dan diperiksa online. Batas kepemilikan, sandi aktif dan nilai data lama dipertahankan; perubahan sumber perhitungan Alokasi mengikuti keputusan di atas.
 
 <!-- impeccable:product-schema 1 -->
 

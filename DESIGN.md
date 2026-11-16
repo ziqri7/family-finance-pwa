@@ -187,6 +187,6 @@ Beranda memakai tab Bulan/Tahun, tiga nominal ringkas, donut pembagian alokasi t
 
 Kartu Suami ungu/Istri hijau, kolom langsung dan pemisah ribuan dipertahankan; tiap pos alokasi mendapat batang proporsi. Galeri Bukti menyatukan gambar pemasukan/pengeluaran siap dengan filter jenis. Gambar melalui API privat. CSS aktif di src/styles.css dan src/components/visual-finance.css; diagram tanpa dependensi baru. Plus Jakarta Sans dan reduced motion tetap berlaku. Pembaruan ini sudah ditayangkan pada 16 November 2026; bukti render dan fungsi ada di docs/TESTING.md.
 
-## Alokasi aktual — preview disetujui, kandidat belum dirilis
+## Alokasi aktual — disetujui dan dirilis 16 November 2026
 
 Bahasa Caku/Jakarta dan diagram dipertahankan. Setiap baris non-income menampilkan Tercatat otomatis atau Alur lama, jenis pembagian, akses jenis/tanggal serta bukti langsung. Tinjau pencatatan memakai dialog agar selisih nominal pos dengan catatan lama terlihat sebelum konversi. Angka ringkas memakai hingga dua desimal dan nominal rupiah lengkap pada label/title. Sisa disebut Sisa belum dibagi; uang disisihkan terpisah dari belanja. Pasangan hanya membaca. Seluruh status simpan/error/draf tetap berlaku; perubahan semantik tidak mengganti arah visual.

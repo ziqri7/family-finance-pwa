@@ -1,6 +1,6 @@
 # Rancangan database PostgreSQL
 
-## Tambahan kandidat migrasi 0005
+## Migrasi 0005 — Alokasi aktual
 
 budget_items: recording_mode legacy/actual (baris lama legacy); posting_kind external/internal/reserve; posting_date nullable dan valid dalam bulan; posting_version positif. Actual non-income bernominal terisi wajib memiliki jenis. Jenis template privat lama tidak ditebak dari label; pemilik memilih sebelum mengisi pos actual baru. Income mempertahankan perilaku awal.
 

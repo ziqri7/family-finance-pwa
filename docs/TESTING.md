@@ -1,5 +1,17 @@
 # Pengujian Financée
 
+## Alokasi aktual terverifikasi online — 16 November 2026
+
+Setelah persetujuan eksplisit pengguna, runtime `bc59ec6833ac21d71c62b9d62a94bef6bb0f2c06` ditayangkan pada proyek Pages yang sama; deployment `34332879-2ba4-43c0-9a3a-c5c9797a2bda`, status success. Sumber GitHub cocok; pembaruan dokumentasi sesudahnya tidak mengganti runtime. Bagian kandidat di bawah adalah arsip sebelum rilis.
+
+- Backup format 4 dengan kode immutable41508f5 selesai sebelum migrasi0005, termasuk dua gambar siap. Migrasi menambah metadata; proyeksi seluruh kolom lama pada sembilan tabel identik sebelum/sesudah. Hash/versi kedua akun dan tiga sesi yang sudah ada dipertahankan. Tidak seed/init akun, perubahan secret atau konversi nominal. Seluruh pos lama masih legacy setelah rilis.
+- Cloudflare nyata: HTML, JavaScript, CSS, service worker, manifest, ikon dan font identik byte dengan build yang diuji. Header keamanan tersedia; API/review/gambar privat anonim ditolak401no-store; bundel backend dan metadata routing404. Tujuh secret produksi tetap, preview tanpa secret produksi.
+- Kedua akun berhasil login dengan sandi yang masih berlaku tanpa perubahan sandi. Cookie Secure/HttpOnly/SameSite=Strict/host-only; data keluarga dan laporan tahun terbaca. Laporan sesuai sumber pengeluaran efektif legacy pada database. Peninjauan pos sendiri terbaca, milik pasangan ditolak. Klien lama ditolak409UPDATE_REQUIRED, klien baru diterima tanpa menulis pos uji, Origin asing ditolak. Dua gambar lama dibaca/checksum oleh kedua akun (empat pembacaan).
+- Snapshot sebelum/sesudah pemeriksaan HTTP identik termasuk kredensial. Hanya sesi verifikasi logout; sesi pengguna valid sebelumnya tetap ada. Tidak membuat pos/bulan/nominal/gambar contoh, tidak mengonversi pos keluarga. Backup format 5 lengkap: sepuluh tabel dan dua objek sesuai cakupan manifest. Uji tulis Alokasi/upload/konversi dan pemulihan gambar tetap memakai cabang dummy, bukan mengubah data keluarga untuk tes.
+
+Ponsel iPhone/Safari fisik dan audit keamanan/aksesibilitas menyeluruh belum diuji. Pemeriksaan produksi adalah HTTP/API; render desktop/mobile serta alur tulis memakai bundel identik di cabang dummy. Pengguna menyelesaikan draf lalu memperbarui PWA sebelum pencatatan; pos lama diaktifkan melalui Tinjau pencatatan oleh pemilik.
+
+
 ## Kandidat Alokasi aktual — 16 November 2026, belum dirilis
 
 **Pemeriksaan akhir: 66 tes lulus, 0 gagal/dilewati.** Instalasi bersih npm ci/build/typecheck dan 25 tes unit lulus (tumpang tindih suite). Ketiga belas berkas build serta seluruh migrasi identik byte dengan build kerja. Seed template publik 20 pos diuji pada tujuan dummy: idempoten, tipe kiriman/disisihkan benar dan kredensial tidak berubah.
