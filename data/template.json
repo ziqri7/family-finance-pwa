@@ -1,11 +1,103 @@
 {
   "partner-a": [
-    {"label":"Penghasilan utama","kind":"income"},{"label":"Penghasilan tambahan","kind":"income"},
-    {"label":"Donasi","kind":"allocation"},{"label":"Iuran","kind":"allocation"},{"label":"Dukungan keluarga","kind":"allocation"},
-    {"label":"Tabungan keluarga","kind":"allocation"},{"label":"Belanja bulanan","kind":"allocation"},{"label":"Listrik","kind":"allocation"},
-    {"label":"Air","kind":"allocation"},{"label":"Internet","kind":"allocation"},{"label":"Kiriman pasangan","kind":"transfer_out"},
-    {"label":"Transportasi pasangan","kind":"allocation"},{"label":"Transportasi pribadi","kind":"allocation"},
-    {"label":"Langganan","kind":"allocation"},{"label":"Layanan digital","kind":"allocation"},{"label":"Keperluan pribadi","kind":"allocation"}
+    {
+      "label": "Penghasilan utama",
+      "kind": "income"
+    },
+    {
+      "label": "Penghasilan tambahan",
+      "kind": "income"
+    },
+    {
+      "label": "Donasi",
+      "kind": "allocation",
+      "posting_kind": "external"
+    },
+    {
+      "label": "Iuran",
+      "kind": "allocation",
+      "posting_kind": "external"
+    },
+    {
+      "label": "Dukungan keluarga",
+      "kind": "allocation",
+      "posting_kind": "external"
+    },
+    {
+      "label": "Tabungan keluarga",
+      "kind": "allocation",
+      "posting_kind": "reserve"
+    },
+    {
+      "label": "Belanja bulanan",
+      "kind": "allocation",
+      "posting_kind": "external"
+    },
+    {
+      "label": "Listrik",
+      "kind": "allocation",
+      "posting_kind": "external"
+    },
+    {
+      "label": "Air",
+      "kind": "allocation",
+      "posting_kind": "external"
+    },
+    {
+      "label": "Internet",
+      "kind": "allocation",
+      "posting_kind": "external"
+    },
+    {
+      "label": "Kiriman pasangan",
+      "kind": "transfer_out",
+      "posting_kind": "internal"
+    },
+    {
+      "label": "Transportasi pasangan",
+      "kind": "allocation",
+      "posting_kind": "external"
+    },
+    {
+      "label": "Transportasi pribadi",
+      "kind": "allocation",
+      "posting_kind": "external"
+    },
+    {
+      "label": "Langganan",
+      "kind": "allocation",
+      "posting_kind": "external"
+    },
+    {
+      "label": "Layanan digital",
+      "kind": "allocation",
+      "posting_kind": "external"
+    },
+    {
+      "label": "Keperluan pribadi",
+      "kind": "allocation",
+      "posting_kind": "external"
+    }
   ],
-  "partner-b": [{"label":"Penghasilan sendiri","kind":"income"},{"label":"Belanja dapur","kind":"allocation"},{"label":"Keperluan pribadi","kind":"allocation"},{"label":"Transportasi","kind":"allocation"}]
+  "partner-b": [
+    {
+      "label": "Penghasilan sendiri",
+      "kind": "income"
+    },
+    {
+      "label": "Belanja dapur",
+      "kind": "allocation",
+      "posting_kind": "external"
+    },
+    {
+      "label": "Keperluan pribadi",
+      "kind": "allocation",
+      "posting_kind": "external"
+    },
+    {
+      "label": "Transportasi",
+      "kind": "allocation",
+      "posting_kind": "external"
+    }
+  ]
 }

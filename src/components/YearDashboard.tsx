@@ -199,10 +199,12 @@ export function YearDashboard({
                 menghasilkan —.
               </p>
               <p>
-                Alokasi: {data.included ? rupiah.format(data.allocation) : "—"}{" "}
-                · sisa anggaran:{" "}
+                Pembayaran:{" "}
+                {data.included ? rupiah.format(data.allocation) : "—"} · sisa
+                belum dibagi:{" "}
                 {data.included ? rupiah.format(data.remaining) : "—"}. Sisa
-                bukan saldo rekening.
+                bukan saldo rekening. Disisihkan:{" "}
+                {rupiah.format(data.reserved ?? 0)}.
               </p>
             </ChartInfo>
           </div>

@@ -29,7 +29,12 @@ export const newPeriodSchema = z
     "Pilih bulan sumber.",
   );
 export const newItemSchema = z
-  .object({ id: idSchema, label: labelSchema, kind: z.enum(kinds) })
+  .object({
+    id: idSchema,
+    label: labelSchema,
+    kind: z.enum(kinds),
+    postingKind: z.enum(["external", "internal", "reserve"]).optional(),
+  })
   .strict();
 export const editItemSchema = z.discriminatedUnion("field", [
   z
@@ -43,6 +48,7 @@ export const editItemSchema = z.discriminatedUnion("field", [
     .object({
       field: z.literal("amount"),
       value: amountSchema,
+      confirmCancel: z.boolean().optional(),
       expectedVersion: versionSchema,
     })
     .strict(),
@@ -102,6 +108,10 @@ export interface Item {
   amount_version: number;
   row_version: number;
   deleted_at: number | null;
+  recording_mode?: "legacy" | "actual";
+  posting_kind?: "external" | "internal" | "reserve" | null;
+  posting_date?: string | null;
+  posting_version?: number;
 }
 export interface Expense {
   id: string;
@@ -113,6 +123,8 @@ export interface Expense {
   amount: number;
   version: number;
   deleted_at: number | null;
+  superseded_by_item_id?: string | null;
+  superseded_at?: number | null;
 }
 export interface Transfer {
   id: string;
@@ -124,11 +136,14 @@ export interface Transfer {
   amount: number;
   version: number;
   deleted_at: number | null;
+  superseded_by_item_id?: string | null;
+  superseded_at?: number | null;
 }
 export interface Attachment {
   id: string;
   expense_id: string | null;
   income_item_id?: string;
+  allocation_item_id?: string;
   owner_id: Owner;
   content_type: string;
   byte_size: number;

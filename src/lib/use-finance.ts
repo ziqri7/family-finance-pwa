@@ -46,6 +46,9 @@ export function useFinance(user: User | null) {
               field: draft.field,
               value,
               expectedVersion: draft.baseVersion,
+              ...(draft.field === "amount" && value === null
+                ? { confirmCancel: draft.confirmCancel === true }
+                : {}),
             },
           })
         ).item,
@@ -205,8 +208,18 @@ export function useFinance(user: User | null) {
       setPeriod(id);
     }
   }
-  async function addItem(label: string, kind: Kind, id: string) {
-    await mutate(`/periods/${period}/items`, "POST", { id, label, kind });
+  async function addItem(
+    label: string,
+    kind: Kind,
+    id: string,
+    postingKind?: "external" | "internal" | "reserve",
+  ) {
+    await mutate(`/periods/${period}/items`, "POST", {
+      id,
+      label,
+      kind,
+      postingKind,
+    });
   }
   async function itemForDelete(item: Item) {
     if (!(await flush()))
@@ -234,8 +247,8 @@ export function useFinance(user: User | null) {
     online,
     drafts: queue.drafts,
     draftList,
-    edit: (item: Item, field: Field, value: string) =>
-      queue.edit(item, field, value),
+    edit: (item: Item, field: Field, value: string, confirmCancel = false) =>
+      queue.edit(item, field, value, confirmCancel),
     commit: (key: string) => queue.commit(key),
     flush,
     resolve: (key: string, keep: boolean) => queue.resolve(key, keep),

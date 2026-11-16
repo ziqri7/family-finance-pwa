@@ -1,3 +1,4 @@
+import { ledger } from "./ledger";
 import type { Snapshot } from "./domain";
 export function allocationChart(snapshot: Snapshot) {
   const items = snapshot.items.filter((i) => !i.deleted_at),
@@ -10,14 +11,14 @@ export function allocationChart(snapshot: Snapshot) {
     ownersComplete &&
     !items.some((i) => i.kind === "income" && i.amount === null);
   const groups = new Map<string, { label: string; amount: number }>();
-  for (const i of items.filter(
-    (i) => i.kind === "allocation" && i.amount !== null && i.amount > 0,
+  for (const i of ledger(snapshot).filter(
+    (e) => e.posting_kind !== "internal" && e.amount > 0,
   )) {
     const key = i.label.trim().toLocaleLowerCase("id-ID"),
       old = groups.get(key);
     groups.set(key, {
       label: old?.label || i.label,
-      amount: (old?.amount || 0) + i.amount!,
+      amount: (old?.amount || 0) + i.amount,
     });
   }
   const all = [...groups.values()].sort((a, b) => b.amount - a.amount),

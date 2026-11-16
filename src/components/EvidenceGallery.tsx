@@ -46,19 +46,27 @@ export function EvidenceGallery({
       )}
       <div className="evidence-gallery">
         {files.map((file) => {
+          const allocation = file.allocation_item_id
+            ? snapshot.items.find((i) => i.id === file.allocation_item_id)
+            : null;
           const income = file.income_item_id
               ? snapshot.items.find((i) => i.id === file.income_item_id)
               : null,
             expense = file.expense_id
               ? snapshot.expenses.find((e) => e.id === file.expense_id)
               : null,
-            label = income?.label || expense?.note || "Bukti pengeluaran";
+            label =
+              allocation?.label ||
+              income?.label ||
+              expense?.note ||
+              "Bukti pengeluaran";
           return (
             <button
               className="evidence-tile"
               key={file.id}
               onClick={() => {
-                if (income) onIncome(income);
+                if (allocation) onIncome(allocation);
+                else if (income) onIncome(income);
                 else if (expense) onExpense(expense);
               }}
               aria-label={"Lihat bukti " + label}
@@ -67,7 +75,11 @@ export function EvidenceGallery({
                 loading="lazy"
                 src={
                   "/api/" +
-                  (income ? "income-attachments/" : "attachments/") +
+                  (allocation
+                    ? "allocation-attachments/"
+                    : income
+                      ? "income-attachments/"
+                      : "attachments/") +
                   file.id +
                   "/content"
                 }
@@ -80,10 +92,10 @@ export function EvidenceGallery({
                   {ownerName[file.owner_id]}
                 </small>
                 <small>
-                  {income
-                    ? income.amount === null
+                  {allocation || income
+                    ? (allocation || income)!.amount === null
                       ? "Nominal belum diisi"
-                      : rupiah.format(income.amount)
+                      : rupiah.format((allocation || income)!.amount!)
                     : expense
                       ? rupiah.format(expense.amount)
                       : ""}

@@ -67,7 +67,9 @@ test("upload storage faults and parent deletion recover without exposing incompl
   try {
     await reset(auth.users);
     await db
-      .prepare("INSERT INTO default_items VALUES($1,$2,$3,$4,$5)")
+      .prepare(
+        "INSERT INTO default_items(id,owner_id,label,kind,position,posting_kind) VALUES($1,$2,$3,$4,$5,CASE WHEN $4='income' THEN NULL WHEN $4='transfer_out' THEN 'internal' ELSE 'external' END)",
+      )
       .bind(id(), "partner-a", "Allocation", "allocation", 0)
       .run();
     let cookie = "";
@@ -76,6 +78,7 @@ test("upload storage faults and parent deletion recover without exposing incompl
         method,
         headers: {
           Origin: origin,
+          "X-Financee-Client": "2",
           Cookie: cookie,
           "Content-Type": raw ? "image/png" : "application/json",
           ...(fault ? { "X-Test-Fault": fault } : {}),

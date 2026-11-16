@@ -10,6 +10,7 @@ interface FileRow {
   id: string;
   expense_id: string;
   income_item_id: string;
+  allocation_item_id: string;
   owner_id: Owner;
   object_key: string;
   content_type: string;
@@ -18,26 +19,47 @@ interface FileRow {
   status: string;
 }
 const source = (c: C) =>
-  c.req.path.includes("/income-") || c.req.path.startsWith("/api/income-items/")
+  c.req.path.startsWith("/api/allocation-")
     ? {
-        table: "income_attachments" as const,
+        table: "allocation_attachments" as const,
         parent: "budget_items" as const,
-        key: "income_item_id" as const,
+        key: "allocation_item_id" as const,
       }
-    : {
-        table: "attachments" as const,
-        parent: "expenses" as const,
-        key: "expense_id" as const,
-      };
+    : c.req.path.includes("/income-") ||
+        c.req.path.startsWith("/api/income-items/")
+      ? {
+          table: "income_attachments" as const,
+          parent: "budget_items" as const,
+          key: "income_item_id" as const,
+        }
+      : {
+          table: "attachments" as const,
+          parent: "expenses" as const,
+          key: "expense_id" as const,
+        };
 export async function reserve(c: C) {
   const src = source(c);
   const expenseId = rowId(c),
     v = await json(c, attachmentSchema),
     expense = await owned<Expense>(c, src.parent, expenseId);
+  if (src.table === "attachments" && (expense as Expense).superseded_by_item_id)
+    fail(
+      409,
+      "HISTORY_LOCKED",
+      "Bukti histori tetap dipertahankan. Tambah bukti pada Alokasi.",
+    );
   if (
     expense.deleted_at ||
     (src.parent === "budget_items" &&
-      (expense as unknown as { kind: string }).kind !== "income")
+      (src.table === "income_attachments"
+        ? (expense as unknown as { kind: string }).kind !== "income"
+        : (
+            expense as unknown as {
+              recording_mode: string;
+              amount: number | null;
+            }
+          ).recording_mode !== "actual" ||
+          (expense as unknown as { amount: number | null }).amount === null))
   )
     fail(
       409,
@@ -62,8 +84,8 @@ export async function reserve(c: C) {
       fail(409, "UPLOAD_CONFLICT", "Bukti dengan ID ini memiliki isi berbeda.");
     return c.json({ id: v.id, status: existing.status });
   }
-  await c.env.DB.prepare(
-    `INSERT INTO ${src.table}(id,${src.key},owner_id,object_key,content_type,byte_size,sha256,status,created_at,updated_at) VALUES($1,$2,$3,$4,$5,$6,$7,'pending',$8,$9)`,
+  const inserted = await c.env.DB.prepare(
+    `INSERT INTO ${src.table}(id,${src.key},owner_id,object_key,content_type,byte_size,sha256,status,created_at,updated_at) SELECT $1,$2,$3,$4,$5,$6,$7,'pending',$8,$9 WHERE EXISTS(SELECT 1 FROM ${src.parent} WHERE id=$2 AND deleted_at IS NULL ${src.table === "attachments" ? "AND superseded_by_item_id IS NULL" : ""}) RETURNING id`,
   )
     .bind(
       v.id,
@@ -77,6 +99,12 @@ export async function reserve(c: C) {
       Date.now(),
     )
     .run();
+  if (!inserted.meta.changes)
+    fail(
+      409,
+      "HISTORY_LOCKED",
+      "Sumber bukti berubah. Muat ulang dan gunakan pos Alokasi.",
+    );
   return c.json({ id: v.id, status: "pending" }, 201);
 }
 export async function upload(c: C) {
@@ -84,7 +112,14 @@ export async function upload(c: C) {
   const id = rowId(c),
     file = await owned<FileRow>(c, src.table, id),
     expense = await owned<Expense>(c, src.parent, file[src.key]);
-  if (expense.deleted_at || file.status === "deleting")
+  if (src.table === "attachments" && (expense as Expense).superseded_by_item_id)
+    fail(409, "HISTORY_LOCKED", "Bukti ini merupakan histori Alokasi.");
+  if (
+    expense.deleted_at ||
+    file.status === "deleting" ||
+    (src.table === "allocation_attachments" &&
+      (expense as unknown as { amount: number | null }).amount === null)
+  )
     fail(409, "EXPENSE_DELETED", "Pos, catatan, atau bukti sudah dihapus.");
   if (c.req.header("content-type") !== file.content_type)
     fail(415, "IMAGE_TYPE", "Format gambar tidak sesuai reservasi.");
@@ -102,7 +137,7 @@ export async function upload(c: C) {
   });
   try {
     const result = await c.env.DB.prepare(
-      `UPDATE ${src.table} SET status='ready',width=$1,height=$2,updated_at=$3 WHERE id=$4 AND status IN ('pending','failed','ready') AND EXISTS(SELECT 1 FROM ${src.parent} WHERE id=${src.key} AND deleted_at IS NULL)`,
+      `UPDATE ${src.table} SET status='ready',width=$1,height=$2,updated_at=$3 WHERE id=$4 AND status IN ('pending','failed','ready') AND EXISTS(SELECT 1 FROM ${src.parent} WHERE id=${src.key} AND deleted_at IS NULL ${src.table === "allocation_attachments" ? "AND amount IS NOT NULL AND recording_mode='actual'" : ""})`,
     )
       .bind(dimensions.width, dimensions.height, Date.now(), id)
       .run();
@@ -123,7 +158,7 @@ export async function download(c: C) {
   const src = source(c);
   const id = rowId(c),
     file = await c.env.DB.prepare(
-      `SELECT a.* FROM ${src.table} a JOIN ${src.parent} e ON e.id=a.${src.key} WHERE a.id=$1 AND a.status='ready' AND e.deleted_at IS NULL`,
+      `SELECT a.* FROM ${src.table} a JOIN ${src.parent} e ON e.id=a.${src.key} WHERE a.id=$1 AND a.status='ready' AND e.deleted_at IS NULL ${src.table === "allocation_attachments" ? "AND e.amount IS NOT NULL AND e.recording_mode='actual'" : ""}`,
     )
       .bind(id)
       .first<FileRow>();
@@ -141,11 +176,13 @@ export async function remove(c: C) {
   const src = source(c);
   const id = rowId(c),
     file = await owned<FileRow>(c, src.table, id);
-  await c.env.DB.prepare(
-    `UPDATE ${src.table} SET status='deleting',updated_at=$1 WHERE id=$2 AND owner_id=$3`,
+  const removed = await c.env.DB.prepare(
+    `UPDATE ${src.table} SET status='deleting',updated_at=$1 WHERE id=$2 AND owner_id=$3 ${src.table === "attachments" ? "AND EXISTS(SELECT 1 FROM expenses WHERE id=expense_id AND superseded_by_item_id IS NULL)" : ""}`,
   )
     .bind(Date.now(), id, c.get("user").id)
     .run();
+  if (!removed.meta.changes)
+    fail(409, "HISTORY_LOCKED", "Bukti histori tetap dipertahankan.");
   await c.env.EVIDENCE.delete(file.object_key);
   return c.json({ ok: true });
 }

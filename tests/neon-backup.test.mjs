@@ -31,7 +31,7 @@ test("Neon snapshot and image restore to a separate branch; tamper and occupied 
     await storage.delete(f.object_key);
   await destination
     .prepare(
-      "TRUNCATE income_attachments,attachments,transfers,expenses,budget_items,budgets,periods,default_items,sessions,login_attempts,account_credentials",
+      "TRUNCATE allocation_attachments,income_attachments,attachments,transfers,expenses,budget_items,budgets,periods,default_items,sessions,login_attempts,account_credentials",
     )
     .run();
   const item = randomBytes(16).toString("hex"),
@@ -76,7 +76,7 @@ test("Neon snapshot and image restore to a separate branch; tamper and occupied 
     1000000000000,
   );
   assert.deepEqual(await restoreBackup(destination, storage, folder), {
-    tables: 9,
+    tables: 10,
     objects: 1,
   });
   assert.equal(
@@ -87,7 +87,7 @@ test("Neon snapshot and image restore to a separate branch; tamper and occupied 
   const manifestPath = folder + "/manifest.json",
     manifest = JSON.parse(await readFile(manifestPath, "utf8"));
   await writeFile(manifestPath, JSON.stringify({ ...manifest, version: 2 }));
-  await assert.rejects(readBackup(folder), /versi 4/);
+  await assert.rejects(readBackup(folder), /versi 5/);
   await writeFile(manifestPath, JSON.stringify({ ...manifest, objects: [] }));
   await assert.rejects(readBackup(folder), /lengkap/);
   await writeFile(manifestPath, JSON.stringify(manifest));

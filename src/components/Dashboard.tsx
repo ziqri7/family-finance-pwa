@@ -1,3 +1,5 @@
+import { AutomaticRecords } from "./AllocationPosting";
+import type { Item } from "../../shared/domain";
 import { MonthCharts } from "./FinanceCharts";
 import {
   ArrowUpRight,
@@ -31,7 +33,12 @@ export function ExpenseList({
   onEvidence: (e: Expense) => void;
 }) {
   const list = snapshot.expenses
-    .filter((e) => !e.deleted_at && (!owner || e.owner_id === owner))
+    .filter(
+      (e) =>
+        !e.deleted_at &&
+        !e.superseded_by_item_id &&
+        (!owner || e.owner_id === owner),
+    )
     .sort(
       (a, b) =>
         b.occurred_on.localeCompare(a.occurred_on) || b.id.localeCompare(a.id),
@@ -39,7 +46,9 @@ export function ExpenseList({
   return (
     <>
       {!list.length && (
-        <p className="empty-note">Belum ada pengeluaran yang dicatat.</p>
+        <p className="empty-note">
+          Belum ada pengeluaran tambahan yang dicatat.
+        </p>
       )}
       {list.map((e) => {
         const files = snapshot.attachments.filter((a) => a.expense_id === e.id),
@@ -117,7 +126,11 @@ export function EvidenceImages({ files }: { files: Attachment[] }) {
           <img
             src={
               "/api/" +
-              (f.income_item_id ? "income-attachments/" : "attachments/") +
+              (f.allocation_item_id
+                ? "allocation-attachments/"
+                : f.income_item_id
+                  ? "income-attachments/"
+                  : "attachments/") +
               f.id +
               "/content"
             }
@@ -145,6 +158,7 @@ export function Dashboard({
   onEvidence,
   mode,
   onMode,
+  onAllocation,
 }: {
   snapshot: Snapshot;
   periods: { id: string; revision: number }[];
@@ -156,6 +170,7 @@ export function Dashboard({
   onEdit: (e: Expense) => void;
   onDelete: (e: Expense) => void;
   onEvidence: (e: Expense) => void;
+  onAllocation: (item: Item) => void;
   mode: "bulan" | "tahun";
   onMode: (mode: "bulan" | "tahun") => void;
 }) {
@@ -198,6 +213,7 @@ export function Dashboard({
           <h2>Catatan bulan ini</h2>
           <Button onClick={onExpense}>+ Catat</Button>
         </div>
+        <AutomaticRecords snapshot={snapshot} onItem={onAllocation} />
         <ExpenseList
           snapshot={snapshot}
           owner={null}

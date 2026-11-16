@@ -9,6 +9,7 @@ export interface Draft {
   status: "dirty" | "saving" | "error" | "conflict";
   message?: string;
   current?: Item;
+  confirmCancel?: boolean;
 }
 interface Options {
   send: (draft: Draft, value: string | number | null) => Promise<Item>;
@@ -22,13 +23,14 @@ export class SaveQueue {
   private acknowledged = new Map<string, Item>();
   private running = new Map<string, Promise<void>>();
   constructor(private options: Options) {}
-  edit(item: Item, field: Field, value: string) {
+  edit(item: Item, field: Field, value: string, confirmCancel = false) {
     const key = item.id + ":" + field,
       old = this.drafts.get(key);
     this.drafts.set(key, {
       itemId: item.id,
       field,
       value,
+      confirmCancel,
       baseVersion:
         old?.baseVersion ??
         item[field === "label" ? "label_version" : "amount_version"],

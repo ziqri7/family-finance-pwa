@@ -1,5 +1,24 @@
 # Pengujian Financée
 
+## Kandidat Alokasi aktual — 16 November 2026, belum dirilis
+
+**Pemeriksaan akhir: 66 tes lulus, 0 gagal/dilewati.** Instalasi bersih npm ci/build/typecheck dan 25 tes unit lulus (tumpang tindih suite). Ketiga belas berkas build serta seluruh migrasi identik byte dengan build kerja. Seed template publik 20 pos diuji pada tujuan dummy: idempoten, tipe kiriman/disisihkan benar dan kredensial tidak berubah.
+
+Native E2E akhir memakai dua akun dan bundle yang sama: unggah PNG/JPG, sumber tunggal, konversi lama, cadangan/disisihkan, kiriman, pasangan readonly, galeri dan rasio tahun22,7% pada fixture13juta/2,95juta lulus. Snapshot yang dibuat melalui layar dipulihkan ke cabang restore: sepuluh tabel dan dua gambar cocok. Uji format5 terpisah memulihkan tiga gambar termasuk histori. Sesi uji logout dan browser/server ditutup.
+
+Render akhir desktop/mobile diperiksa. Temuan legenda donut yang belum memakai uang disisihkan pada penyebut diperbaiki; tes render dibuktikan gagal dengan penyebut lama lalu lulus dengan perbaikan. Pembulatan label persentase dapat menimbulkan selisih0,1 pada penjumlahan tampilan; nominal dan proporsi lingkaran memakai nilai utuh. Kelompok kiriman mengikuti jenis aktual, dan pesan kosong khusus pengeluaran tambahan agar tidak menyangkal catatan otomatis. Detektor hanya memberi43advisory token, tanpa temuan utama pada pemeriksaan awal kandidat; ini bukan audit aksesibilitas penuh.
+
+Audit123berkas sumber/aset terhadap nilai rahasia produksi yang diketahui lulus. Migrasi0001–0004 dan kode autentikasi/ganti sandi identik byte dengan rilis sebelumnya. Workbook asli tidak berubah. Kandidat belum dipush/deploy, data keluarga tidak dikonversi dan belum ada pemeriksaan Cloudflare untuk fitur ini. Hasil perantara berikut merupakan jejak pengujian sebelum pemeriksaan akhir.
+
+
+- Suite gabungan sebelum penyempurnaan terakhir: 64 tes lulus/0 gagal/dilewati. Uji tambahan format 5 lulus: sepuluh tabel dan tiga gambar (Alokasi JPEG, histori expense PNG, pemasukan PNG) dipulihkan ke cabang dummy terpisah. Penanda superseded dan hash akun dipertahankan; pembatalan di tujuan tidak menghidupkan pengeluaran lama. Angka tes ini tumpang tindih dengan pemeriksaan akhir berikutnya.
+- Native browser → bundel Pages minified → Neon dummy dua akun lulus: lebar 320/375/390/1366, koreksi satu nominal/satu catatan, PNG/JPG langsung pada pos, date metadata, uang disisihkan terpisah, konversi lama450ribu/catatan400ribu menjadi400ribu tanpa duplikasi, kiriman tersedia pada penerima, galeri, rekap tahun dan pasangan readonly. Sesi uji logout. Screenshot desktop/mobile diperiksa; ini bukan iPhone fisik atau Cloudflare produksi.
+- Uji API menguji stale review/revisi periode, CAS nominal, retry konversi, penolakan histori, tambahan baru tetap dihitung, pembatalan bukti/unggah ulang ditolak, penolakan klien lama, anonim/pasangan, salin semua nominal kosong serta laporan dari proyeksi efektif. Uji batas kuota koleksi baru dan tanggal ditambahkan untuk pemeriksaan akhir.
+- Regresi ditemukan saat menyusun ulang guard: tombstone pada kuota penuh sempat ditolak. Kandidat diperbaiki dengan mempertahankan fungsi dari migrasi 0002. Hanya dua cabang dummy yang dibuat ulang dengan guard ID/host berbeda dari produksi; migrasi 0001–0004 tetap byte-identik. Tidak ada perubahan produksi.
+
+Belum dilakukan untuk kandidat ini: rilis/migrasi produksi, konversi data keluarga, pemeriksaan iPhone/Safari fisik, beban maksimum dan audit keamanan/aksesibilitas menyeluruh. Bagian rilis 16 November di bawah mengacu runtime sebelumnya.
+
+
 ## Rilis gabungan terverifikasi online — 16 November 2026
 
 Setelah persetujuan eksplisit pengguna, paket visual donut/batang, ringkasan tahun serta bukti pemasukan ditayangkan pada proyek Pages yang sama. Runtime commit `41508f5a74fe710d9fc9d347847f126ca344f736`; deployment `594b8309-81bb-48b9-87c0-fa2695067d00`, status success. Publikasi sumber GitHub cocok dengan commit tersebut; pembaruan dokumentasi sesudahnya tidak mengganti runtime.

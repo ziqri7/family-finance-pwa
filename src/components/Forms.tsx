@@ -36,7 +36,7 @@ export function MonthForm({
     <Dialog
       open
       title="Buat anggaran bulan"
-      description="Salin rencana saja; pengeluaran dan bukti tetap di bulan asal."
+      description="Salin struktur pos saja. Nominal, tanggal dan bukti bulan baru kosong."
       busy={busy}
       onOpenChange={(v) => {
         if (!v) onClose();
@@ -110,6 +110,9 @@ export function AddItemForm({
 }) {
   const id = useRef(randomId()).current,
     [label, setLabel] = useState(""),
+    [postingKind, setPostingKind] = useState<
+      "external" | "internal" | "reserve"
+    >(kind === "transfer_out" ? "internal" : "external"),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
   return (
@@ -120,7 +123,7 @@ export function AddItemForm({
           ? "Tambah pemasukan"
           : kind === "allocation"
             ? "Tambah alokasi"
-            : "Tambah rencana kiriman"
+            : "Tambah pos kiriman"
       }
       busy={busy}
       onOpenChange={(v) => {
@@ -132,7 +135,12 @@ export function AddItemForm({
           e.preventDefault();
           setBusy(true);
           try {
-            await store.addItem(label, kind, id);
+            await store.addItem(
+              label,
+              kind,
+              id,
+              kind === "income" ? undefined : postingKind,
+            );
             onClose();
           } catch (err) {
             setError((err as Error).message);
@@ -149,6 +157,22 @@ export function AddItemForm({
           value={label}
           onChange={(e) => setLabel(e.target.value)}
         />
+        {kind !== "income" && (
+          <>
+            <label htmlFor="new-posting-kind">Jenis pembagian</label>
+            <select
+              id="new-posting-kind"
+              value={postingKind}
+              onChange={(e) =>
+                setPostingKind(e.target.value as typeof postingKind)
+              }
+            >
+              <option value="external">Pembayaran</option>
+              <option value="internal">Kiriman pasangan</option>
+              <option value="reserve">Disisihkan</option>
+            </select>
+          </>
+        )}
         {error && (
           <p className="error" role="alert">
             {error}
@@ -302,8 +326,13 @@ export function ExpenseForm({
   return (
     <Dialog
       open={open}
-      title={initial ? "Ubah pengeluaran" : "Catat pengeluaran"}
-      description={ownerName[actor] + " · " + monthName(snapshot.id)}
+      title={initial ? "Ubah pengeluaran" : "Catat pengeluaran tambahan"}
+      description={
+        ownerName[actor] +
+        " · " +
+        monthName(snapshot.id) +
+        " · Hanya pembayaran tambahan. Nominal Alokasi sudah tercatat otomatis."
+      }
       busy={busy}
       onOpenChange={(v) => {
         if (!v) onClose();
@@ -486,7 +515,11 @@ export function TransferForm({
 }) {
   const s = store.snapshot!,
     items = s.items.filter(
-      (i) => i.owner_id === actor && i.kind === "transfer_out" && !i.deleted_at,
+      (i) =>
+        i.owner_id === actor &&
+        i.kind === "transfer_out" &&
+        i.recording_mode !== "actual" &&
+        !i.deleted_at,
     ),
     id = useRef(randomId()).current,
     [itemId, setItemId] = useState(items[0]?.id || ""),

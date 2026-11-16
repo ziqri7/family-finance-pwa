@@ -6,6 +6,7 @@ export interface MonthReport {
   income: number;
   allocation: number;
   spent: number;
+  reserved?: number;
 }
 export type ReportMonth = MonthReport & { complete: boolean };
 export interface YearReport {
@@ -17,6 +18,7 @@ export interface YearReport {
   allocation: number;
   spent: number;
   remaining: number;
+  reserved?: number;
 }
 export function summarizeYear(year: string, rows: MonthReport[]): YearReport {
   const months = rows.map((row) => ({
@@ -24,19 +26,20 @@ export function summarizeYear(year: string, rows: MonthReport[]): YearReport {
     complete: row.exists && row.missingOwners === 0 && row.missingAmounts === 0,
   }));
   const complete = months.filter((row) => row.complete);
-  const sum = (key: "income" | "allocation" | "spent") => {
+  const sum = (key: "income" | "allocation" | "spent" | "reserved") => {
     let total = 0n;
     for (const row of complete) {
-      if (!Number.isSafeInteger(row[key]) || row[key] < 0)
+      if (!Number.isSafeInteger(row[key] ?? 0) || (row[key] ?? 0) < 0)
         throw Error("REPORT_RANGE");
-      total += BigInt(row[key]);
+      total += BigInt(row[key] ?? 0);
     }
     if (total > BigInt(Number.MAX_SAFE_INTEGER)) throw Error("REPORT_RANGE");
     return Number(total);
   };
   const income = sum("income"),
     allocation = sum("allocation"),
-    spent = sum("spent");
+    spent = sum("spent"),
+    reserved = sum("reserved");
   return {
     year,
     months,
@@ -45,6 +48,7 @@ export function summarizeYear(year: string, rows: MonthReport[]): YearReport {
     income,
     allocation,
     spent,
-    remaining: income - allocation,
+    reserved,
+    remaining: income - allocation - reserved,
   };
 }

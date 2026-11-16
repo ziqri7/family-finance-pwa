@@ -31,6 +31,12 @@ test("pie combines matching allocation labels, ignores transfers/deletes and pre
     { label: "Kiriman", amount: 100, kind: "transfer_out" },
     { label: "Hapus", amount: 100, kind: "allocation", deleted_at: 1 },
   ];
+  s.items = s.items.map((i, n) => ({
+    ...i,
+    id: String(n),
+    recording_mode: "actual",
+    posting_kind: i.kind === "transfer_out" ? "internal" : "external",
+  }));
   const r = allocationChart(s);
   assert.equal(r.slices.length, 4);
   assert.equal(r.slices[0].amount, 50);

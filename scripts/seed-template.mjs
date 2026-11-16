@@ -23,12 +23,17 @@ export async function seed(db) {
         typeof r.label !== "string" ||
         !r.label.trim() ||
         r.label.length > 100 ||
-        !["income", "allocation", "transfer_out"].includes(r.kind)
+        !["income", "allocation", "transfer_out"].includes(r.kind) ||
+        (r.posting_kind != null &&
+          !["external", "internal", "reserve"].includes(r.posting_kind)) ||
+        (r.kind === "income" && r.posting_kind != null)
       )
         throw Error("Pos template tidak valid.");
       rows.push(
         db
-          .prepare("INSERT INTO default_items VALUES($1,$2,$3,$4,$5)")
+          .prepare(
+            "INSERT INTO default_items(id,owner_id,label,kind,position,posting_kind) VALUES($1,$2,$3,$4,$5,$6)",
+          )
           .bind(
             (owner === "partner-a" ? "a" : "b") +
               i.toString(16).padStart(31, "0"),
@@ -36,6 +41,7 @@ export async function seed(db) {
             r.label.trim(),
             r.kind,
             i,
+            r.posting_kind ?? (r.kind === "transfer_out" ? "internal" : null),
           ),
       );
     }

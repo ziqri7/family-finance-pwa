@@ -25,7 +25,12 @@ export const rowId = (c: C) => idSchema.parse(c.req.param("id"));
 export const periodId = (c: C) => periodSchema.parse(c.req.param("id"));
 export async function owned<T extends { owner_id: Owner }>(
   c: C,
-  table: "budget_items" | "expenses" | "attachments" | "income_attachments",
+  table:
+    | "budget_items"
+    | "expenses"
+    | "attachments"
+    | "income_attachments"
+    | "allocation_attachments",
   id: string,
 ) {
   const row = await c.env.DB.prepare(
@@ -49,6 +54,7 @@ export async function snapshot(c: C) {
     transfers,
     attachments,
     incomeFiles,
+    allocationFiles,
   ] = await db.batch([
     db.execute(sql`SELECT pg_advisory_xact_lock(61324017)`),
     db.select().from(schema.periods).where(eq(schema.periods.id, id)),
@@ -125,6 +131,30 @@ export async function snapshot(c: C) {
           isNull(schema.budgetItems.deleted_at),
         ),
       ),
+    db
+      .select({
+        id: schema.allocationAttachments.id,
+        expense_id: sql<null>`NULL`,
+        allocation_item_id: schema.allocationAttachments.allocation_item_id,
+        owner_id: schema.allocationAttachments.owner_id,
+        content_type: schema.allocationAttachments.content_type,
+        byte_size: schema.allocationAttachments.byte_size,
+        status: schema.allocationAttachments.status,
+      })
+      .from(schema.allocationAttachments)
+      .innerJoin(
+        schema.budgetItems,
+        eq(
+          schema.allocationAttachments.allocation_item_id,
+          schema.budgetItems.id,
+        ),
+      )
+      .where(
+        and(
+          eq(schema.budgetItems.period_id, id),
+          isNull(schema.budgetItems.deleted_at),
+        ),
+      ),
   ]);
   if (!period[0]) fail(404, "PERIOD_NOT_FOUND", "Bulan belum dibuat.");
   if (c.req.query("revision") === String(period[0].revision))
@@ -137,6 +167,7 @@ export async function snapshot(c: C) {
     expenses,
     transfers,
     attachments: [
+      ...allocationFiles.filter((a) => a.status !== "deleting"),
       ...attachments.filter((a) => a.status !== "deleting"),
       ...incomeFiles.filter((a) => a.status !== "deleting"),
     ],
@@ -177,12 +208,12 @@ export async function createPeriod(c: C) {
     input.mode === "copy"
       ? db
           .prepare(
-            "INSERT INTO budget_items(id,period_id,owner_id,label,kind,amount,position,created_at,updated_at) SELECT replace(gen_random_uuid()::text,'-',''),$1,$2,label,kind,amount,position,$3,$4 FROM budget_items WHERE period_id=$5 AND owner_id=$6 AND deleted_at IS NULL",
+            "INSERT INTO budget_items(id,period_id,owner_id,label,kind,amount,position,created_at,updated_at,recording_mode,posting_kind) SELECT replace(gen_random_uuid()::text,'-',''),$1,$2,label,kind,NULL,position,$3,$4,CASE WHEN kind='income' THEN 'legacy' ELSE 'actual' END,posting_kind FROM budget_items WHERE period_id=$5 AND owner_id=$6 AND deleted_at IS NULL",
           )
           .bind(input.id, owner, now, now, input.sourcePeriodId!, owner)
       : db
           .prepare(
-            "INSERT INTO budget_items(id,period_id,owner_id,label,kind,amount,position,created_at,updated_at) SELECT replace(gen_random_uuid()::text,'-',''),$1,$2,label,kind,NULL,position,$3,$4 FROM default_items WHERE owner_id=$5",
+            "INSERT INTO budget_items(id,period_id,owner_id,label,kind,amount,position,created_at,updated_at,recording_mode,posting_kind) SELECT replace(gen_random_uuid()::text,'-',''),$1,$2,label,kind,NULL,position,$3,$4,CASE WHEN kind='income' THEN 'legacy' ELSE 'actual' END,posting_kind FROM default_items WHERE owner_id=$5",
           )
           .bind(input.id, owner, now, now, owner),
   ]);
@@ -211,6 +242,8 @@ export async function createItem(c: C) {
       existing.deleted_at ||
       existing.period_id !== period ||
       existing.kind !== v.kind ||
+      (v.postingKind !== undefined &&
+        existing.posting_kind !== v.postingKind) ||
       existing.label !== v.label
     )
       fail(409, "ID_CONFLICT", "Permintaan tambah pos berbeda.");
@@ -225,9 +258,21 @@ export async function createItem(c: C) {
   )
     fail(404, "BUDGET_NOT_FOUND", "Buat anggaran Anda dahulu.");
   const item = await c.env.DB.prepare(
-    "INSERT INTO budget_items(id,period_id,owner_id,label,kind,position,created_at,updated_at) VALUES($1,$2,$3,$4,$5,(SELECT coalesce(max(position),-1)+1 FROM budget_items WHERE period_id=$6 AND owner_id=$7 AND kind=$8),$9,$10) RETURNING *",
+    "INSERT INTO budget_items(id,period_id,owner_id,label,kind,position,created_at,updated_at,recording_mode,posting_kind) VALUES($1,$2,$3,$4,$5,(SELECT coalesce(max(position),-1)+1 FROM budget_items WHERE period_id=$6 AND owner_id=$7 AND kind=$8),$9,$10,CASE WHEN $5='income' THEN 'legacy' ELSE 'actual' END,$11) RETURNING *",
   )
-    .bind(v.id, period, owner, v.label, v.kind, period, owner, v.kind, now, now)
+    .bind(
+      v.id,
+      period,
+      owner,
+      v.label,
+      v.kind,
+      period,
+      owner,
+      v.kind,
+      now,
+      now,
+      v.kind === "income" ? null : (v.postingKind ?? null),
+    )
     .first<Item>();
   return c.json({ item }, 201);
 }
@@ -238,12 +283,31 @@ export async function editItem(c: C) {
   if (row.deleted_at)
     fail(409, "ITEM_DELETED", "Pos telah dihapus di perangkat lain.");
   if (row[v.field] === v.value) return c.json({ item: row });
+  if (
+    v.field === "amount" &&
+    row.recording_mode === "actual" &&
+    v.value !== null &&
+    !row.posting_kind
+  )
+    fail(
+      400,
+      "CHOOSE_POSTING_KIND",
+      "Pilih jenis pembagian pada pos ini dahulu.",
+    );
   const column = v.field === "label" ? "label" : "amount",
     version = column === "label" ? "label_version" : "amount_version";
   const item = await c.env.DB.prepare(
-    `UPDATE budget_items SET ${column}=$1,${version}=${version}+1,row_version=row_version+1,updated_at=$2 WHERE id=$3 AND owner_id=$4 AND deleted_at IS NULL AND ${version}=$5 RETURNING *`,
+    `UPDATE budget_items SET ${column}=$1,${version}=${version}+1,row_version=row_version+1,updated_at=$2 WHERE id=$3 AND owner_id=$4 AND deleted_at IS NULL AND ${version}=$5 AND ($6::boolean OR $7::boolean OR NOT EXISTS(SELECT 1 FROM allocation_attachments WHERE allocation_item_id=$3 AND status IN ('ready','pending'))) RETURNING *`,
   )
-    .bind(v.value, Date.now(), id, c.get("user").id, v.expectedVersion)
+    .bind(
+      v.value,
+      Date.now(),
+      id,
+      c.get("user").id,
+      v.expectedVersion,
+      v.field !== "amount" || v.value !== null,
+      v.field === "amount" && v.confirmCancel === true,
+    )
     .first<Item>();
   if (!item)
     return c.json(
@@ -330,6 +394,12 @@ export async function editExpense(c: C) {
     row = await owned<Expense>(c, "expenses", id);
   if (row.deleted_at)
     fail(409, "EXPENSE_DELETED", "Pengeluaran sudah dihapus.");
+  if (row.superseded_by_item_id)
+    fail(
+      409,
+      "HISTORY_LOCKED",
+      "Catatan ini sudah terwakili Alokasi. Koreksi melalui pos sumber.",
+    );
   await allocation(c, v.itemId, v.date);
   if (v.date.slice(0, 7) !== row.period_id)
     fail(400, "WRONG_PERIOD", "Tanggal harus berada pada bulan catatan.");
@@ -373,6 +443,12 @@ export async function deleteExpense(c: C) {
     v = await json(c, deleteSchema),
     row = await owned<Expense>(c, "expenses", id);
   if (row.deleted_at) return c.json({ ok: true });
+  if (row.superseded_by_item_id)
+    fail(
+      409,
+      "HISTORY_LOCKED",
+      "Histori sudah terwakili Alokasi dan tetap dipertahankan.",
+    );
   const result = await c.env.DB.batch([
     c.env.DB.prepare(
       "UPDATE expenses SET deleted_at=$1,updated_at=$2,version=version+1 WHERE id=$3 AND owner_id=$4 AND version=$5 AND deleted_at IS NULL RETURNING id",
@@ -410,6 +486,12 @@ export async function createTransfer(c: C) {
       400,
       "INVALID_TRANSFER_ITEM",
       "Pilih rencana kiriman Anda pada bulan yang sama.",
+    );
+  if (row.recording_mode === "actual")
+    fail(
+      409,
+      "AUTOMATIC_TRANSFER",
+      "Kiriman sudah dicatat langsung melalui Alokasi.",
     );
   const existing = await c.env.DB.prepare("SELECT * FROM transfers WHERE id=$1")
     .bind(v.id)
@@ -453,6 +535,8 @@ export async function deleteTransfer(c: C) {
   if (!row)
     fail(404, "NOT_FOUND", "Kiriman tidak ditemukan atau bukan milik Anda.");
   if (row.deleted_at) return c.json({ ok: true });
+  if (row.superseded_by_item_id)
+    fail(409, "HISTORY_LOCKED", "Histori kiriman sudah terwakili Alokasi.");
   const result = await c.env.DB.prepare(
     "UPDATE transfers SET deleted_at=$1,version=version+1 WHERE id=$2 AND from_owner_id=$3 AND version=$4 AND deleted_at IS NULL",
   )

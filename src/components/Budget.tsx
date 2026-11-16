@@ -1,3 +1,5 @@
+import { AllocationPosting } from "./AllocationPosting";
+import { ledgerTotals as totals } from "../../shared/ledger";
 import { MoneyInput } from "./MoneyInput";
 import { useState } from "react";
 import { IncomeEvidence } from "./IncomeEvidence";
@@ -5,7 +7,13 @@ import { Trash2, Plus, Check, LoaderCircle } from "lucide-react";
 import { Button } from "./ui/button";
 import type { FinanceStore } from "../lib/use-finance";
 import type { Item, Owner, Kind } from "../../shared/domain";
-import { totals, rupiah, ratio, other, ownerName } from "../../shared/domain";
+import { rupiah, ratio, other, ownerName } from "../../shared/domain";
+const groupOf = (i: Item): Kind =>
+  i.recording_mode === "actual" && i.posting_kind
+    ? i.posting_kind === "internal"
+      ? "transfer_out"
+      : "allocation"
+    : i.kind;
 function FieldError({
   item,
   field,
@@ -123,12 +131,38 @@ function BudgetRow({
             }
             inputMode="numeric"
             autoComplete="off"
-            disabled={disabled}
+            disabled={
+              disabled ||
+              (item.recording_mode === "actual" && !item.posting_kind)
+            }
             placeholder="Belum diisi"
             value={
               amount?.value ?? (item.amount === null ? "" : String(item.amount))
             }
-            onValueChange={(value) => store.edit(item, "amount", value)}
+            onValueChange={(value) => {
+              if (
+                value === "" &&
+                store.snapshot!.attachments.some(
+                  (f) =>
+                    f.allocation_item_id === item.id && f.status !== "deleting",
+                ) &&
+                !confirm(
+                  "Batalkan pembagian ini dan lepaskan seluruh buktinya?",
+                )
+              )
+                return;
+              store.edit(
+                item,
+                "amount",
+                value,
+                value === "" &&
+                  store.snapshot!.attachments.some(
+                    (f) =>
+                      f.allocation_item_id === item.id &&
+                      f.status !== "deleting",
+                  ),
+              );
+            }}
             onBlur={() => {
               if (amount) void store.commit(item.id + ":amount");
             }}
@@ -179,6 +213,14 @@ function BudgetRow({
             }}
           />
         </div>
+      )}
+      {item.kind !== "income" && (
+        <AllocationPosting
+          item={item}
+          store={store}
+          canEdit={canEdit}
+          active={active}
+        />
       )}
       <FieldError item={item} field="label" store={store} />
       <FieldError item={item} field="amount" store={store} />
@@ -235,7 +277,7 @@ export function Budget({
     <>
       <p className="access-note">
         {canEdit
-          ? "Isi nominal pada pos anggaran Anda."
+          ? "Isi nominal sesudah membayar atau menyerahkan uang."
           : `Bagian ${ownerName[owner].toLowerCase()} · hanya bisa dilihat dari akun Anda.`}
       </p>
       {!exists ? (
@@ -255,7 +297,7 @@ export function Budget({
             aria-label="Ringkasan anggaran"
           >
             <div className="budget-remaining">
-              <span>Sisa anggaran</span>
+              <span>Sisa belum dibagikan</span>
               <strong className={stats.remaining < 0 ? "negative" : ""}>
                 {rupiah.format(stats.remaining)}
               </strong>
@@ -265,19 +307,17 @@ export function Budget({
                   : ratio(Math.abs(stats.remaining), stats.income) +
                     (stats.remaining < 0
                       ? " melebihi dana anggaran"
-                      : " belum dialokasikan")}
+                      : " belum dibagikan")}
               </small>
             </div>
             <div className="budget-total">
               <div>
-                <span>Dana anggaran</span>
+                <span>Pemasukan + kiriman masuk</span>
                 <strong>{rupiah.format(stats.income)}</strong>
               </div>
               <div>
-                <span>Alokasi + kiriman</span>
-                <strong>
-                  {rupiah.format(stats.allocation + stats.outgoing)}
-                </strong>
+                <span>Dibayar / diserahkan</span>
+                <strong>{rupiah.format(stats.distributed)}</strong>
               </div>
             </div>
           </section>
@@ -319,7 +359,7 @@ export function Budget({
                         ? "Pemasukan sendiri"
                         : kind === "allocation"
                           ? "Alokasi"
-                          : "Rencana kiriman ke " +
+                          : "Kiriman pasangan ke " +
                             ownerName[other(owner)].toLowerCase()}
                     </h3>
                     <strong>
@@ -329,14 +369,14 @@ export function Budget({
                             (i) =>
                               i.owner_id === owner &&
                               !i.deleted_at &&
-                              i.kind === kind,
+                              groupOf(i) === kind,
                           )
                           .reduce((sum, i) => sum + (i.amount ?? 0), 0),
                       )}
                     </strong>
                   </div>
                   {s.items
-                    .filter((i) => i.owner_id === owner && i.kind === kind)
+                    .filter((i) => i.owner_id === owner && groupOf(i) === kind)
                     .map((item) => (
                       <BudgetRow
                         key={item.id}
@@ -350,7 +390,7 @@ export function Budget({
                   {kind === "income" && stats.incoming > 0 && (
                     <div className="derived-income">
                       <span>
-                        Rencana kiriman dari{" "}
+                        Kiriman pasangan dari{" "}
                         {ownerName[other(owner)].toLowerCase()} · otomatis
                       </span>
                       <strong>{rupiah.format(stats.incoming)}</strong>
@@ -368,7 +408,7 @@ export function Budget({
                         ? "Tambah pemasukan"
                         : kind === "allocation"
                           ? "Tambah alokasi"
-                          : "Tambah rencana kiriman"}
+                          : "Tambah pos kiriman"}
                     </Button>
                   )}
                 </section>

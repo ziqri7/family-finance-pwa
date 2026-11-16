@@ -46,6 +46,7 @@ test("income evidence: both owners, private reads, quota, copy, retirement and r
       method,
       headers: {
         Origin: origin,
+        "X-Financee-Client": "2",
         Cookie: cookies[who] || "",
         "Content-Type": type,
       },
@@ -372,11 +373,11 @@ test("income evidence: both owners, private reads, quota, copy, retirement and r
         await migrate(dest);
         await dest
           .prepare(
-            "TRUNCATE income_attachments,attachments,transfers,expenses,budget_items,budgets,periods,default_items,sessions,login_attempts,account_credentials",
+            "TRUNCATE allocation_attachments,income_attachments,attachments,transfers,expenses,budget_items,budgets,periods,default_items,sessions,login_attempts,account_credentials",
           )
           .run();
         assert.deepEqual(await restoreBackup(dest, storage, folder), {
-          tables: 9,
+          tables: 10,
           objects: 3,
         });
       },

@@ -14,6 +14,7 @@ import { Button } from "./components/ui/button";
 import { Dialog } from "./components/ui/dialog";
 import { ChangePassword } from "./components/ChangePassword";
 import { EvidenceGallery } from "./components/EvidenceGallery";
+import { AutomaticRecords } from "./components/AllocationPosting";
 import { IncomeEvidence } from "./components/IncomeEvidence";
 import { Budget } from "./components/Budget";
 import { Dashboard, ExpenseList, EvidenceImages } from "./components/Dashboard";
@@ -244,12 +245,15 @@ export default function App() {
     if (
       !store.snapshot?.items.some(
         (i) =>
-          i.owner_id === user.id && i.kind === "transfer_out" && !i.deleted_at,
+          i.owner_id === user.id &&
+          i.kind === "transfer_out" &&
+          i.recording_mode !== "actual" &&
+          !i.deleted_at,
       )
     ) {
       await navigate(user.id);
       store.setMessage(
-        "Tambahkan rencana kiriman pada bagian Anda terlebih dahulu.",
+        "Kiriman dicatat langsung pada Alokasi. Isi nominal pada pos kiriman pasangan.",
       );
       return;
     }
@@ -454,6 +458,7 @@ export default function App() {
           </div>
           {incomeEvidence && user && (
             <IncomeEvidence
+              allocation={incomeEvidence.kind !== "income"}
               item={incomeEvidence}
               store={store}
               canEdit={incomeEvidence.owner_id === user.id}
@@ -553,6 +558,7 @@ export default function App() {
               <div className="view-content" key={view + ":" + s.id}>
                 {view === "dashboard" ? (
                   <Dashboard
+                    onAllocation={setIncomeEvidence}
                     mode={dashboardMode}
                     onMode={(mode) => setDashboardMode(mode)}
                     snapshot={s}
@@ -587,7 +593,7 @@ export default function App() {
                         <section className="records-panel">
                           <div className="section-heading">
                             <div>
-                              <h2>Pengeluaran nyata</h2>
+                              <h2>Catatan pembagian dan tambahan</h2>
                               <p>Bukti opsional.</p>
                             </div>
                             {view === actor && (
@@ -599,6 +605,11 @@ export default function App() {
                               </Button>
                             )}
                           </div>
+                          <AutomaticRecords
+                            snapshot={s}
+                            owner={view}
+                            onItem={setIncomeEvidence}
+                          />
                           <ExpenseList
                             snapshot={s}
                             owner={view}
@@ -608,80 +619,97 @@ export default function App() {
                             onEvidence={setEvidence}
                           />
                         </section>
-                        <section className="records-panel">
-                          <div className="section-heading">
-                            <div>
-                              <h2>Kiriman antar pasangan</h2>
-                              <p>Hanya pencatatan, bukan transfer uang.</p>
-                            </div>
-                            {view === actor && (
-                              <Button
-                                variant="secondary"
-                                disabled={!store.online || store.busy}
-                                onClick={() => void openTransfer()}
-                              >
-                                + Kiriman
-                              </Button>
-                            )}
-                          </div>
-                          {!s.transfers.some(
+                        {(s.items.some(
+                          (i) =>
+                            i.owner_id === view &&
+                            i.kind === "transfer_out" &&
+                            i.recording_mode !== "actual" &&
+                            !i.deleted_at,
+                        ) ||
+                          s.transfers.some(
                             (t) =>
-                              t.from_owner_id === view ||
-                              t.to_owner_id === view,
-                          ) && (
-                            <p className="empty-note">
-                              Belum ada kiriman yang dicatat.
-                            </p>
-                          )}
-                          {s.transfers
-                            .filter(
+                              !t.deleted_at &&
+                              !t.superseded_by_item_id &&
+                              (t.from_owner_id === view ||
+                                t.to_owner_id === view),
+                          )) && (
+                          <section className="records-panel">
+                            <div className="section-heading">
+                              <div>
+                                <h2>Kiriman antar pasangan</h2>
+                                <p>Hanya pencatatan, bukan transfer uang.</p>
+                              </div>
+                              {view === actor && (
+                                <Button
+                                  variant="secondary"
+                                  disabled={!store.online || store.busy}
+                                  onClick={() => void openTransfer()}
+                                >
+                                  + Kiriman
+                                </Button>
+                              )}
+                            </div>
+                            {!s.transfers.some(
                               (t) =>
-                                t.from_owner_id === view ||
-                                t.to_owner_id === view,
-                            )
-                            .map((t) => (
-                              <article className="transfer-record" key={t.id}>
-                                <div>
-                                  <strong>
-                                    {ownerName[t.from_owner_id]} →{" "}
-                                    {ownerName[t.to_owner_id]}
-                                  </strong>
-                                  <small>
-                                    {t.occurred_on} ·{" "}
-                                    {t.from_owner_id === view
-                                      ? "Keluar"
-                                      : "Masuk · otomatis"}
-                                  </small>
-                                </div>
-                                <strong>{rupiah.format(t.amount)}</strong>
-                                {view === actor &&
-                                  t.from_owner_id === actor && (
-                                    <Button
-                                      variant="ghost"
-                                      disabled={!store.online || store.busy}
-                                      onClick={() => {
-                                        if (
-                                          confirm(
-                                            "Hapus catatan kiriman dari kedua tampilan?",
-                                          )
-                                        )
-                                          void store
-                                            .mutate(
-                                              "/transfers/" + t.id,
-                                              "DELETE",
-                                              { expectedVersion: t.version },
+                                !t.superseded_by_item_id &&
+                                (t.from_owner_id === view ||
+                                  t.to_owner_id === view),
+                            ) && (
+                              <p className="empty-note">
+                                Belum ada kiriman yang dicatat.
+                              </p>
+                            )}
+                            {s.transfers
+                              .filter(
+                                (t) =>
+                                  !t.superseded_by_item_id &&
+                                  (t.from_owner_id === view ||
+                                    t.to_owner_id === view),
+                              )
+                              .map((t) => (
+                                <article className="transfer-record" key={t.id}>
+                                  <div>
+                                    <strong>
+                                      {ownerName[t.from_owner_id]} →{" "}
+                                      {ownerName[t.to_owner_id]}
+                                    </strong>
+                                    <small>
+                                      {t.occurred_on} ·{" "}
+                                      {t.from_owner_id === view
+                                        ? "Keluar"
+                                        : "Masuk · otomatis"}
+                                    </small>
+                                  </div>
+                                  <strong>{rupiah.format(t.amount)}</strong>
+                                  {view === actor &&
+                                    t.from_owner_id === actor && (
+                                      <Button
+                                        variant="ghost"
+                                        disabled={!store.online || store.busy}
+                                        onClick={() => {
+                                          if (
+                                            confirm(
+                                              "Hapus catatan kiriman dari kedua tampilan?",
                                             )
-                                            .catch((e) =>
-                                              store.setMessage(e.message),
-                                            );
-                                      }}
-                                    >
-                                      Hapus
-                                    </Button>
-                                  )}
-                              </article>
-                            ))}
-                        </section>
+                                          )
+                                            void store
+                                              .mutate(
+                                                "/transfers/" + t.id,
+                                                "DELETE",
+                                                { expectedVersion: t.version },
+                                              )
+                                              .catch((e) =>
+                                                store.setMessage(e.message),
+                                              );
+                                        }}
+                                      >
+                                        Hapus
+                                      </Button>
+                                    )}
+                                </article>
+                              ))}
+                          </section>
+                        )}
                       </>
                     )}
                   </>

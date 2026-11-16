@@ -15,7 +15,7 @@ let mf, workerScript;
 import { config, db, reset } from "./neon-helper.mjs";
 const id = () => randomBytes(16).toString("hex");
 async function req(method, path, body, who = "a", extra = {}) {
-  const headers = { Origin: origin, ...extra };
+  const headers = { Origin: origin, "X-Financee-Client": "2", ...extra };
   if (cookies[who]) headers.Cookie = cookies[who];
   if (body !== undefined && !headers["Content-Type"])
     headers["Content-Type"] = "application/json";
@@ -88,7 +88,9 @@ before(async () => {
   for (const owner of ["partner-a", "partner-b"])
     for (const [position, item] of template[owner].entries())
       await db
-        .prepare("INSERT INTO default_items VALUES($1,$2,$3,$4,$5)")
+        .prepare(
+          "INSERT INTO default_items(id,owner_id,label,kind,position,posting_kind) VALUES($1,$2,$3,$4,$5,CASE WHEN $4='income' THEN NULL WHEN $4='transfer_out' THEN 'internal' ELSE 'external' END)",
+        )
         .bind(id(), owner, item.label, item.kind, position)
         .run();
 });
@@ -259,7 +261,12 @@ test("field versions support independent edits, concurrent CAS, and retry after 
 });
 test("new item ID is idempotent; null differs from zero; deleted ID is not resurrected", async () => {
   const itemId = id(),
-    body = { id: itemId, label: "Pos contoh", kind: "allocation" };
+    body = {
+      id: itemId,
+      label: "Pos contoh",
+      kind: "allocation",
+      postingKind: "external",
+    };
   const a = await req("POST", "/periods/2026-11/items", body);
   assert.equal(a.status, 201);
   assert.equal((await req("POST", "/periods/2026-11/items", body)).status, 200);
@@ -337,6 +344,24 @@ test("expense, internal transfer and copy preserve the financial model", async (
     409,
   );
   state.transfer = await set(state.transfer, 1000000);
+  // Actual allocation already represents a transfer; the separate route is legacy-only.
+  assert.equal(
+    (
+      await req("POST", "/transfers", {
+        id: id(),
+        date: "2026-11-10",
+        sourceItemId: state.transfer.id,
+        amount: 1,
+      })
+    ).status,
+    409,
+  );
+  await db
+    .prepare(
+      "UPDATE budget_items SET recording_mode='legacy',posting_kind=NULL WHERE id=$1",
+    )
+    .bind(state.transfer.id)
+    .run();
   ids.transfer = id();
   assert.equal(
     (
@@ -383,7 +408,7 @@ test("expense, internal transfer and copy preserve the financial model", async (
     copy.items
       .filter((i) => i.kind === "income")
       .reduce((sum, i) => sum + (i.amount || 0), 0),
-    10000000,
+    0,
   );
   assert.equal(copy.expenses.length, 0);
   assert.equal(copy.transfers.length, 0);

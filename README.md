@@ -1,5 +1,12 @@
 # Financée
 
+## Kandidat Alokasi aktual — belum dirilis
+
+Alur baru yang disetujui: isi nominal sesudah pembayaran/penyerahan, catatan otomatis dari pos yang sama, bukti JPG/PNG langsung pada Alokasi, serta pembeda Pembayaran/Kiriman pasangan/Disisihkan. Data lama diberi penanda dan ditinjau pemilik sebelum konversi; histori dan buktinya tetap disimpan. Salin bulan membawa struktur dengan nominal kosong. Pengeluaran tambahan memakai menu Catat tanpa mengulang nominal Alokasi.
+
+Kode pada cabang pengembangan ini membutuhkan migrasi 0005 dan backup format 5. Jangan menerapkannya langsung pada instalasi keluarga; ikuti [upgrade](docs/DEPLOYMENT.md), [rancangan disetujui](docs/ALOKASI_REALISASI_PROPOSAL.md) dan [bukti uji](docs/TESTING.md). Versi dasar yang disebut di bawah tetap merupakan rilis sebelumnya sampai kandidat ini ditayangkan.
+
+
 Aplikasi keuangan keluarga berbahasa Indonesia: isi anggaran langsung, catat pengeluaran dan bukti JPG/PNG, serta lihat ringkasan suami–istri tanpa menghitung kiriman internal dua kali.
 
 Setiap keluarga memasang salinan sendiri pada **Cloudflare Pages + Functions + Neon** miliknya. Tidak ada server akun pusat, pendaftaran publik, koneksi bank atau pelaksanaan transfer uang. Pengisian dilakukan langsung pada aplikasi; tidak ada unggah Excel. Workbook sumber hanya dipakai saat pengembangan/provisioning privat.
@@ -25,11 +32,11 @@ Backend berjalan lokal, tetapi data/gambar memakai cabang Neon online sehingga m
 
 1. Masuk dengan akun sendiri, pilih bulan, lalu buat anggaran. Pos bawaan langsung tersedia untuk diisi.
 2. Tekan Enter atau pindah kolom untuk menyimpan. **Tersimpan** muncul setelah server mengonfirmasi; isian gagal/konflik tetap terlihat.
-3. Tambah, ubah atau hapus pos. Salin bulan membawa rencana sendiri, tanpa pengeluaran, kiriman nyata atau gambar.
-4. Catat pengeluaran pada alokasi sendiri. Bukti JPG/PNG opsional, maksimal 10 gambar per catatan dan 5 MiB per gambar; gambar rusak atau berdimensi berlebihan ditolak.
+3. Tambah, ubah atau hapus pos. Salin bulan membawa struktur pos sendiri; nominal, tanggal, pengeluaran, kiriman dan gambar tidak disalin.
+4. Pada Alokasi baru, pilih jenis pembagian lalu isi nominal setelah dibayar/diserahkan; catatan terbentuk otomatis. Gunakan Catat hanya untuk pembayaran tambahan. Bukti JPG/PNG dapat dipasang langsung pada pos, maksimal 10 gambar dan 5 MiB per gambar; gambar rusak atau berdimensi berlebihan ditolak. Pos lama ditinjau sebelum beralih agar catatan tidak ganda.
 5. Pada pos pemasukan, pilih Tambah / lihat bukti untuk lampiran JPG/PNG opsional dengan batas yang sama. Galeri Bukti menampilkan gambar pemasukan/pengeluaran bulan terpilih; pasangan dapat melihat.
 6. Di Beranda, pilih Bulan untuk donut alokasi dan batang pemasukan/pengeluaran, atau Tahun untuk ringkasan 12 bulan. Penjelasan hitungan tersedia melalui tombol info.
-7. Catat kiriman yang sudah dilakukan. Pasangan melihat referensi masuk otomatis. Aplikasi tidak menjalankan transfer uang.
+7. Isi pos berjenis Kiriman pasangan setelah uang diserahkan. Pasangan melihat referensi masuk otomatis. Aplikasi tidak menjalankan transfer uang; pencatatan kiriman manual tetap tersedia untuk data alur lama.
 
 Kedua akun membaca data keluarga; masing-masing hanya mengubah bagiannya. Backend memeriksa pembatasan ini. Sinkronisasi diperiksa setiap 10 detik saat tab terlihat dan online. Saat offline, pengisian baru ditahan; cache PWA berisi antarmuka saja. Draf tidak disimpan permanen pada perangkat.
 

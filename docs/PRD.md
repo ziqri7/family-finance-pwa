@@ -1,5 +1,12 @@
 # PRD — family-finance-pwa
 
+## Revisi berlaku pada kandidat Alokasi aktual
+
+Preview dan engineering disetujui pada 16 November 2026. Nominal pos baru menyatakan pembayaran/penyerahan yang sudah terjadi; catatan otomatis dibentuk dari pos tersebut. Pilih jenis Pembayaran/Kiriman pasangan/Disisihkan sekali; jenis dan tanggal opsional dapat dikoreksi dengan pemeriksaan versi. Tanggal yang kosong ditampilkan sebagai konteks bulan.
+
+Data lama tidak dianggap telah dibayar otomatis. Tinjau pencatatan memperlihatkan nominal pos, total/jumlah catatan dan jumlah bukti lama sebelum penggantian sumber. Histori tetap dapat dibaca dan tidak dihitung lagi; pengeluaran tambahan berikutnya tetap dihitung. Kosong berbeda dari 0. Pembatalan dengan bukti memerlukan konfirmasi dan menonaktifkan bukti. Salin bulan hanya label/urutan/klasifikasi, seluruh nominal/tanggal/bukti kosong. Endpoint keuangan menolak antarmuka lama dengan pesan pembaruan. Hak pemilik dan kedua pembaca tetap. Uji penerimaan terperinci ada pada ALOKASI_REALISASI_PROPOSAL.md dan TESTING.md; catatan rencana lama di bawah menjadi arsip untuk perubahan semantik ini.
+
+
 Status terkini: paket gabungan 16 November 2026 sudah diimplementasikan, diuji, disetujui dan ditayangkan. Catatan tahap awal di bawah adalah arsip. Beranda memakai donut pembagian alokasi dan batang pemasukan/pengeluaran; tab Tahun berisi rasio berbobot dan batang 12 bulan. Kedua bagian pemilik tetap menyediakan kolom langsung. Galeri Bukti menyatukan lampiran siap dengan filter Semua/Pengeluaran/Pemasukan. Penjelasan panjang dipindahkan ke tombol info tanpa menghilangkan status simpan, kesalahan, atau konfirmasi.
 
 Pembaruan arsitektur yang disetujui: hosting/API tetap Cloudflare, database dan gambar privat memakai Neon milik keluarga yang sama. Instalasi kini memerlukan dua akun layanan. Fungsi dan hitungan MVP tetap; rincian di ARCHITECTURE.md.

@@ -36,6 +36,7 @@ test("year report is private, weighted, complete-only, transfer-free and year sc
       method: body ? "POST" : "GET",
       headers: {
         Origin: origin,
+        "X-Financee-Client": "2",
         "Content-Type": "application/json",
         Cookie: cookies[who] || "",
       },
@@ -137,8 +138,8 @@ test("year report is private, weighted, complete-only, transfer-free and year sc
     assert.equal(a.data.excluded, 2);
     assert.equal(a.data.income, 12000000);
     assert.equal(a.data.spent, 7000100);
-    assert.equal(a.data.allocation, 10000000);
-    assert.equal(a.data.remaining, 2000000);
+    assert.equal(a.data.allocation, 7000100);
+    assert.equal(a.data.remaining, 4999900);
     assert.equal(a.data.months[2].complete, false);
     assert.equal(a.data.months[3].missingOwners, 1);
     assert.equal(a.data.months[4].income, 0);

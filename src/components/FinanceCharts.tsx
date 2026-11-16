@@ -1,13 +1,9 @@
+import { effectiveFamilyTotals as familyTotals } from "../../shared/ledger";
 import { allocationChart } from "../../shared/chart-data";
 import { useState } from "react";
 import { Info } from "lucide-react";
 import { Dialog } from "./ui/dialog";
-import {
-  familyTotals,
-  ratio,
-  rupiah,
-  type Snapshot,
-} from "../../shared/domain";
+import { ratio, rupiah, type Snapshot } from "../../shared/domain";
 import "./visual-finance.css";
 export function ChartInfo({
   title,
@@ -35,13 +31,13 @@ export function ChartInfo({
 export const compactMoney = (n: number) =>
   Math.abs(n) >= 1e9
     ? "Rp" +
-      new Intl.NumberFormat("id-ID", { maximumFractionDigits: 1 }).format(
+      new Intl.NumberFormat("id-ID", { maximumFractionDigits: 2 }).format(
         n / 1e9,
       ) +
       " M"
     : Math.abs(n) >= 1e6
       ? "Rp" +
-        new Intl.NumberFormat("id-ID", { maximumFractionDigits: 1 }).format(
+        new Intl.NumberFormat("id-ID", { maximumFractionDigits: 2 }).format(
           n / 1e6,
         ) +
         " jt"
@@ -90,7 +86,7 @@ export function MonthCharts({ snapshot }: { snapshot: Snapshot }) {
           ["Pemasukan anggaran", incomeComplete ? t.income : null],
           ["Pengeluaran", t.spent],
           [
-            "Sisa anggaran",
+            "Sisa belum dibagi",
             ownersComplete && missing === 0 ? t.remaining : null,
           ],
         ]}
@@ -101,20 +97,26 @@ export function MonthCharts({ snapshot }: { snapshot: Snapshot }) {
           {missing ? ` · ${missing} nominal belum diisi` : ""}.
         </p>
       )}
+      {t.reserved > 0 && (
+        <p className="chart-status">
+          Disisihkan: {rupiah.format(t.reserved)} · terpisah dari pembayaran ke
+          luar keluarga.
+        </p>
+      )}
       <div className="finance-chart-grid">
         <section className="finance-panel">
           <div className="finance-heading">
-            <h2>Pembagian alokasi</h2>
+            <h2>Pembagian uang</h2>
             <ChartInfo title="Pembagian alokasi">
               <p>
-                Donut membagi alokasi yang sudah diisi menurut nama pos. Pos
-                bernama sama digabung; tiga terbesar ditampilkan tersendiri,
-                sisanya menjadi Pos lainnya.
+                Donut membagi pembayaran dan uang disisihkan yang sudah tercatat
+                menurut nama pos. Pos bernama sama digabung; tiga terbesar
+                ditampilkan tersendiri, sisanya menjadi Pos lainnya.
               </p>
               <p>
-                Persentase terhadap total alokasi terisi, bukan pemasukan. Sisa
-                anggaran = pemasukan dikurangi alokasi; kiriman internal tidak
-                dihitung dua kali.
+                Persentase terhadap pembayaran dan uang disisihkan yang
+                tercatat. Sisa belum dibagi = pemasukan dikurangi pembayaran dan
+                uang disisihkan; kiriman internal tidak dihitung dua kali.
               </p>
               <p>Nominal kosong belum diisi. Isi 0 jika pos tidak dipakai.</p>
             </ChartInfo>
@@ -129,7 +131,10 @@ export function MonthCharts({ snapshot }: { snapshot: Snapshot }) {
                     ? "Komposisi alokasi: " +
                       top
                         .map(
-                          (r) => r.label + " " + ratio(r.amount, t.allocation),
+                          (r) =>
+                            r.label +
+                            " " +
+                            ratio(r.amount, t.allocation + t.reserved),
                         )
                         .join(", ")
                     : "Belum ada alokasi terisi"
@@ -145,7 +150,8 @@ export function MonthCharts({ snapshot }: { snapshot: Snapshot }) {
                     strokeWidth="15"
                   />
                   {top.map((r, i) => {
-                    const size = (r.amount / t.allocation) * circle,
+                    const size =
+                        (r.amount / (t.allocation + t.reserved)) * circle,
                       start = offset;
                     offset += size;
                     return (
@@ -165,9 +171,9 @@ export function MonthCharts({ snapshot }: { snapshot: Snapshot }) {
                 </g>
               </svg>
               <div className="allocation-center" aria-hidden="true">
-                <span>Alokasi terisi</span>
-                <strong title={rupiah.format(t.allocation)}>
-                  {compactMoney(t.allocation)}
+                <span>Sudah dicatat</span>
+                <strong title={rupiah.format(t.allocation + t.reserved)}>
+                  {compactMoney(t.allocation + t.reserved)}
                 </strong>
               </div>
             </div>
@@ -181,14 +187,14 @@ export function MonthCharts({ snapshot }: { snapshot: Snapshot }) {
                       {compactMoney(r.amount)}
                     </small>
                   </span>
-                  <strong>{ratio(r.amount, t.allocation)}</strong>
+                  <strong>{ratio(r.amount, t.allocation + t.reserved)}</strong>
                 </li>
               ))}
               {!top.length && <li>Belum ada alokasi.</li>}
             </ul>
           </div>
           <p className="chart-caption">
-            Persentase dari alokasi yang sudah diisi.
+            Persentase dari pembayaran dan uang disisihkan yang sudah tercatat.
           </p>
         </section>
         <section className="finance-panel">

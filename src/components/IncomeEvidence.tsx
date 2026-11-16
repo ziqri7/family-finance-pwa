@@ -9,11 +9,13 @@ import { randomId, type Item } from "../../shared/domain";
 
 export function IncomeEvidence({
   item,
+  allocation = false,
   store,
   canEdit,
   onClose,
 }: {
   item: Item;
+  allocation?: boolean;
   store: FinanceStore;
   canEdit: boolean;
   onClose: () => void;
@@ -23,8 +25,20 @@ export function IncomeEvidence({
   const [picked, setPicked] = useState<
     { id: string; file: File; done: boolean }[]
   >([]);
+  const prefix = allocation ? "allocation" : "income";
+  const archived = allocation
+    ? new Set(
+        store
+          .snapshot!.expenses.filter((e) => e.superseded_by_item_id === item.id)
+          .map((e) => e.id),
+      )
+    : new Set<string>();
   const files = store.snapshot!.attachments.filter(
-    (f) => f.income_item_id === item.id && f.status !== "deleting",
+    (f) =>
+      (allocation
+        ? f.allocation_item_id === item.id ||
+          Boolean(f.expense_id && archived.has(f.expense_id))
+        : f.income_item_id === item.id) && f.status !== "deleting",
   );
   async function save() {
     setBusy(true);
@@ -41,7 +55,7 @@ export function IncomeEvidence({
           ),
           (b) => b.toString(16).padStart(2, "0"),
         ).join("");
-        await api("/income-items/" + item.id + "/attachments", {
+        await api("/" + prefix + "-items/" + item.id + "/attachments", {
           method: "POST",
           body: {
             id: entry.id,
@@ -50,7 +64,11 @@ export function IncomeEvidence({
             sha256,
           },
         });
-        await upload(entry.id, entry.file, "income-attachments");
+        await upload(
+          entry.id,
+          entry.file,
+          allocation ? "allocation-attachments" : "income-attachments",
+        );
         entry.done = true;
         setPicked([...picked]);
       }
@@ -72,7 +90,7 @@ export function IncomeEvidence({
   return (
     <Dialog
       open
-      title="Bukti pemasukan"
+      title={allocation ? "Bukti pembayaran / penyerahan" : "Bukti pemasukan"}
       description={item.label + " · " + store.snapshot!.id}
       busy={busy}
       onOpenChange={(v) => {
@@ -85,22 +103,23 @@ export function IncomeEvidence({
       </p>
       <EvidenceImages files={files.filter((f) => f.status === "ready")} />
       {files.length === 0 && (
-        <p className="empty-note">Belum ada bukti pemasukan.</p>
+        <p className="empty-note">Belum ada bukti pada pos ini.</p>
       )}
       {files.map((file, i) => (
         <div className="inline-actions" key={file.id}>
           <span>
             Bukti {i + 1}
+            {allocation && !file.allocation_item_id ? " · histori lama" : ""}
             {file.status !== "ready" ? " · belum selesai diunggah" : ""}
           </span>
-          {canEdit && (
+          {canEdit && (!allocation || Boolean(file.allocation_item_id)) && (
             <Button
               variant="ghost"
               disabled={busy}
               onClick={async () => {
                 setBusy(true);
                 try {
-                  await api("/income-attachments/" + file.id, {
+                  await api("/" + prefix + "-attachments/" + file.id, {
                     method: "DELETE",
                   });
                   await store.refresh(true);
@@ -134,14 +153,16 @@ export function IncomeEvidence({
               setError("");
               try {
                 if (
-                  files.length +
+                  files.filter(
+                    (f) => !allocation || f.allocation_item_id === item.id,
+                  ).length +
                     picked.filter(
                       (p) => !p.done && !files.some((f) => f.id === p.id),
                     ).length +
                     list.length >
                   10
                 )
-                  throw Error("Maksimal 10 gambar per pos pemasukan.");
+                  throw Error("Maksimal 10 gambar per pos.");
                 for (const file of list) await validateFile(file);
                 setPicked((old) => [
                   ...old,

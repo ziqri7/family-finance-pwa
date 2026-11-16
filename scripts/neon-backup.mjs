@@ -14,7 +14,14 @@ export const columns = {
     "version",
     "updated_at",
   ],
-  default_items: ["id", "owner_id", "label", "kind", "position"],
+  default_items: [
+    "id",
+    "owner_id",
+    "label",
+    "kind",
+    "position",
+    "posting_kind",
+  ],
   periods: ["id", "revision", "created_at"],
   budgets: ["period_id", "owner_id", "created_at"],
   budget_items: [
@@ -72,8 +79,19 @@ export const columns = {
     "updated_at",
   ],
 };
+columns.budget_items.push(
+  "recording_mode",
+  "posting_kind",
+  "posting_date",
+  "posting_version",
+);
+columns.expenses.push("superseded_by_item_id", "superseded_at");
+columns.transfers.push("superseded_by_item_id", "superseded_at");
 columns.income_attachments = columns.attachments.map((k) =>
   k === "expense_id" ? "income_item_id" : k,
+);
+columns.allocation_attachments = columns.attachments.map((k) =>
+  k === "expense_id" ? "allocation_item_id" : k,
 );
 export const digest = (data) => createHash("sha256").update(data).digest("hex");
 export async function snapshot(db, includeMigrations = false) {
@@ -102,7 +120,20 @@ export function requiredObjects(data) {
       .filter((i) => i.deleted_at === null && i.kind === "income")
       .map((i) => i.id),
   );
+  const allocations = new Set(
+    data.budget_items
+      .filter(
+        (i) =>
+          i.deleted_at === null &&
+          i.recording_mode === "actual" &&
+          i.amount !== null,
+      )
+      .map((i) => i.id),
+  );
   return [
+    ...(data.allocation_attachments || []).filter(
+      (a) => a.status === "ready" && allocations.has(a.allocation_item_id),
+    ),
     ...data.attachments.filter(
       (a) => a.status === "ready" && live.has(a.expense_id),
     ),
@@ -121,7 +152,11 @@ export function requiredObjects(data) {
 export function restoredData(data) {
   const copy = structuredClone(data),
     required = new Set(requiredObjects(copy).map((a) => a.id));
-  for (const a of [...copy.attachments, ...(copy.income_attachments || [])])
+  for (const a of [
+    ...copy.attachments,
+    ...(copy.income_attachments || []),
+    ...(copy.allocation_attachments || []),
+  ])
     if (!required.has(a.id)) a.status = "deleting";
   return copy;
 }
@@ -158,7 +193,7 @@ export async function createBackup(
     join(folder, "manifest.json"),
     JSON.stringify(
       {
-        version: 4,
+        version: 5,
         complete: true,
         createdAt: new Date().toISOString(),
         databaseSha256: digest(json),
@@ -177,9 +212,9 @@ export async function readBackup(folder) {
       await readFile(join(folder, "manifest.json"), "utf8"),
     ),
     bytes = await readFile(join(folder, "database.json"));
-  if (manifest.version !== 4)
+  if (manifest.version !== 5)
     throw Error(
-      "Format backup harus versi 4 yang memuat kredensial; gunakan panduan pemulihan versi lama secara terpisah.",
+      "Format backup harus versi 5 yang memuat kredensial; gunakan panduan pemulihan versi lama secara terpisah.",
     );
   if (manifest.complete !== true || digest(bytes) !== manifest.databaseSha256)
     throw Error("Backup tidak lengkap atau checksum berbeda.");

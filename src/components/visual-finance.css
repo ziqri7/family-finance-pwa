@@ -567,3 +567,25 @@
     font-size: 33px;
   }
 }
+
+.posting-controls {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin: 8px 0;
+}
+.posting-state {
+  font-size: 12px;
+  color: #44672b;
+}
+.posting-controls small {
+  font-size: 12px;
+  color: #61636e;
+}
+.posting-controls button {
+  font-size: 12px;
+}
+.posting-controls select {
+  max-width: 100%;
+}

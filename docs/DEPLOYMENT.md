@@ -1,5 +1,16 @@
 # Deployment Cloudflare dan Neon milik sendiri
 
+## Upgrade kandidat Alokasi aktual 0005 — belum untuk produksi
+
+1. Tinjau paket dan hasil uji lalu minta persetujuan rilis. Cadangkan database/gambar format 4 dengan sumber immutable versi 0004 sebelum migrasi; pertahankan pepper dan tujuh secret.
+2. Jalankan hanya migrasi 0005 pada konfigurasi yang ditinjau. Tidak menjalankan seed/provisioning/accounts:init; tidak menafsirkan nominal lama sebagai actual atau mengonversi data keluarga otomatis. Snapshot nilai lama dan kredensial harus tetap cocok.
+3. Deploy bundel kandidat yang telah diuji ke proyek Pages yang sama. Pengguna menyelesaikan draf lalu memperbarui PWA; antarmuka lama ditolak pada penulisan keuangan dengan pesan pembaruan.
+4. Verifikasi aset, endpoint privat, sumber laporan, kedua akun/sesi dan backup format 5. Jangan membuat bulan/gambar dummy atau mengganti sandi keluarga untuk tes. Konversi pos lama tetap keputusan pemilik melalui layar peninjauan.
+5. Sesudah data actual dipakai, rollback ke backend yang mengabaikan mode/superseded tidak aman. Gunakan forward fix atau restore terisolasi dengan versi skema sesuai; jangan kehilangan penanda histori sehingga pengeluaran dihitung lagi.
+
+Tidak ada layanan atau secret baru. Instruksi upgrade 0004 di bawah merupakan prosedur versi sebelumnya. Bukti native/dummy dan batas pemeriksaan ada di TESTING.md.
+
+
 ## Upgrade kandidat visual, tahun dan bukti pemasukan — 16 November 2026
 
 Untuk instalasi yang sudah memiliki migrasi 0001–0003 dan fitur ganti sandi:

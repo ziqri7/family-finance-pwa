@@ -1,5 +1,16 @@
 # Arsitektur Financée — Cloudflare Pages + Neon
 
+## Kandidat Alokasi aktual — belum dirilis
+
+Migrasi additive 0005 menambah metadata budget_items (recording_mode, posting_kind, posting_date, posting_version), metadata superseded pada expenses/transfers, klasifikasi default_items dan allocation_attachments. Semua baris lama tetap legacy. View effective_postings menjadi proyeksi PostgreSQL dari pos actual dan catatan manual yang belum digantikan; tidak menyimpan salinan transaksi otomatis. shared/ledger.ts memberikan proyeksi UI setara, jumlah aman dan pemisahan external/internal/reserve; laporan tahun melakukan preagregasi view agar join tidak menggandakan.
+
+Tinjau/konversi melalui GET/PATCH /api/items/:id/posting, owner-only, CAS row_version dan revisi periode. Perubahan sumber dan penandaan anak terjadi dalam satu statement CTE/transaction dengan lock keluarga. Retry konversi yang sudah sama tidak menandai tambahan baru. Koreksi metadata mempertahankan identitas; histori yang digantikan tidak otomatis hidup setelah pembatalan. Guard histori mencegah penulisan ulang metadata lama. Nominal tetap pada endpoint edit kolom yang ada.
+
+Koleksi bukti ketiga memakai pemetaan tabel/rute konstan /api/allocation-items/:id/attachments dan /api/allocation-attachments/:id/content. Hanya pos actual non-NULL aktif menerima bukti. Guard kuota/ID lintas tiga koleksi, checksum/decode, retire di pembatalan/hapus dan cleanup diperluas. Bukti expense lama tetap dapat dibaca sebagai arsip. API tidak membocorkan object_key.
+
+Penulisan keuangan baru memerlukan X-Financee-Client: 2. API lama tanpa penanda ditolak 409 UPDATE_REQUIRED; login/logout/ganti sandi tetap kontraknya. Draf UI tidak diklaim tersimpan dan tidak dipaksa terhapus saat pembaruan PWA. Tidak mengubah auth, hash, sesi, provider, secret, framework atau menambah dependensi.
+
+
 Kandidat gabungan memakai layanan dan dependensi yang sama. FinanceCharts dan YearDashboard merender diagram dengan CSS; shared/chart-data.ts mengelompokkan label alokasi identik, mempertahankan total, dan membedakan kosong dengan nol. Tiga kelompok terbesar serta kelompok sisa tampil pada donut. Diagram memiliki label/nominal dan rincian yang dapat dibaca tanpa mengandalkan warna. EvidenceGallery hanya memakai metadata ready dari snapshot bersesi; gambar tetap melalui proxy privat, dengan otorisasi backend.
 
 Integrasi Neon disetujui sebagai pengganti D1/R2. UI, hitungan dan hak akses tidak berubah. Versi dasar dan paket visual/tahun/bukti pemasukan sudah dirilis; pembaruan terakhir diperiksa online pada 16 November 2026. Hasil aktual dan batas bukti ada di TESTING.md dan NEON_REVIEW.md.

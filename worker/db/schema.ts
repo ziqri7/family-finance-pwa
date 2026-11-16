@@ -15,6 +15,7 @@ export const defaultItems = pgTable("default_items", {
   label: text().notNull(),
   kind: text().notNull(),
   position: integer().notNull(),
+  posting_kind: text().$type<"external" | "internal" | "reserve">(),
 });
 export const periods = pgTable("periods", {
   id: text().primaryKey(),
@@ -41,6 +42,13 @@ export const budgetItems = pgTable(
     label: text().notNull(),
     kind: text().notNull().$type<"income" | "allocation" | "transfer_out">(),
     amount: bigint({ mode: "number" }),
+    recording_mode: text()
+      .notNull()
+      .default("legacy")
+      .$type<"legacy" | "actual">(),
+    posting_kind: text().$type<"external" | "internal" | "reserve">(),
+    posting_date: text(),
+    posting_version: integer().notNull().default(1),
     position: integer().notNull(),
     label_version: integer().notNull().default(1),
     amount_version: integer().notNull().default(1),
@@ -71,6 +79,8 @@ export const expenses = pgTable(
     created_at: bigint({ mode: "number" }).notNull(),
     updated_at: bigint({ mode: "number" }).notNull(),
     deleted_at: bigint({ mode: "number" }),
+    superseded_by_item_id: text(),
+    superseded_at: bigint({ mode: "number" }),
   },
   (t) => [
     foreignKey({
@@ -96,6 +106,8 @@ export const transfers = pgTable(
     version: integer().notNull().default(1),
     created_at: bigint({ mode: "number" }).notNull(),
     deleted_at: bigint({ mode: "number" }),
+    superseded_by_item_id: text(),
+    superseded_at: bigint({ mode: "number" }),
   },
   (t) => [
     foreignKey({
@@ -127,6 +139,22 @@ export const attachments = pgTable("attachments", {
 export const incomeAttachments = pgTable("income_attachments", {
   id: text().primaryKey(),
   income_item_id: text()
+    .notNull()
+    .references(() => budgetItems.id),
+  owner_id: owner(),
+  object_key: text().notNull().unique(),
+  content_type: text().notNull(),
+  byte_size: integer().notNull(),
+  sha256: text().notNull(),
+  width: integer(),
+  height: integer(),
+  status: text().notNull(),
+  created_at: bigint({ mode: "number" }).notNull(),
+  updated_at: bigint({ mode: "number" }).notNull(),
+});
+export const allocationAttachments = pgTable("allocation_attachments", {
+  id: text().primaryKey(),
+  allocation_item_id: text()
     .notNull()
     .references(() => budgetItems.id),
   owner_id: owner(),

@@ -1,5 +1,12 @@
 # Rancangan database PostgreSQL
 
+## Tambahan kandidat migrasi 0005
+
+budget_items: recording_mode legacy/actual (baris lama legacy); posting_kind external/internal/reserve; posting_date nullable dan valid dalam bulan; posting_version positif. Actual non-income bernominal terisi wajib memiliki jenis. Jenis template privat lama tidak ditebak dari label; pemilik memilih sebelum mengisi pos actual baru. Income mempertahankan perilaku awal.
+
+expenses/transfers: superseded_by_item_id dan superseded_at harus sama-sama NULL atau terisi, mengacu sumber dan owner/periode yang benar; histori yang sudah ditandai tidak dapat diedit. allocation_attachments mengikuti kontrak metadata gambar koleksi lama dengan allocation_item_id sebagai induk. effective_postings adalah VIEW, tidak ikut sebagai tabel backup; format 5 memuat sepuluh tabel keuangan/kredensial/bukti, bukan sessions/login_attempts. Migrasi 0001–0004 tidak diubah; fungsi family_guard baru mempertahankan perbaikan tombstone dari 0002.
+
+
 Integrasi Neon menggantikan D1/SQLite. Sembilan tabel aplikasi awal tetap, ditambah account_credentials, income_attachments dan schema_migrations untuk nomor/hash migrasi. Skema Drizzle pg-core dan SQL bernomor adalah sumber implementasi; data keluarga lokal lama tidak dipindahkan otomatis. Nominal/waktu memakai BIGINT, versi/posisi INTEGER. Semua transaksi mengambil advisory lock keluarga sebelum query data dalam READ COMMITTED; snapshot dan kuota konsisten untuk dua penulis. Hasil serta batas pengujian pada TESTING.md.
 
 ## Konvensi

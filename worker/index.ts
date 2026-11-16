@@ -9,11 +9,32 @@ import { Database } from "./db/postgres";
 import { EvidenceStorage } from "./storage";
 import { changePassword } from "./passwords";
 import { yearReport } from "./reports";
+import * as postings from "./postings";
 const app = new Hono<AppEnv>();
 app.use("/api/*", configure);
 app.use("/api/*", async (c, next) => {
   if (c.req.path === "/api/login" && c.req.method === "POST") return next();
   return authenticated(c, next);
+});
+app.use("/api/*", async (c, next) => {
+  if (
+    !["GET", "HEAD", "OPTIONS"].includes(c.req.method) &&
+    !["/api/login", "/api/logout", "/api/account/password"].includes(
+      c.req.path,
+    ) &&
+    c.req.header("X-Financee-Client") !== "2"
+  )
+    return c.json(
+      {
+        error: {
+          code: "UPDATE_REQUIRED",
+          message:
+            "Perbarui aplikasi sebelum melanjutkan pencatatan. Isian Anda belum tersimpan.",
+        },
+      },
+      409,
+    );
+  await next();
 });
 app.post("/api/login", login);
 app.post("/api/logout", logout);
@@ -29,6 +50,8 @@ app.get("/api/reports/year/:year", yearReport);
 app.post("/api/periods", finance.createPeriod);
 app.get("/api/periods/:id", finance.snapshot);
 app.post("/api/periods/:id/items", finance.createItem);
+app.get("/api/items/:id/posting", postings.review);
+app.patch("/api/items/:id/posting", postings.save);
 app.patch("/api/items/:id", finance.editItem);
 app.delete("/api/items/:id", finance.deleteItem);
 app.post("/api/expenses", finance.createExpense);
@@ -36,6 +59,10 @@ app.patch("/api/expenses/:id", finance.editExpense);
 app.delete("/api/expenses/:id", finance.deleteExpense);
 app.post("/api/transfers", finance.createTransfer);
 app.delete("/api/transfers/:id", finance.deleteTransfer);
+app.post("/api/allocation-items/:id/attachments", files.reserve);
+app.put("/api/allocation-attachments/:id/content", files.upload);
+app.get("/api/allocation-attachments/:id/content", files.download);
+app.delete("/api/allocation-attachments/:id", files.remove);
 app.post("/api/income-items/:id/attachments", files.reserve);
 app.put("/api/income-attachments/:id/content", files.upload);
 app.get("/api/income-attachments/:id/content", files.download);
@@ -61,7 +88,7 @@ app.onError((err, c) => {
     );
   const message = String(err);
   if (
-    /ITEM_LIMIT|EXPENSE_LIMIT|TRANSFER_LIMIT|ATTACHMENT_LIMIT|ITEM_REFERENCED|unique constraint/i.test(
+    /HISTORY_LOCKED|ITEM_LIMIT|EXPENSE_LIMIT|TRANSFER_LIMIT|ATTACHMENT_LIMIT|ITEM_REFERENCED|unique constraint/i.test(
       message,
     )
   )
