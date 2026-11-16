@@ -144,6 +144,8 @@ export interface Attachment {
   expense_id: string | null;
   income_item_id?: string;
   allocation_item_id?: string;
+  group_id?: string;
+  confirmed_group_version?: number;
   owner_id: Owner;
   content_type: string;
   byte_size: number;
@@ -165,6 +167,28 @@ export interface Snapshot {
   expenses: Expense[];
   transfers: Transfer[];
   attachments: Attachment[];
+  groups?: AllocationGroup[];
+  groupItems?: GroupMember[];
+}
+export interface AllocationGroup {
+  id: string;
+  period_id: string;
+  owner_id: Owner;
+  label: string;
+  posting_kind: "external" | "internal" | "reserve";
+  recipient_owner_id: Owner | null;
+  status: "draft" | "posted" | "cancelled";
+  posting_date: string | null;
+  version: number;
+  position: number;
+  deleted_at: number | null;
+}
+export interface GroupMember {
+  group_id: string;
+  item_id: string;
+  position: number;
+  posted: number;
+  retired_at: number | null;
 }
 export function totals(snapshot: Snapshot, owner: Owner) {
   const sum = (who: Owner, kind: Kind) =>

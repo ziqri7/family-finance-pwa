@@ -31,7 +31,7 @@ test("Neon snapshot and image restore to a separate branch; tamper and occupied 
     await storage.delete(f.object_key);
   await destination
     .prepare(
-      "TRUNCATE allocation_attachments,income_attachments,attachments,transfers,expenses,budget_items,budgets,periods,default_items,sessions,login_attempts,account_credentials",
+      "TRUNCATE group_attachments,allocation_group_operations,allocation_group_items,allocation_groups,allocation_attachments,income_attachments,attachments,transfers,expenses,budget_items,budgets,periods,default_items,sessions,login_attempts,account_credentials",
     )
     .run();
   const item = randomBytes(16).toString("hex"),
@@ -76,7 +76,7 @@ test("Neon snapshot and image restore to a separate branch; tamper and occupied 
     1000000000000,
   );
   assert.deepEqual(await restoreBackup(destination, storage, folder), {
-    tables: 10,
+    tables: 14,
     objects: 1,
   });
   assert.equal(

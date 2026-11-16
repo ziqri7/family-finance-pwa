@@ -13,7 +13,7 @@ import {
   digest,
   readBackup,
 } from "../scripts/neon-backup.mjs";
-test("format5 restores allocation JPG, archived expense PNG, income proof and superseded history without resurrecting spending", async () => {
+test("format6 restores allocation JPG, archived expense PNG, income proof and superseded history without resurrecting spending", async () => {
   const auth = credentials();
   await reset(auth.users);
   const target = loadConfig(".env.neon-restore");
@@ -29,14 +29,14 @@ test("format5 restores allocation JPG, archived expense PNG, income proof and su
   for (const f of (
     await dest
       .prepare(
-        "SELECT object_key FROM attachments UNION ALL SELECT object_key FROM income_attachments UNION ALL SELECT object_key FROM allocation_attachments",
+        "SELECT object_key FROM attachments UNION ALL SELECT object_key FROM income_attachments UNION ALL SELECT object_key FROM allocation_attachments UNION ALL SELECT object_key FROM group_attachments",
       )
       .all()
   ).results)
     await storage.delete(f.object_key);
   await dest
     .prepare(
-      "TRUNCATE allocation_attachments,income_attachments,attachments,transfers,expenses,budget_items,budgets,periods,default_items,sessions,login_attempts,account_credentials",
+      "TRUNCATE group_attachments,allocation_group_operations,allocation_group_items,allocation_groups,allocation_attachments,income_attachments,attachments,transfers,expenses,budget_items,budgets,periods,default_items,sessions,login_attempts,account_credentials",
     )
     .run();
   const id = () => randomBytes(16).toString("hex"),
@@ -81,11 +81,11 @@ test("format5 restores allocation JPG, archived expense PNG, income proof and su
   }
   const folder = await createBackup(db, bucket),
     backup = await readBackup(folder);
-  assert.equal(backup.manifest.version, 5);
+  assert.equal(backup.manifest.version, 6);
   assert.equal(backup.manifest.objects.length, 3);
-  assert.equal(Object.keys(backup.data).length, 10);
+  assert.equal(Object.keys(backup.data).length, 14);
   assert.deepEqual(await restoreBackup(dest, storage, folder, auth.pepper), {
-    tables: 10,
+    tables: 14,
     objects: 3,
   });
   assert.deepEqual(await snapshot(dest), await snapshot(db));

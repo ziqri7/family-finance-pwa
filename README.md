@@ -1,5 +1,12 @@
 # Financée
 
+## Kandidat UX ringkas dan bukti bersama — belum ditayangkan
+
+Beranda membuka bagian akun sendiri, dengan konteks Saya/Pasangan/Keluarga dan tiga menu Beranda, Catat, Bukti. Kelompok penyerahan memuat beberapa pos dan satu bukti bersama. Satu konfirmasi menyimpan seluruh nominal secara atomik, koreksi memakai sumber yang sama, dan galeri menampilkan gambar sekali. Tabungan yang dikirim ke pasangan mengikuti tujuan kelompok; tabungan sendiri memakai aksi Sudah ditabung.
+
+Kode cabang ini memerlukan migrasi 0006 dan backup format 6. Data lama dikelompokkan melalui review pemilik, salin bulan membawa struktur kosong. Belum ada perubahan produksi dari kandidat ini. [Rancangan disetujui](docs/UX_RINGKAS_PROPOSAL.md), [upgrade](docs/DEPLOYMENT.md) dan [pengujian](docs/TESTING.md) menjelaskan penerapannya. Bagian rilis di bawah mencatat versi yang sudah tayang sebelumnya.
+
+
 ## Perbaikan HP dan penandaan sekaligus — dirilis 16 November 2026
 
 Pesan grafik kosong ditampilkan di luar kisi legenda agar tetap terbaca pada HP. Tombol Buka alokasi saya menuju bagian pemilik. Pada bulan lama, tombol **Sudah dibayar / diserahkan** membuka satu ringkasan seluruh pos yang nominalnya sudah terisi; pilih semua, periksa jenis/nominal, lalu **Tandai N pos selesai**. Pos kosong tidak ikut. Peninjauan per pos tetap tersedia untuk kasus khusus.

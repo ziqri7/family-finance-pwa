@@ -30,7 +30,9 @@ export async function owned<T extends { owner_id: Owner }>(
     | "expenses"
     | "attachments"
     | "income_attachments"
-    | "allocation_attachments",
+    | "allocation_attachments"
+    | "allocation_groups"
+    | "group_attachments",
   id: string,
 ) {
   const row = await c.env.DB.prepare(
@@ -55,6 +57,9 @@ export async function snapshot(c: C) {
     attachments,
     incomeFiles,
     allocationFiles,
+    groups,
+    groupItems,
+    groupFiles,
   ] = await db.batch([
     db.execute(sql`SELECT pg_advisory_xact_lock(61324017)`),
     db.select().from(schema.periods).where(eq(schema.periods.id, id)),
@@ -155,6 +160,62 @@ export async function snapshot(c: C) {
           isNull(schema.budgetItems.deleted_at),
         ),
       ),
+    db
+      .select()
+      .from(schema.allocationGroups)
+      .where(
+        and(
+          eq(schema.allocationGroups.period_id, id),
+          isNull(schema.allocationGroups.deleted_at),
+        ),
+      )
+      .orderBy(
+        asc(schema.allocationGroups.position),
+        asc(schema.allocationGroups.id),
+      ),
+    db
+      .select({
+        group_id: schema.allocationGroupItems.group_id,
+        item_id: schema.allocationGroupItems.item_id,
+        position: schema.allocationGroupItems.position,
+        posted: schema.allocationGroupItems.posted,
+        retired_at: schema.allocationGroupItems.retired_at,
+      })
+      .from(schema.allocationGroupItems)
+      .innerJoin(
+        schema.allocationGroups,
+        eq(schema.allocationGroups.id, schema.allocationGroupItems.group_id),
+      )
+      .where(
+        and(
+          eq(schema.allocationGroups.period_id, id),
+          isNull(schema.allocationGroupItems.retired_at),
+        ),
+      ),
+    db
+      .select({
+        id: schema.groupAttachments.id,
+        group_id: schema.groupAttachments.group_id,
+        expense_id: sql<null>`NULL`,
+        owner_id: schema.groupAttachments.owner_id,
+        content_type: schema.groupAttachments.content_type,
+        byte_size: schema.groupAttachments.byte_size,
+        status: schema.groupAttachments.status,
+        confirmed_group_version:
+          schema.groupAttachments.confirmed_group_version,
+      })
+      .from(schema.groupAttachments)
+      .innerJoin(
+        schema.allocationGroups,
+        eq(schema.allocationGroups.id, schema.groupAttachments.group_id),
+      )
+      .where(
+        and(
+          eq(schema.allocationGroups.period_id, id),
+          eq(schema.allocationGroups.status, "posted"),
+          isNull(schema.allocationGroups.deleted_at),
+        ),
+      ),
   ]);
   if (!period[0]) fail(404, "PERIOD_NOT_FOUND", "Bulan belum dibuat.");
   if (c.req.query("revision") === String(period[0].revision))
@@ -166,7 +227,10 @@ export async function snapshot(c: C) {
     items,
     expenses,
     transfers,
+    groups,
+    groupItems,
     attachments: [
+      ...groupFiles.filter((a) => a.status !== "deleting"),
       ...allocationFiles.filter((a) => a.status !== "deleting"),
       ...attachments.filter((a) => a.status !== "deleting"),
       ...incomeFiles.filter((a) => a.status !== "deleting"),
@@ -208,7 +272,7 @@ export async function createPeriod(c: C) {
     input.mode === "copy"
       ? db
           .prepare(
-            "INSERT INTO budget_items(id,period_id,owner_id,label,kind,amount,position,created_at,updated_at,recording_mode,posting_kind) SELECT replace(gen_random_uuid()::text,'-',''),$1,$2,label,kind,NULL,position,$3,$4,CASE WHEN kind='income' THEN 'legacy' ELSE 'actual' END,posting_kind FROM budget_items WHERE period_id=$5 AND owner_id=$6 AND deleted_at IS NULL",
+            "INSERT INTO budget_items(id,period_id,owner_id,label,kind,amount,position,created_at,updated_at,recording_mode,posting_kind) SELECT md5($1||':'||$2||':'||id),$1,$2,label,kind,NULL,position,$3,$4,CASE WHEN kind='income' THEN 'legacy' ELSE 'actual' END,posting_kind FROM budget_items WHERE period_id=$5 AND owner_id=$6 AND deleted_at IS NULL",
           )
           .bind(input.id, owner, now, now, input.sourcePeriodId!, owner)
       : db
@@ -216,6 +280,14 @@ export async function createPeriod(c: C) {
             "INSERT INTO budget_items(id,period_id,owner_id,label,kind,amount,position,created_at,updated_at,recording_mode,posting_kind) SELECT replace(gen_random_uuid()::text,'-',''),$1,$2,label,kind,NULL,position,$3,$4,CASE WHEN kind='income' THEN 'legacy' ELSE 'actual' END,posting_kind FROM default_items WHERE owner_id=$5",
           )
           .bind(input.id, owner, now, now, owner),
+    db
+      .prepare("SELECT copy_allocation_groups($1,$2,$3,$4)")
+      .bind(
+        input.mode === "copy" ? input.sourcePeriodId : null,
+        input.id,
+        owner,
+        now,
+      ),
   ]);
   if (!result[1].meta.changes)
     fail(
@@ -340,7 +412,10 @@ async function allocation(c: C, id: string, date: string) {
   const row = await owned<Item>(c, "budget_items", id);
   if (
     row.deleted_at ||
-    row.kind !== "allocation" ||
+    (row.recording_mode === "actual"
+      ? row.posting_kind !== "external" &&
+        !(row.posting_kind === null && row.kind === "allocation")
+      : row.kind !== "allocation") ||
     row.period_id !== date.slice(0, 7)
   )
     fail(
@@ -479,7 +554,9 @@ export async function createTransfer(c: C) {
     row = await owned<Item>(c, "budget_items", v.sourceItemId);
   if (
     row.deleted_at ||
-    row.kind !== "transfer_out" ||
+    (row.recording_mode === "actual"
+      ? row.posting_kind !== "internal"
+      : row.kind !== "transfer_out") ||
     row.period_id !== v.date.slice(0, 7)
   )
     fail(
@@ -487,7 +564,14 @@ export async function createTransfer(c: C) {
       "INVALID_TRANSFER_ITEM",
       "Pilih rencana kiriman Anda pada bulan yang sama.",
     );
-  if (row.recording_mode === "actual")
+  if (
+    row.recording_mode === "actual" &&
+    !(await c.env.DB.prepare(
+      "SELECT 1 AS n FROM allocation_group_items WHERE item_id=$1 AND retired_at IS NULL AND posted=1",
+    )
+      .bind(row.id)
+      .first())
+  )
     fail(
       409,
       "AUTOMATIC_TRANSFER",

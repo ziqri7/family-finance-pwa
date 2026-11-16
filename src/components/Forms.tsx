@@ -169,7 +169,7 @@ export function AddItemForm({
             >
               <option value="external">Pembayaran</option>
               <option value="internal">Kiriman pasangan</option>
-              <option value="reserve">Disisihkan</option>
+              <option value="reserve">Tabungan sendiri</option>
             </select>
           </>
         )}
@@ -517,8 +517,9 @@ export function TransferForm({
     items = s.items.filter(
       (i) =>
         i.owner_id === actor &&
-        i.kind === "transfer_out" &&
-        i.recording_mode !== "actual" &&
+        ((i.kind === "transfer_out" && i.recording_mode !== "actual") ||
+          (i.posting_kind === "internal" &&
+            s.groupItems?.some((m) => m.item_id === i.id && m.posted === 1))) &&
         !i.deleted_at,
     ),
     id = useRef(randomId()).current,

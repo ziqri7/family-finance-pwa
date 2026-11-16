@@ -8,10 +8,12 @@ import {
 } from "../../shared/domain";
 export function EvidenceGallery({
   snapshot,
+  onGroup,
   onExpense,
   onIncome,
 }: {
   snapshot: Snapshot;
+  onGroup: (id: string) => void;
   onExpense: (expense: Expense) => void;
   onIncome: (item: Item) => void;
 }) {
@@ -46,6 +48,9 @@ export function EvidenceGallery({
       )}
       <div className="evidence-gallery">
         {files.map((file) => {
+          const group = file.group_id
+            ? snapshot.groups?.find((g) => g.id === file.group_id)
+            : null;
           const allocation = file.allocation_item_id
             ? snapshot.items.find((i) => i.id === file.allocation_item_id)
             : null;
@@ -56,6 +61,7 @@ export function EvidenceGallery({
               ? snapshot.expenses.find((e) => e.id === file.expense_id)
               : null,
             label =
+              group?.label ||
               allocation?.label ||
               income?.label ||
               expense?.note ||
@@ -65,7 +71,8 @@ export function EvidenceGallery({
               className="evidence-tile"
               key={file.id}
               onClick={() => {
-                if (allocation) onIncome(allocation);
+                if (group) onGroup(group.id);
+                else if (allocation) onIncome(allocation);
                 else if (income) onIncome(income);
                 else if (expense) onExpense(expense);
               }}
@@ -75,11 +82,13 @@ export function EvidenceGallery({
                 loading="lazy"
                 src={
                   "/api/" +
-                  (allocation
-                    ? "allocation-attachments/"
-                    : income
-                      ? "income-attachments/"
-                      : "attachments/") +
+                  (group
+                    ? "group-attachments/"
+                    : allocation
+                      ? "allocation-attachments/"
+                      : income
+                        ? "income-attachments/"
+                        : "attachments/") +
                   file.id +
                   "/content"
                 }
@@ -88,17 +97,25 @@ export function EvidenceGallery({
               <span>
                 <strong>{label}</strong>
                 <small>
-                  {income ? "Pemasukan" : "Pengeluaran"} ·{" "}
-                  {ownerName[file.owner_id]}
+                  {group
+                    ? "Bukti bersama"
+                    : income
+                      ? "Pemasukan"
+                      : "Pengeluaran"}{" "}
+                  · {ownerName[file.owner_id]}
                 </small>
                 <small>
-                  {allocation || income
-                    ? (allocation || income)!.amount === null
-                      ? "Nominal belum diisi"
-                      : rupiah.format((allocation || income)!.amount!)
-                    : expense
-                      ? rupiah.format(expense.amount)
-                      : ""}
+                  {group
+                    ? (snapshot.groupItems ?? []).filter(
+                        (m) => m.group_id === group.id && m.posted,
+                      ).length + " pos"
+                    : allocation || income
+                      ? (allocation || income)!.amount === null
+                        ? "Nominal belum diisi"
+                        : rupiah.format((allocation || income)!.amount!)
+                      : expense
+                        ? rupiah.format(expense.amount)
+                        : ""}
                 </small>
               </span>
             </button>

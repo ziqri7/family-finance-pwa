@@ -10,7 +10,7 @@ import { ledger, type PostingKind } from "../../shared/ledger";
 const names = {
   external: "Pembayaran",
   internal: "Kiriman pasangan",
-  reserve: "Disisihkan",
+  reserve: "Tabungan sendiri",
 };
 interface Review {
   item: Item;
@@ -199,8 +199,8 @@ export function AllocationPosting({
             </select>
             <p className="helper-note">
               Pembayaran masuk belanja keluarga. Kiriman masuk ke bagian
-              pasangan. Disisihkan mengurangi uang siap dibagi dan ditampilkan
-              terpisah dari belanja.
+              pasangan. Tabungan sendiri mengurangi uang siap dibagi dan
+              ditampilkan terpisah dari belanja.
             </p>
             <label htmlFor={"posting-date-" + item.id}>
               Tanggal (opsional)

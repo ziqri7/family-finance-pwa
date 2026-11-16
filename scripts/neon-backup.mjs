@@ -93,13 +93,55 @@ columns.income_attachments = columns.attachments.map((k) =>
 columns.allocation_attachments = columns.attachments.map((k) =>
   k === "expense_id" ? "allocation_item_id" : k,
 );
+columns.allocation_groups = [
+  "id",
+  "period_id",
+  "owner_id",
+  "label",
+  "posting_kind",
+  "recipient_owner_id",
+  "status",
+  "posting_date",
+  "version",
+  "position",
+  "created_at",
+  "updated_at",
+  "deleted_at",
+];
+columns.allocation_group_items = [
+  "group_id",
+  "item_id",
+  "position",
+  "posted",
+  "retired_at",
+];
+columns.allocation_group_operations = [
+  "operation_id",
+  "owner_id",
+  "group_id",
+  "action",
+  "payload_hash",
+  "resulting_version",
+  "receipt",
+  "created_at",
+];
+columns.group_attachments = [
+  ...columns.attachments.map((k) => (k === "expense_id" ? "group_id" : k)),
+  "confirmed_group_version",
+];
+const groupTables = [
+  "allocation_groups",
+  "allocation_group_items",
+  "allocation_group_operations",
+  "group_attachments",
+];
 export const digest = (data) => createHash("sha256").update(data).digest("hex");
 export async function snapshot(db, includeMigrations = false) {
   const tables = Object.keys(columns),
     rows = await db.batch([
       ...tables.map((t) =>
         db.prepare(
-          `SELECT * FROM ${t} ORDER BY ${t === "account_credentials" ? "account_id" : columns[t].includes("id") ? "id" : "period_id,owner_id"}`,
+          `SELECT * FROM ${t} ORDER BY ${t === "budgets" ? "period_id,owner_id" : t === "allocation_group_items" ? "group_id,item_id" : columns[t][0]}`,
         ),
       ),
       ...(includeMigrations
@@ -130,7 +172,15 @@ export function requiredObjects(data) {
       )
       .map((i) => i.id),
   );
+  const groups = new Set(
+    (data.allocation_groups || [])
+      .filter((g) => g.status === "posted" && g.deleted_at === null)
+      .map((g) => g.id),
+  );
   return [
+    ...(data.group_attachments || []).filter(
+      (a) => a.status === "ready" && groups.has(a.group_id),
+    ),
     ...(data.allocation_attachments || []).filter(
       (a) => a.status === "ready" && allocations.has(a.allocation_item_id),
     ),
@@ -156,6 +206,7 @@ export function restoredData(data) {
     ...copy.attachments,
     ...(copy.income_attachments || []),
     ...(copy.allocation_attachments || []),
+    ...(copy.group_attachments || []),
   ])
     if (!required.has(a.id)) a.status = "deleting";
   return copy;
@@ -193,7 +244,7 @@ export async function createBackup(
     join(folder, "manifest.json"),
     JSON.stringify(
       {
-        version: 5,
+        version: 6,
         complete: true,
         createdAt: new Date().toISOString(),
         databaseSha256: digest(json),
@@ -212,16 +263,23 @@ export async function readBackup(folder) {
       await readFile(join(folder, "manifest.json"), "utf8"),
     ),
     bytes = await readFile(join(folder, "database.json"));
-  if (manifest.version !== 5)
-    throw Error(
-      "Format backup harus versi 5 yang memuat kredensial; gunakan panduan pemulihan versi lama secara terpisah.",
-    );
+  if (![5, 6].includes(manifest.version))
+    throw Error("Format backup harus versi 5 atau 6 yang memuat kredensial.");
   if (manifest.complete !== true || digest(bytes) !== manifest.databaseSha256)
     throw Error("Backup tidak lengkap atau checksum berbeda.");
   const data = JSON.parse(bytes);
-  if (Object.keys(data).sort().join() !== Object.keys(columns).sort().join())
+  const expectedColumns =
+    manifest.version === 5
+      ? Object.fromEntries(
+          Object.entries(columns).filter(([t]) => !groupTables.includes(t)),
+        )
+      : columns;
+  if (
+    Object.keys(data).sort().join() !==
+    Object.keys(expectedColumns).sort().join()
+  )
     throw Error("Tabel backup tidak sesuai.");
-  for (const [t, keys] of Object.entries(columns)) {
+  for (const [t, keys] of Object.entries(expectedColumns)) {
     if (!Array.isArray(data[t])) throw Error("Isi tabel backup tidak sesuai.");
     for (const r of data[t])
       if (
@@ -246,6 +304,7 @@ export async function readBackup(folder) {
     throw Error(
       "Backup harus memuat dua kredensial akun; tidak boleh kembali ke sandi awal.",
     );
+  if (manifest.version === 5) for (const t of groupTables) data[t] = [];
   validateManifestObjects(requiredObjects(data), manifest);
   for (const f of manifest.objects) {
     const bytes = await readFile(join(folder, f.file));
@@ -268,7 +327,11 @@ export async function restoreBackup(db, storage, folder, passwordPepper) {
       .prepare("SELECT id,sha256 FROM schema_migrations ORDER BY id")
       .all()
   ).results;
-  if (JSON.stringify(versions) !== JSON.stringify(manifest.migrations))
+  if (
+    JSON.stringify(manifest.version === 5 ? versions.slice(0, 5) : versions) !==
+      JSON.stringify(manifest.migrations) ||
+    (manifest.version === 5 && manifest.migrations.length !== 5)
+  )
     throw Error("Versi migrasi backup berbeda.");
   const emptySql = `SELECT ${[...Object.keys(columns), "sessions", "login_attempts"].map((t) => `(SELECT count(*) FROM ${t})`).join("+")} AS n`;
   if (Number((await db.prepare(emptySql).first()).n) !== 0)

@@ -126,11 +126,13 @@ export function EvidenceImages({ files }: { files: Attachment[] }) {
           <img
             src={
               "/api/" +
-              (f.allocation_item_id
-                ? "allocation-attachments/"
-                : f.income_item_id
-                  ? "income-attachments/"
-                  : "attachments/") +
+              (f.group_id
+                ? "group-attachments/"
+                : f.allocation_item_id
+                  ? "allocation-attachments/"
+                  : f.income_item_id
+                    ? "income-attachments/"
+                    : "attachments/") +
               f.id +
               "/content"
             }

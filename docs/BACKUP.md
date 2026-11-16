@@ -1,5 +1,14 @@
 # Backup dan pemulihan Neon
 
+## Kandidat format 6 — kelompok dan bukti bersama
+
+Format6 menambahkan4tabel kelompok pada10tabel format5. Bukti wajib mencakup group_attachments ready dari kelompok posted yang masih aktif, termasuk gambar sebelum koreksi, serta ketiga koleksi sebelumnya. Operasi idempotensi, keanggotaan aktif/retired, hash sandi dan metadata bukti ikut snapshot. Objek pending/failed/deleting dipulihkan sebagai deleting dan dibersihkan melalui cleanup.
+
+readBackup menerima format5 atau6. Format5 diverifikasi terhadap10tabel dan5migrasi asal, dinormalisasi dengan4tabel kelompok kosong, lalu dipulihkan ke skema6 pada tujuan kosong. Migrasi1–5 harus cocok hash. PASSWORD_PEPPER tetap diperlukan untuk akun yang memakai pepper. Format4 dan lebih lama mengikuti panduan versi asalnya.
+
+Sebelum upgrade produksi0006, buat backupformat5 memakai kode immutable718103ba876a17b580b88cd34797df9a922787f8 yang sesuai skema lama. Jangan menjalankan snapshotformat6 pada database yang belum memiliki tabel kelompok. Setelah upgrade, buat dan periksa backupformat6. Uji pemulihan dilakukan pada cabang berbeda yang terverifikasi, termasuk data kelompok yang sudah dilepas dan histori.
+
+
 ## Format 5 untuk Alokasi aktual
 
 Versi ini menghasilkan manifest versi 5, sepuluh tabel termasuk allocation_attachments, metadata mode/jenis/tanggal dan penanda histori digantikan. View effective_postings dibentuk oleh migrasi dan tidak disalin sebagai data. Seluruh bukti siap yang masih dapat dibaca, termasuk arsip expense yang sudah terwakili Alokasi, dicakup manifest dan checksum. Pembatalan pos actual tidak menghidupkan kembali expense superseded saat restore.

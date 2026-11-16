@@ -17,6 +17,37 @@ export const defaultItems = pgTable("default_items", {
   position: integer().notNull(),
   posting_kind: text().$type<"external" | "internal" | "reserve">(),
 });
+export const allocationGroups = pgTable("allocation_groups", {
+  id: text().primaryKey(),
+  period_id: text().notNull(),
+  owner_id: owner(),
+  label: text().notNull(),
+  posting_kind: text().$type<"external" | "internal" | "reserve">().notNull(),
+  recipient_owner_id: text(),
+  status: text().$type<"draft" | "posted" | "cancelled">().notNull(),
+  posting_date: text(),
+  version: integer().notNull(),
+  position: integer().notNull(),
+  created_at: bigint({ mode: "number" }).notNull(),
+  updated_at: bigint({ mode: "number" }).notNull(),
+  deleted_at: bigint({ mode: "number" }),
+});
+export const allocationGroupItems = pgTable("allocation_group_items", {
+  group_id: text().notNull(),
+  item_id: text().notNull(),
+  position: integer().notNull(),
+  posted: integer().notNull(),
+  retired_at: bigint({ mode: "number" }),
+});
+export const groupAttachments = pgTable("group_attachments", {
+  id: text().primaryKey(),
+  group_id: text().notNull(),
+  owner_id: owner(),
+  content_type: text().notNull(),
+  byte_size: integer().notNull(),
+  status: text().$type<"pending" | "ready" | "failed" | "deleting">().notNull(),
+  confirmed_group_version: integer().notNull(),
+});
 export const periods = pgTable("periods", {
   id: text().primaryKey(),
   revision: integer().notNull().default(1),

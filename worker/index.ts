@@ -10,6 +10,7 @@ import { EvidenceStorage } from "./storage";
 import { changePassword } from "./passwords";
 import { yearReport } from "./reports";
 import * as postings from "./postings";
+import * as groups from "./groups";
 const app = new Hono<AppEnv>();
 app.use("/api/*", configure);
 app.use("/api/*", async (c, next) => {
@@ -49,6 +50,16 @@ app.get("/api/periods", finance.listPeriods);
 app.get("/api/reports/year/:year", yearReport);
 app.post("/api/periods", finance.createPeriod);
 app.get("/api/periods/:id", finance.snapshot);
+app.post("/api/periods/:id/allocation-groups", groups.configure);
+app.get("/api/allocation-groups/:id", groups.review);
+app.patch("/api/allocation-groups/:id", groups.configure);
+app.delete("/api/allocation-groups/:id", groups.remove);
+app.post("/api/allocation-groups/:id/commit", groups.save);
+app.post("/api/allocation-groups/:id/cancel", groups.save);
+app.post("/api/allocation-groups/:id/attachments", files.reserve);
+app.put("/api/group-attachments/:id/content", files.upload);
+app.get("/api/group-attachments/:id/content", files.download);
+app.delete("/api/group-attachments/:id", files.remove);
 app.post("/api/periods/:id/items", finance.createItem);
 app.get("/api/items/:id/posting", postings.review);
 app.patch("/api/items/:id/posting", postings.save);
@@ -87,8 +98,38 @@ app.onError((err, c) => {
       400,
     );
   const message = String(err);
+  if (/GROUP_NOT_FOUND/.test(message))
+    return c.json(
+      { error: { code: "NOT_FOUND", message: "Penyerahan tidak ditemukan." } },
+      404,
+    );
   if (
-    /HISTORY_LOCKED|ITEM_LIMIT|EXPENSE_LIMIT|TRANSFER_LIMIT|ATTACHMENT_LIMIT|ITEM_REFERENCED|unique constraint/i.test(
+    /GROUP_CHANGED|GROUP_LOCKED|GROUP_OPERATION_CONFLICT|GROUP_EVIDENCE_REVIEW|GROUP_LIMIT/.test(
+      message,
+    )
+  )
+    return c.json(
+      {
+        error: {
+          code: "GROUP_CHANGED",
+          message:
+            "Data berubah atau pos tergabung. Buka penyerahan dan periksa nominal terbaru.",
+        },
+      },
+      409,
+    );
+  if (/INVALID_GROUP/.test(message))
+    return c.json(
+      {
+        error: {
+          code: "INVALID_GROUP",
+          message: "Periksa anggota, nominal dan tanggal penyerahan.",
+        },
+      },
+      400,
+    );
+  if (
+    /HISTORY_LOCKED|ITEM_LIMIT|EXPENSE_LIMIT|TRANSFER_LIMIT|ATTACHMENT_LIMIT|ATTACHMENT_ID_CONFLICT|ITEM_REFERENCED|unique constraint/i.test(
       message,
     )
   )

@@ -106,7 +106,7 @@ export function MonthCharts({
       )}
       {t.reserved > 0 && (
         <p className="chart-status">
-          Disisihkan: {rupiah.format(t.reserved)} · terpisah dari pembayaran ke
+          Tabungan: {rupiah.format(t.reserved)} · terpisah dari pembayaran ke
           luar keluarga.
         </p>
       )}
@@ -116,14 +116,14 @@ export function MonthCharts({
             <h2>Pembagian uang</h2>
             <ChartInfo title="Pembagian alokasi">
               <p>
-                Donut membagi pembayaran dan uang disisihkan yang sudah tercatat
-                menurut nama pos. Pos bernama sama digabung; tiga terbesar
-                ditampilkan tersendiri, sisanya menjadi Pos lainnya.
+                Donut membagi pembayaran dan uang yang ditabung yang sudah
+                tercatat menurut nama pos. Pos bernama sama digabung; tiga
+                terbesar ditampilkan tersendiri, sisanya menjadi Pos lainnya.
               </p>
               <p>
-                Persentase terhadap pembayaran dan uang disisihkan yang
+                Persentase terhadap pembayaran dan uang yang ditabung yang
                 tercatat. Sisa belum dibagi = pemasukan dikurangi pembayaran dan
-                uang disisihkan; kiriman internal tidak dihitung dua kali.
+                uang yang ditabung; kiriman internal tidak dihitung dua kali.
               </p>
               <p>Nominal kosong belum diisi. Isi 0 jika pos tidak dipakai.</p>
             </ChartInfo>
@@ -216,7 +216,7 @@ export function MonthCharts({
           </div>
           <p className="chart-caption">
             {top.length
-              ? "Persentase dari pembayaran dan uang disisihkan yang sudah tercatat."
+              ? "Persentase dari pembayaran dan uang yang ditabung yang sudah tercatat."
               : "Tandai alokasi yang sudah dibayar untuk melihat pembagiannya."}
           </p>
         </section>

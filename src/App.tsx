@@ -15,6 +15,12 @@ import { Dialog } from "./components/ui/dialog";
 import { ChangePassword } from "./components/ChangePassword";
 import { EvidenceGallery } from "./components/EvidenceGallery";
 import { AutomaticRecords } from "./components/AllocationPosting";
+import {
+  CompactHome,
+  ConfigureGroup,
+  GroupEditor,
+} from "./components/GroupedAllocation";
+import "./components/grouped-allocation.css";
 import { IncomeEvidence } from "./components/IncomeEvidence";
 import { Budget } from "./components/Budget";
 import { Dashboard, ExpenseList, EvidenceImages } from "./components/Dashboard";
@@ -132,6 +138,9 @@ function Login({
   );
 }
 export default function App() {
+  const [groupId, setGroupId] = useState<string | null>(null),
+    [setupGroup, setSetupGroup] = useState<{ item?: Item } | null>(null),
+    [manage, setManage] = useState(false);
   const [incomeEvidence, setIncomeEvidence] = useState<Item | null>(null);
   const [dashboardMode, setDashboardMode] = useState<"bulan" | "tahun">(
     "bulan",
@@ -165,6 +174,7 @@ export default function App() {
       .then((v) => {
         setUser(v.user);
         setLastUser(v.user);
+        setView(v.user.id);
       })
       .catch((e) => {
         if (e.status !== 401) store.setMessage(e.message);
@@ -174,7 +184,7 @@ export default function App() {
   }, []);
   useEffect(() => {
     const prevent = (e: BeforeUnloadEvent) => {
-      if (store.hasDrafts || expense || transferOpen) {
+      if (store.hasDrafts || expense || transferOpen || groupId) {
         e.preventDefault();
         e.returnValue = "";
       }
@@ -217,9 +227,17 @@ export default function App() {
       store.setMessage("Simpan atau perbaiki isian sebelum pindah halaman.");
       return false;
     }
+    setManage(false);
     setView(next);
     window.scrollTo(0, 0);
     return true;
+  }
+  function showItem(item: Item) {
+    const member = store.snapshot?.groupItems?.find(
+      (m) => m.item_id === item.id,
+    );
+    if (member) setGroupId(member.group_id);
+    else setIncomeEvidence(item);
   }
   async function openMonth() {
     if (await navigate(user?.id || "dashboard")) setMonthOpen(true);
@@ -246,8 +264,11 @@ export default function App() {
       !store.snapshot?.items.some(
         (i) =>
           i.owner_id === user.id &&
-          i.kind === "transfer_out" &&
-          i.recording_mode !== "actual" &&
+          ((i.kind === "transfer_out" && i.recording_mode !== "actual") ||
+            (i.posting_kind === "internal" &&
+              store.snapshot?.groupItems?.some(
+                (m) => m.item_id === i.id && m.posted === 1,
+              ))) &&
           !i.deleted_at,
       )
     ) {
@@ -309,6 +330,7 @@ export default function App() {
     }
     setUser(result.user);
     setLastUser(result.user);
+    if (!lastUser) setView(result.user.id);
     store.setMessage("");
   }
   async function update() {
@@ -419,7 +441,7 @@ export default function App() {
                   ? "Keuangan keluarga"
                   : view === "evidence"
                     ? "Bukti"
-                    : "Anggaran " + ownerName[view].toLowerCase()}
+                    : "Pembagian uang"}
               </h1>
             </div>
             <div className="period-controls">
@@ -465,39 +487,22 @@ export default function App() {
               onClose={() => setIncomeEvidence(null)}
             />
           )}
-          <nav className="app-nav" aria-label="Bagian aplikasi">
+          <nav className="app-nav compact-nav" aria-label="Bagian aplikasi">
             <button
-              aria-label="Dashboard keluarga"
-              aria-pressed={view === "dashboard"}
-              onClick={() => void navigate("dashboard")}
+              aria-label="Beranda"
+              aria-pressed={view !== "evidence"}
+              onClick={() => void navigate(actor ?? "dashboard")}
             >
               <House />
               <span>Beranda</span>
             </button>
             <button
-              aria-label="Bagian suami"
-              aria-pressed={view === "partner-a"}
-              onClick={() => void navigate("partner-a")}
-            >
-              <UserRound />
-              <span>Suami</span>
-            </button>
-            <button
-              className="compose-nav"
               aria-label="Catat pengeluaran"
               disabled={!store.online || store.busy}
               onClick={() => void openExpense()}
             >
               <ReceiptText />
               <span>Catat</span>
-            </button>
-            <button
-              aria-label="Bagian istri"
-              aria-pressed={view === "partner-b"}
-              onClick={() => void navigate("partner-b")}
-            >
-              <UserRound />
-              <span>Istri</span>
             </button>
             <button
               aria-label="Galeri bukti"
@@ -508,6 +513,34 @@ export default function App() {
               <span>Bukti</span>
             </button>
           </nav>
+          {actor && (
+            <div className="compact-scope" role="group" aria-label="Tampilan">
+              <button
+                aria-pressed={view === actor}
+                onClick={() => void navigate(actor)}
+              >
+                Saya
+              </button>
+              <button
+                aria-pressed={
+                  view !== "dashboard" && view !== "evidence" && view !== actor
+                }
+                onClick={() =>
+                  void navigate(
+                    actor === "partner-a" ? "partner-b" : "partner-a",
+                  )
+                }
+              >
+                Pasangan
+              </button>
+              <button
+                aria-pressed={view === "dashboard"}
+                onClick={() => void navigate("dashboard")}
+              >
+                Keluarga
+              </button>
+            </div>
+          )}
           {!store.online && (
             <p className="offline-note" role="status">
               <WifiOff size={16} />
@@ -558,7 +591,7 @@ export default function App() {
               <div className="view-content" key={view + ":" + s.id}>
                 {view === "dashboard" ? (
                   <Dashboard
-                    onAllocation={setIncomeEvidence}
+                    onAllocation={showItem}
                     mode={dashboardMode}
                     onMode={(mode) => setDashboardMode(mode)}
                     snapshot={s}
@@ -574,144 +607,167 @@ export default function App() {
                   />
                 ) : view === "evidence" ? (
                   <EvidenceGallery
+                    onGroup={setGroupId}
                     snapshot={s}
                     onExpense={setEvidence}
-                    onIncome={setIncomeEvidence}
+                    onIncome={showItem}
                   />
                 ) : (
                   <>
-                    <Budget
-                      active={Boolean(user)}
+                    <CompactHome
                       store={store}
                       owner={view}
                       actor={actor}
-                      onCreate={() => void openMonth()}
-                      onAdd={setAddKind}
+                      onGroup={setGroupId}
+                      onSetup={(item) => setSetupGroup({ item })}
+                      onManage={() => setManage((v) => !v)}
+                      onItem={showItem}
+                      managing={manage}
+                      active={Boolean(user)}
+                      onExpense={(e) => void openExpense(e)}
+                      onDelete={(e) => void removeExpense(e)}
+                      onEvidence={setEvidence}
                     />
-                    {s.budgets.some((b) => b.owner_id === view) && (
-                      <>
-                        <section className="records-panel">
-                          <div className="section-heading">
-                            <div>
-                              <h2>Catatan pembagian dan tambahan</h2>
-                              <p>Bukti opsional.</p>
-                            </div>
-                            {view === actor && (
-                              <Button
-                                disabled={!store.online || store.busy}
-                                onClick={() => void openExpense()}
-                              >
-                                + Catat
-                              </Button>
-                            )}
-                          </div>
-                          <AutomaticRecords
-                            snapshot={s}
-                            owner={view}
-                            onItem={setIncomeEvidence}
-                          />
-                          <ExpenseList
-                            snapshot={s}
-                            owner={view}
-                            actor={actor}
-                            onEdit={(e) => void openExpense(e)}
-                            onDelete={(e) => void removeExpense(e)}
-                            onEvidence={setEvidence}
-                          />
-                        </section>
-                        {(s.items.some(
-                          (i) =>
-                            i.owner_id === view &&
-                            i.kind === "transfer_out" &&
-                            i.recording_mode !== "actual" &&
-                            !i.deleted_at,
-                        ) ||
-                          s.transfers.some(
-                            (t) =>
-                              !t.deleted_at &&
-                              !t.superseded_by_item_id &&
-                              (t.from_owner_id === view ||
-                                t.to_owner_id === view),
-                          )) && (
+                    <div hidden={!manage}>
+                      <Budget
+                        active={Boolean(user)}
+                        store={store}
+                        owner={view}
+                        actor={actor}
+                        onCreate={() => void openMonth()}
+                        onAdd={setAddKind}
+                        onGroup={setGroupId}
+                      />
+                      {s.budgets.some((b) => b.owner_id === view) && (
+                        <>
                           <section className="records-panel">
                             <div className="section-heading">
                               <div>
-                                <h2>Kiriman antar pasangan</h2>
-                                <p>Hanya pencatatan, bukan transfer uang.</p>
+                                <h2>Catatan pembagian dan tambahan</h2>
+                                <p>Bukti opsional.</p>
                               </div>
                               {view === actor && (
                                 <Button
-                                  variant="secondary"
                                   disabled={!store.online || store.busy}
-                                  onClick={() => void openTransfer()}
+                                  onClick={() => void openExpense()}
                                 >
-                                  + Kiriman
+                                  + Catat
                                 </Button>
                               )}
                             </div>
-                            {!s.transfers.some(
+                            <AutomaticRecords
+                              snapshot={s}
+                              owner={view}
+                              onItem={showItem}
+                            />
+                            <ExpenseList
+                              snapshot={s}
+                              owner={view}
+                              actor={actor}
+                              onEdit={(e) => void openExpense(e)}
+                              onDelete={(e) => void removeExpense(e)}
+                              onEvidence={setEvidence}
+                            />
+                          </section>
+                          {(s.items.some(
+                            (i) =>
+                              i.owner_id === view &&
+                              i.kind === "transfer_out" &&
+                              i.recording_mode !== "actual" &&
+                              !i.deleted_at,
+                          ) ||
+                            s.transfers.some(
                               (t) =>
+                                !t.deleted_at &&
                                 !t.superseded_by_item_id &&
                                 (t.from_owner_id === view ||
                                   t.to_owner_id === view),
-                            ) && (
-                              <p className="empty-note">
-                                Belum ada kiriman yang dicatat.
-                              </p>
-                            )}
-                            {s.transfers
-                              .filter(
+                            )) && (
+                            <section className="records-panel">
+                              <div className="section-heading">
+                                <div>
+                                  <h2>Kiriman antar pasangan</h2>
+                                  <p>Hanya pencatatan, bukan transfer uang.</p>
+                                </div>
+                                {view === actor && (
+                                  <Button
+                                    variant="secondary"
+                                    disabled={!store.online || store.busy}
+                                    onClick={() => void openTransfer()}
+                                  >
+                                    + Kiriman
+                                  </Button>
+                                )}
+                              </div>
+                              {!s.transfers.some(
                                 (t) =>
                                   !t.superseded_by_item_id &&
                                   (t.from_owner_id === view ||
                                     t.to_owner_id === view),
-                              )
-                              .map((t) => (
-                                <article className="transfer-record" key={t.id}>
-                                  <div>
-                                    <strong>
-                                      {ownerName[t.from_owner_id]} →{" "}
-                                      {ownerName[t.to_owner_id]}
-                                    </strong>
-                                    <small>
-                                      {t.occurred_on} ·{" "}
-                                      {t.from_owner_id === view
-                                        ? "Keluar"
-                                        : "Masuk · otomatis"}
-                                    </small>
-                                  </div>
-                                  <strong>{rupiah.format(t.amount)}</strong>
-                                  {view === actor &&
-                                    t.from_owner_id === actor && (
-                                      <Button
-                                        variant="ghost"
-                                        disabled={!store.online || store.busy}
-                                        onClick={() => {
-                                          if (
-                                            confirm(
-                                              "Hapus catatan kiriman dari kedua tampilan?",
-                                            )
-                                          )
-                                            void store
-                                              .mutate(
-                                                "/transfers/" + t.id,
-                                                "DELETE",
-                                                { expectedVersion: t.version },
+                              ) && (
+                                <p className="empty-note">
+                                  Belum ada kiriman yang dicatat.
+                                </p>
+                              )}
+                              {s.transfers
+                                .filter(
+                                  (t) =>
+                                    !t.superseded_by_item_id &&
+                                    (t.from_owner_id === view ||
+                                      t.to_owner_id === view),
+                                )
+                                .map((t) => (
+                                  <article
+                                    className="transfer-record"
+                                    key={t.id}
+                                  >
+                                    <div>
+                                      <strong>
+                                        {ownerName[t.from_owner_id]} →{" "}
+                                        {ownerName[t.to_owner_id]}
+                                      </strong>
+                                      <small>
+                                        {t.occurred_on} ·{" "}
+                                        {t.from_owner_id === view
+                                          ? "Keluar"
+                                          : "Masuk · otomatis"}
+                                      </small>
+                                    </div>
+                                    <strong>{rupiah.format(t.amount)}</strong>
+                                    {view === actor &&
+                                      t.from_owner_id === actor && (
+                                        <Button
+                                          variant="ghost"
+                                          disabled={!store.online || store.busy}
+                                          onClick={() => {
+                                            if (
+                                              confirm(
+                                                "Hapus catatan kiriman dari kedua tampilan?",
                                               )
-                                              .catch((e) =>
-                                                store.setMessage(e.message),
-                                              );
-                                        }}
-                                      >
-                                        Hapus
-                                      </Button>
-                                    )}
-                                </article>
-                              ))}
-                          </section>
-                        )}
-                      </>
-                    )}
+                                            )
+                                              void store
+                                                .mutate(
+                                                  "/transfers/" + t.id,
+                                                  "DELETE",
+                                                  {
+                                                    expectedVersion: t.version,
+                                                  },
+                                                )
+                                                .catch((e) =>
+                                                  store.setMessage(e.message),
+                                                );
+                                          }}
+                                        >
+                                          Hapus
+                                        </Button>
+                                      )}
+                                  </article>
+                                ))}
+                            </section>
+                          )}
+                        </>
+                      )}
+                    </div>
                   </>
                 )}
               </div>
@@ -719,6 +775,35 @@ export default function App() {
           )}
         </main>
       </div>
+      {actor && s && groupId && (
+        <GroupEditor
+          key={groupId}
+          id={groupId}
+          store={store}
+          actor={actor}
+          active={Boolean(user)}
+          onClose={() => setGroupId(null)}
+          readOnly={
+            view !== actor && view !== "evidence" && view !== "dashboard"
+          }
+          onExtra={() => {
+            setGroupId(null);
+            void openTransfer();
+          }}
+        />
+      )}
+      {user && actor && setupGroup && (
+        <ConfigureGroup
+          store={store}
+          actor={actor}
+          item={setupGroup.item}
+          onClose={() => setSetupGroup(null)}
+          onCreated={(id) => {
+            setSetupGroup(null);
+            setGroupId(id);
+          }}
+        />
+      )}
       {user && actor && monthOpen && (
         <MonthForm
           store={store}

@@ -1,3 +1,4 @@
+import { z } from "zod";
 import type { Context } from "hono";
 import type { AppEnv } from "./types";
 import { attachmentSchema, type Expense, type Owner } from "../shared/domain";
@@ -8,6 +9,8 @@ import { validateImage } from "./images";
 type C = Context<AppEnv>;
 interface FileRow {
   id: string;
+  group_id: string;
+  confirmed_group_version: number;
   expense_id: string;
   income_item_id: string;
   allocation_item_id: string;
@@ -19,29 +22,55 @@ interface FileRow {
   status: string;
 }
 const source = (c: C) =>
-  c.req.path.startsWith("/api/allocation-")
+  c.req.path.startsWith("/api/allocation-groups/") ||
+  c.req.path.startsWith("/api/group-attachments/")
     ? {
-        table: "allocation_attachments" as const,
-        parent: "budget_items" as const,
-        key: "allocation_item_id" as const,
+        table: "group_attachments" as const,
+        parent: "allocation_groups" as const,
+        key: "group_id" as const,
       }
-    : c.req.path.includes("/income-") ||
-        c.req.path.startsWith("/api/income-items/")
+    : c.req.path.startsWith("/api/allocation-")
       ? {
-          table: "income_attachments" as const,
+          table: "allocation_attachments" as const,
           parent: "budget_items" as const,
-          key: "income_item_id" as const,
+          key: "allocation_item_id" as const,
         }
-      : {
-          table: "attachments" as const,
-          parent: "expenses" as const,
-          key: "expense_id" as const,
-        };
+      : c.req.path.includes("/income-") ||
+          c.req.path.startsWith("/api/income-items/")
+        ? {
+            table: "income_attachments" as const,
+            parent: "budget_items" as const,
+            key: "income_item_id" as const,
+          }
+        : {
+            table: "attachments" as const,
+            parent: "expenses" as const,
+            key: "expense_id" as const,
+          };
 export async function reserve(c: C) {
   const src = source(c);
   const expenseId = rowId(c),
-    v = await json(c, attachmentSchema),
+    v = await json(
+      c,
+      src.table === "group_attachments"
+        ? attachmentSchema.extend({
+            expectedVersion: z.number().int().positive(),
+          })
+        : attachmentSchema,
+    ),
     expense = await owned<Expense>(c, src.parent, expenseId);
+  if (
+    src.table === "group_attachments" &&
+    ((expense as unknown as { status: string; version: number }).status !==
+      "posted" ||
+      (expense as unknown as { version: number }).version !==
+        (v as { expectedVersion?: number }).expectedVersion)
+  )
+    fail(
+      409,
+      "GROUP_CHANGED",
+      "Penyerahan berubah. Muat ulang sebelum mengunggah bukti.",
+    );
   if (src.table === "attachments" && (expense as Expense).superseded_by_item_id)
     fail(
       409,
@@ -79,13 +108,16 @@ export async function reserve(c: C) {
       existing.sha256 !== v.sha256 ||
       existing.content_type !== v.contentType ||
       existing.byte_size !== v.byteSize ||
-      existing.status === "deleting"
+      existing.status === "deleting" ||
+      (src.table === "group_attachments" &&
+        existing.confirmed_group_version !==
+          (expense as unknown as { version: number }).version)
     )
       fail(409, "UPLOAD_CONFLICT", "Bukti dengan ID ini memiliki isi berbeda.");
     return c.json({ id: v.id, status: existing.status });
   }
   const inserted = await c.env.DB.prepare(
-    `INSERT INTO ${src.table}(id,${src.key},owner_id,object_key,content_type,byte_size,sha256,status,created_at,updated_at) SELECT $1,$2,$3,$4,$5,$6,$7,'pending',$8,$9 WHERE EXISTS(SELECT 1 FROM ${src.parent} WHERE id=$2 AND deleted_at IS NULL ${src.table === "attachments" ? "AND superseded_by_item_id IS NULL" : ""}) RETURNING id`,
+    `INSERT INTO ${src.table}(id,${src.key},owner_id,object_key,content_type,byte_size,sha256,status,created_at,updated_at${src.table === "group_attachments" ? ",confirmed_group_version" : ""}) SELECT $1,$2,$3,$4,$5,$6,$7,'pending',$8,$9${src.table === "group_attachments" ? ",$10" : ""} WHERE EXISTS(SELECT 1 FROM ${src.parent} WHERE id=$2 AND deleted_at IS NULL ${src.table === "attachments" ? "AND superseded_by_item_id IS NULL" : src.table === "group_attachments" ? "AND status='posted' AND version=$10" : ""}) RETURNING id`,
   )
     .bind(
       v.id,
@@ -97,6 +129,9 @@ export async function reserve(c: C) {
       v.sha256,
       Date.now(),
       Date.now(),
+      ...(src.table === "group_attachments"
+        ? [(expense as unknown as { version: number }).version]
+        : []),
     )
     .run();
   if (!inserted.meta.changes)
@@ -116,6 +151,11 @@ export async function upload(c: C) {
     fail(409, "HISTORY_LOCKED", "Bukti ini merupakan histori Alokasi.");
   if (
     expense.deleted_at ||
+    (src.table === "group_attachments" &&
+      ((expense as unknown as { status: string; version: number }).status !==
+        "posted" ||
+        (expense as unknown as { version: number }).version !==
+          file.confirmed_group_version)) ||
     file.status === "deleting" ||
     (src.table === "allocation_attachments" &&
       (expense as unknown as { amount: number | null }).amount === null)
@@ -131,18 +171,30 @@ export async function upload(c: C) {
       "Isi gambar berbeda. Pilih ulang berkas yang benar.",
     );
   const dimensions = validateImage(data, file.content_type);
+  if (file.status === "ready") return c.json({ id, status: "ready" });
   await c.env.EVIDENCE.put(file.object_key, data, {
     httpMetadata: { contentType: file.content_type },
     customMetadata: { sha256: file.sha256 },
   });
   try {
     const result = await c.env.DB.prepare(
-      `UPDATE ${src.table} SET status='ready',width=$1,height=$2,updated_at=$3 WHERE id=$4 AND status IN ('pending','failed','ready') AND EXISTS(SELECT 1 FROM ${src.parent} WHERE id=${src.key} AND deleted_at IS NULL ${src.table === "allocation_attachments" ? "AND amount IS NOT NULL AND recording_mode='actual'" : ""})`,
+      `UPDATE ${src.table} SET status='ready',width=$1,height=$2,updated_at=$3 WHERE id=$4 AND status IN ('pending','failed','ready') AND EXISTS(SELECT 1 FROM ${src.parent} WHERE id=${src.key} AND deleted_at IS NULL ${src.table === "allocation_attachments" ? "AND amount IS NOT NULL AND recording_mode='actual'" : src.table === "group_attachments" ? "AND status='posted' AND version=$5" : ""})`,
     )
-      .bind(dimensions.width, dimensions.height, Date.now(), id)
+      .bind(
+        dimensions.width,
+        dimensions.height,
+        Date.now(),
+        id,
+        ...(src.table === "group_attachments"
+          ? [file.confirmed_group_version]
+          : []),
+      )
       .run();
     if (!result.meta.changes) {
-      await c.env.EVIDENCE.delete(file.object_key);
+      // A group upload can race its correction. Cleanup reclaims its pending
+      // object without removing a successful concurrent upload of the same ID.
+      if (src.table !== "group_attachments")
+        await c.env.EVIDENCE.delete(file.object_key);
       fail(
         409,
         "EXPENSE_DELETED",
@@ -158,7 +210,7 @@ export async function download(c: C) {
   const src = source(c);
   const id = rowId(c),
     file = await c.env.DB.prepare(
-      `SELECT a.* FROM ${src.table} a JOIN ${src.parent} e ON e.id=a.${src.key} WHERE a.id=$1 AND a.status='ready' AND e.deleted_at IS NULL ${src.table === "allocation_attachments" ? "AND e.amount IS NOT NULL AND e.recording_mode='actual'" : ""}`,
+      `SELECT a.* FROM ${src.table} a JOIN ${src.parent} e ON e.id=a.${src.key} WHERE a.id=$1 AND a.status='ready' AND e.deleted_at IS NULL ${src.table === "allocation_attachments" ? "AND e.amount IS NOT NULL AND e.recording_mode='actual'" : src.table === "group_attachments" ? "AND e.status='posted'" : ""}`,
     )
       .bind(id)
       .first<FileRow>();

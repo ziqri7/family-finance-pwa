@@ -15,7 +15,7 @@ const groupOf = (i: Item): Kind =>
       ? "transfer_out"
       : "allocation"
     : i.kind;
-function FieldError({
+export function FieldError({
   item,
   field,
   store,
@@ -76,16 +76,20 @@ function BudgetRow({
   store,
   income,
   active,
+  onGroup,
 }: {
   item: Item;
   canEdit: boolean;
   store: FinanceStore;
   income: number;
   active: boolean;
+  onGroup?: (id: string) => void;
 }) {
   const [evidenceOpen, setEvidenceOpen] = useState(false);
   const label = store.drafts.get(item.id + ":label"),
     amount = store.drafts.get(item.id + ":amount");
+  const member = store.snapshot!.groupItems?.find((m) => m.item_id === item.id);
+  const grouped = Boolean(member);
   const disabled =
     !canEdit || !store.online || store.busy || Boolean(item.deleted_at);
   return (
@@ -134,6 +138,7 @@ function BudgetRow({
             autoComplete="off"
             disabled={
               disabled ||
+              grouped ||
               (item.recording_mode === "actual" && !item.posting_kind)
             }
             placeholder="Belum diisi"
@@ -179,7 +184,7 @@ function BudgetRow({
           <button
             className="icon-button delete-item"
             aria-label={"Hapus " + item.label}
-            disabled={disabled}
+            disabled={disabled || grouped}
             onClick={async () => {
               try {
                 const confirmed = await store.itemForDelete(item);
@@ -215,7 +220,7 @@ function BudgetRow({
           />
         </div>
       )}
-      {item.kind !== "income" && (
+      {item.kind !== "income" && !grouped && (
         <AllocationPosting
           item={item}
           store={store}
@@ -224,6 +229,11 @@ function BudgetRow({
         />
       )}
       <FieldError item={item} field="label" store={store} />
+      {member && onGroup && (
+        <Button variant="ghost" onClick={() => onGroup(member.group_id)}>
+          Lihat penyerahan & bukti bersama
+        </Button>
+      )}
       <FieldError item={item} field="amount" store={store} />
       {item.kind === "income" && (
         <Button
@@ -261,6 +271,7 @@ export function Budget({
   actor,
   onCreate,
   onAdd,
+  onGroup,
   active = true,
 }: {
   store: FinanceStore;
@@ -268,6 +279,7 @@ export function Budget({
   actor: Owner;
   onCreate: () => void;
   onAdd: (kind: Kind) => void;
+  onGroup?: (id: string) => void;
   active?: boolean;
 }) {
   const s = store.snapshot!;
@@ -389,6 +401,7 @@ export function Budget({
                         store={store}
                         income={stats.income}
                         active={active}
+                        onGroup={onGroup}
                       />
                     ))}
                   {kind === "income" && stats.incoming > 0 && (

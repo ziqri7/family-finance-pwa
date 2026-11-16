@@ -43,6 +43,7 @@ export function QuickPosting({
       i.kind !== "income" &&
       i.recording_mode !== "actual" &&
       i.amount !== null &&
+      !store.snapshot!.groupItems?.some((m) => m.item_id === i.id) &&
       !i.deleted_at,
   );
   async function start() {
@@ -165,8 +166,8 @@ export function QuickPosting({
             >
               <p className="helper-note">
                 Periksa nominal dan jenis, lalu tandai sekaligus. Pilih Ke
-                pasangan untuk kiriman suami/istri, Disisihkan untuk tabungan.
-                Catatan lama tidak dihitung ganda.
+                pasangan untuk kiriman suami/istri, Tabungan sendiri untuk
+                tabungan. Catatan lama tidak dihitung ganda.
               </p>
               {rows.length > 0 && (
                 <label className="quick-select">
@@ -242,7 +243,7 @@ export function QuickPosting({
                         >
                           <option value="external">Pembayaran</option>
                           <option value="internal">Ke pasangan</option>
-                          <option value="reserve">Disisihkan</option>
+                          <option value="reserve">Tabungan sendiri</option>
                         </select>
                       </label>
                     </div>

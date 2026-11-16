@@ -39,6 +39,7 @@ export async function bytes(request: Request, max: number) {
 export async function json<T>(
   c: Context<AppEnv>,
   schema: ZodType<T>,
+  maxBytes = 16 * 1024,
 ): Promise<T> {
   if (c.req.header("content-type")?.split(";")[0].trim() !== "application/json")
     fail(415, "JSON_REQUIRED", "Gunakan isian JSON.");
@@ -46,7 +47,7 @@ export async function json<T>(
   try {
     input = JSON.parse(
       new TextDecoder("utf-8", { fatal: true }).decode(
-        await bytes(c.req.raw, 16 * 1024),
+        await bytes(c.req.raw, maxBytes),
       ),
     );
   } catch (e) {

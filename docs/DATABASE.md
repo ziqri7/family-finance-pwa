@@ -1,5 +1,12 @@
 # Rancangan database PostgreSQL
 
+## Kandidat migrasi 0006 — kelompok penyerahan
+
+Empat tabel baru allocation_groups, allocation_group_items, allocation_group_operations dan group_attachments. Indeks unique partial menjaga satu keanggotaan aktif per pos. Guard memvalidasi owner/bulan, ID bukti lintas koleksi, kuota dan penulisan pos kelompok. Commit/cancel menyimpan seluruh anggota dalam transaksi yang sama, cutover mempertahankan histori, receipt tidak dapat diperbarui/dihapus. Grup/anggota yang dilepas tetap dapat dipulihkan sebagai histori. Jenis reserve tetap untuk tabungan sendiri dan data lama.
+
+Tidak ada backfill kelompok berdasarkan label, perubahan akun atau konversi otomatis saat migrasi. Migrasi0001–0005 harus byte-identik. Skema Drizzle memetakan kolom kelompok yang dibaca API. Backup6 mencakup14tabel, selain sesi/login_attempts/schema_migrations sesuai kontrak backup.
+
+
 ## Migrasi 0005 — Alokasi aktual
 
 budget_items: recording_mode legacy/actual (baris lama legacy); posting_kind external/internal/reserve; posting_date nullable dan valid dalam bulan; posting_version positif. Actual non-income bernominal terisi wajib memiliki jenis. Jenis template privat lama tidak ditebak dari label; pemilik memilih sebelum mengisi pos actual baru. Income mempertahankan perilaku awal.

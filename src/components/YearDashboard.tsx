@@ -203,7 +203,7 @@ export function YearDashboard({
                 {data.included ? rupiah.format(data.allocation) : "—"} · sisa
                 belum dibagi:{" "}
                 {data.included ? rupiah.format(data.remaining) : "—"}. Sisa
-                bukan saldo rekening. Disisihkan:{" "}
+                bukan saldo rekening. Tabungan:{" "}
                 {rupiah.format(data.reserved ?? 0)}.
               </p>
             </ChartInfo>

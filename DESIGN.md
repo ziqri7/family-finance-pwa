@@ -190,3 +190,9 @@ Kartu Suami ungu/Istri hijau, kolom langsung dan pemisah ribuan dipertahankan; t
 ## Alokasi aktual — disetujui dan dirilis 16 November 2026
 
 Bahasa Caku/Jakarta dan diagram dipertahankan. Setiap baris non-income menampilkan Tercatat otomatis atau Alur lama, jenis pembagian, akses jenis/tanggal serta bukti langsung. Tinjau pencatatan memakai dialog agar selisih nominal pos dengan catatan lama terlihat sebelum konversi. Angka ringkas memakai hingga dua desimal dan nominal rupiah lengkap pada label/title. Sisa disebut Sisa belum dibagi; uang disisihkan terpisah dari belanja. Pasangan hanya membaca. Seluruh status simpan/error/draf tetap berlaku; perubahan semantik tidak mengganti arah visual.
+
+## UX ringkas — visual dan alur disetujui, kandidat belum dirilis
+
+Caku/Jakarta tetap. Beranda membuka bagian akun aktif dan kelompok pembagian, dengan konteks Saya/Pasangan/Keluarga serta tiga menu Beranda/Catat/Bukti. Dialog Pemasukan hanya memuat pemasukan sendiri. Kelola pos membuka rincian struktur dan catatan lama. Belanja terbaru tampil di Beranda. Ringkasan grafik bulan/tahun berada pada Keluarga.
+
+Satu layar memuat nominal perpos, checkbox, total dan bukti bersama. Setelah konfirmasi berhasil kembali ke Beranda; upload gagal menyediakan retry dan penghapusan reservasi tertunda. Tabungan sendiri memakai label Tabungan/Sudah ditabung. Status konflik, sesi habis, nol/kosong dan angka terlalu besar tetap jelas. Bukti render mobile/desktop dan batas uji ada di TESTING.md.

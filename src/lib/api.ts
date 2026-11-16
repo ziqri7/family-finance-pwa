@@ -81,7 +81,8 @@ export async function upload(
   collection:
     | "attachments"
     | "income-attachments"
-    | "allocation-attachments" = "attachments",
+    | "allocation-attachments"
+    | "group-attachments" = "attachments",
 ) {
   let response: Response;
   try {

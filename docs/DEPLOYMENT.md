@@ -1,5 +1,15 @@
 # Deployment Cloudflare dan Neon milik sendiri
 
+## Upgrade kandidat kelompok 0006 — menunggu persetujuan rilis
+
+1. Periksa sumber/bundel yang diuji serta kondisi proyek dan skema produksi. Buat backup format5 dengan kode immutable718103ba876a17b580b88cd34797df9a922787f8 dalam checkout terpisah yang memakai konfigurasi privat produksi. Simpan pepper terpisah dan pastikan snapshot/gambar lengkap.
+2. Setelah persetujuan rilis, jalankan migrasi0006 saja dengan konfigurasi produksi yang ditinjau. Pertahankan secret, hash sandi dan sesi yang valid. Tidak seed/accounts:init atau pengelompokan data keluarga otomatis.
+3. Tayangkan bundel baru di proyek Pages milik instalasi tersebut. Pengguna menyelesaikan draf lalu memperbarui PWA. Guard menolak edit per-pos yang melewati kelompok. Pengaturan kelompok data lama dilakukan pemilik lewat aplikasi.
+4. Cocokkan nilai kolom lama/kredensial/sesi sebelum-sesudah, periksa aset/API/dua akun sesuai sandi aktif, lalu buat backupformat6 lengkap. Tes konversi/unggah baru menggunakan dummy, jangan mengubah catatan keluarga sebagai tes.
+
+Tidak memerlukan layanan, bucket atau secret baru. Satu objek bukti dapat dilihat dari banyak pos melalui API privat. Contoh instalasi baru di bawah memakai kode kandidat dan memasang seluruh migrasi1–6. Prosedur0005 berikut adalah arsip rilis sebelumnya.
+
+
 ## Upgrade Alokasi aktual 0005 — rilis terverifikasi 16 November 2026
 
 1. Tinjau paket dan hasil uji lalu minta persetujuan rilis. Cadangkan database/gambar format 4 dengan sumber immutable versi 0004 sebelum migrasi; pertahankan pepper dan tujuh secret.

@@ -373,11 +373,11 @@ test("income evidence: both owners, private reads, quota, copy, retirement and r
         await migrate(dest);
         await dest
           .prepare(
-            "TRUNCATE allocation_attachments,income_attachments,attachments,transfers,expenses,budget_items,budgets,periods,default_items,sessions,login_attempts,account_credentials",
+            "TRUNCATE group_attachments,allocation_group_operations,allocation_group_items,allocation_groups,allocation_attachments,income_attachments,attachments,transfers,expenses,budget_items,budgets,periods,default_items,sessions,login_attempts,account_credentials",
           )
           .run();
         assert.deepEqual(await restoreBackup(dest, storage, folder), {
-          tables: 10,
+          tables: 14,
           objects: 3,
         });
       },

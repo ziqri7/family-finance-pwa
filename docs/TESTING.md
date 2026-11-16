@@ -1,5 +1,22 @@
 # Pengujian Financée
 
+## Kandidat UX ringkas dan bukti bersama — 16 November 2026
+
+Implementasi sesuai preview dan rancangan disetujui, belum ditayangkan. Sumber nominal tetap pada pos. Kelompok/anggota/receipt operasi/bukti bersama ditambahkan melalui migrasi0006. Backupformat6 memuat14tabel danempat koleksi gambar. Data lama dikelompokkan melalui review pemilik.
+
+- Build/typecheck serta seluruh **71 pengujian lulus, 0 gagal/dilewati** pada cabang dummy. Uji kelompok diperluas dan diulang setelahnya untuk pending upload setelah koreksi, pembatalan pending, histori kelompok dilepas, serta pemulihan format5→skema6. Hasilnya lulus.
+- Transaksi satu kelompok gagal seluruhnya bila satu versi basi. Retry mengenali receipt, retry lama tidak menimpa koreksi baru, dua perubahan bersamaan hanya menghasilkan satu pemenang. Histori/catatan tambahan dan sumber ledger tidak dihitung ganda. Guard jalur lama mencegah edit nominal anggota di luar kelompok.
+- Bukti satuobjek terbaca oleh kedua akun dan tampil sekali di galeri, metadata API tanpa object_key. Pasangan tidak dapat mengubah/mengunggah. Upload tertunda ditolak setelah koreksi keuangan dan dapat dihapus; pembatalan mencegah gambar hidup kembali. Kuota, validasi JPG/PNG dan pemeriksaan gambar mengikuti mekanisme yang sudah ada.
+- Backup/restore format6 lulus pada dua cabang terpisah,14tabel dan1gambar termasuk bukti sebelum koreksi. Histori kelompok dilepas dipulihkan lengkap. Format5 dibaca/dipulihkan ke skema6 dengan4tabel kelompok kosong. Kasus sandi/pepper, izin dan uploadfault sebelumnya diuji kembali tanpa melemahkan guard.
+- Instalasi bersih npmci dan29unit lulus (tes unit juga termasuk suite71). Build ulang kandidat terakhir menghasilkan13berkas identik byte dan migrasi identik. Bukan tambahan29tes unik di atas71.
+- Native Chromium memakai bundel Pages nyata dan Neon dummy, dua akun,320/369/390/430/1366 tanpa luapan. Dialog pemasukan menyimpan angka, empat pos diserahkan lewat satu konfirmasi, satuPNG bersama terbaca, pembayaran listrik membuat sisa suami0, istri menerima3,3juta dan mencatat100ribu sehingga sisa3,2juta. Belanja keluarga550ribu, tidak memasukkan kirimaninternal. Sesi uji logout.
+- Enter pada nominal tidak mengonfirmasi kelompok. Nominal melewati batas aman menampilkan total— dan menonaktifkan konfirmasi. Sesi habis saat dialog pemasukan terbuka menutup portal agar login terlihat, lalu akun yang sama melanjutkan draf. Browser pageerror0. Render reviewmobile/desktop, bukti bersama, istri dan keluarga diperiksa.
+
+Regresi yang ditemukan dan diperbaiki selama pengembangan meliputi guard histori saat tujuan berubah menjadi kiriman, kompatibilitas pos actual tanpa klasifikasi, daftar tabel restore baru, dan cleanup nongroup yang harus mempertahankan perilaku lama. Semua temuan tersebut diuji ulang. Penyesuaian formulir memakai label/konteks yang tegas dan jarak centang yang sesuai layar HP.
+
+Batas verifikasi: belum iPhone/Safari fisik, dua perangkat fisik, beban maksimum atau audit keamanan/aksesibilitas menyeluruh. Tidak mengakses/menulis data keluarga produksi, tidak melakukan migrasi/rilis atau konversi data lama otomatis. Angka/gambar yang diperagakan adalah contoh. Migrasi1–5, autentikasi, sandi, adaptertransaksi dan dependencylock dipertahankan.
+
+
 ## Perbaikan HP dan penandaan sekaligus terverifikasi online — 16 November 2026
 
 Pengguna menyetujui penayangan. Runtime `79b20e57dd433184e4128bcac8094aca6cf21931` ditayangkan pada proyek Pages yang sama, deployment `836722e8-e14b-4890-92a5-7410c43e10b7` success. Sumber GitHub cocok dengan runtime; pembaruan dokumentasi sesudahnya tidak mengubah build. Bagian kandidat di bawah adalah arsip sebelum rilis.
