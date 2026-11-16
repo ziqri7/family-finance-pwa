@@ -1,5 +1,12 @@
 # Financée
 
+## Kandidat perbaikan HP dan penandaan sekaligus — belum dirilis
+
+Pesan grafik kosong ditampilkan di luar kisi legenda agar tetap terbaca pada HP. Tombol Buka alokasi saya menuju bagian pemilik. Pada bulan lama, tombol **Sudah dibayar / diserahkan** membuka satu ringkasan seluruh pos yang nominalnya sudah terisi; pilih semua, periksa jenis/nominal, lalu **Tandai N pos selesai**. Pos kosong tidak ikut. Peninjauan per pos tetap tersedia untuk kasus khusus.
+
+Alur ini memakai endpoint dan perlindungan versi yang sudah ada, tanpa migrasi atau perubahan sandi. Setiap pos dikonfirmasi terpisah di server: hasil sebagian tetap tersimpan dan ditampilkan; retry mengenali yang sudah berhasil. Perubahan pos/catatan dari perangkat lain perlu dimuat ulang dan ditinjau. Tidak menandai data keluarga secara otomatis saat rilis.
+
+
 ## Alokasi aktual — dirilis 16 November 2026
 
 Alur baru yang disetujui: isi nominal sesudah pembayaran/penyerahan, catatan otomatis dari pos yang sama, bukti JPG/PNG langsung pada Alokasi, serta pembeda Pembayaran/Kiriman pasangan/Disisihkan. Data lama diberi penanda dan ditinjau pemilik sebelum konversi; histori dan buktinya tetap disimpan. Salin bulan membawa struktur dengan nominal kosong. Pengeluaran tambahan memakai menu Catat tanpa mengulang nominal Alokasi.

@@ -589,3 +589,122 @@
 .posting-controls select {
   max-width: 100%;
 }
+
+.allocation-layout.is-empty {
+  flex-direction: column;
+  justify-content: center;
+  gap: 14px;
+}
+.allocation-layout.is-empty .allocation-donut {
+  width: 150px;
+  max-width: 100%;
+}
+.allocation-empty {
+  width: 100%;
+  text-align: center;
+  line-height: 1.6;
+  font-size: 14px;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+.allocation-empty .button {
+  margin-top: 12px;
+}
+.quick-posting {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: var(--tint);
+  padding: 18px;
+  border-radius: 12px;
+  margin-bottom: 22px;
+}
+.quick-posting strong {
+  font-size: 14px;
+}
+.quick-posting p {
+  font-size: 12px;
+  margin: 6px 0 0;
+  line-height: 1.6;
+}
+.quick-posting-list {
+  display: grid;
+  gap: 0;
+}
+.quick-posting-row {
+  border-bottom: 1px solid var(--line);
+  padding: 18px 0;
+}
+.quick-posting-row small {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+  margin-top: 6px;
+}
+.quick-select {
+  display: flex !important;
+  gap: 10px;
+  align-items: center !important;
+  margin: 10px 0 !important;
+  font-size: 14px;
+}
+.quick-select input[type="checkbox"] {
+  width: 20px !important;
+  min-height: 20px !important;
+  height: 20px !important;
+  flex: 0 0 20px;
+  accent-color: var(--accent);
+}
+.quick-posting-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+}
+.quick-posting-fields label {
+  font-size: 12px;
+}
+.quick-posting-fields input,
+.quick-posting-fields select {
+  width: 100%;
+  min-width: 0;
+}
+.quick-done {
+  font-size: 13px;
+  color: #44672b;
+  margin: 8px 0 0;
+}
+@media (max-width: 600px) {
+  .quick-posting {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .quick-posting .button {
+    width: 100%;
+    white-space: normal;
+  }
+}
+
+.quick-posting-row {
+  padding: 12px 0;
+}
+.quick-posting-form > .dialog-actions {
+  position: sticky;
+  bottom: -24px;
+  background: white;
+  padding: 12px 0;
+  z-index: 1;
+  border-top: 1px solid var(--line);
+}
+.quick-posting-form > .dialog-actions .button {
+  white-space: normal;
+}
+.quick-posting-fields label {
+  margin-top: 10px;
+}
+@media (max-width: 350px) {
+  .quick-posting-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

@@ -2,6 +2,7 @@ import { effectiveFamilyTotals as familyTotals } from "../../shared/ledger";
 import { allocationChart } from "../../shared/chart-data";
 import { useState } from "react";
 import { Info } from "lucide-react";
+import { Button } from "./ui/button";
 import { Dialog } from "./ui/dialog";
 import { ratio, rupiah, type Snapshot } from "../../shared/domain";
 import "./visual-finance.css";
@@ -66,7 +67,13 @@ export function ChartNumbers({
     </dl>
   );
 }
-export function MonthCharts({ snapshot }: { snapshot: Snapshot }) {
+export function MonthCharts({
+  snapshot,
+  onStart,
+}: {
+  snapshot: Snapshot;
+  onStart?: () => void;
+}) {
   const t = familyTotals(snapshot),
     {
       slices: top,
@@ -121,7 +128,9 @@ export function MonthCharts({ snapshot }: { snapshot: Snapshot }) {
               <p>Nominal kosong belum diisi. Isi 0 jika pos tidak dipakai.</p>
             </ChartInfo>
           </div>
-          <div className="allocation-layout">
+          <div
+            className={"allocation-layout" + (!top.length ? " is-empty" : "")}
+          >
             <div className="allocation-donut">
               <svg
                 viewBox="0 0 132 132"
@@ -177,24 +186,38 @@ export function MonthCharts({ snapshot }: { snapshot: Snapshot }) {
                 </strong>
               </div>
             </div>
-            <ul className="allocation-legend">
-              {top.map((r, i) => (
-                <li key={i}>
-                  <i style={{ background: colors[i] }} />
-                  <span>
-                    {r.label}
-                    <small title={rupiah.format(r.amount)}>
-                      {compactMoney(r.amount)}
-                    </small>
-                  </span>
-                  <strong>{ratio(r.amount, t.allocation + t.reserved)}</strong>
-                </li>
-              ))}
-              {!top.length && <li>Belum ada alokasi.</li>}
-            </ul>
+            {top.length > 0 ? (
+              <ul className="allocation-legend">
+                {top.map((r, i) => (
+                  <li key={i}>
+                    <i style={{ background: colors[i] }} />
+                    <span>
+                      {r.label}
+                      <small title={rupiah.format(r.amount)}>
+                        {compactMoney(r.amount)}
+                      </small>
+                    </span>
+                    <strong>
+                      {ratio(r.amount, t.allocation + t.reserved)}
+                    </strong>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div className="allocation-empty">
+                <p>Belum ada pembagian yang dicatat.</p>
+                {onStart && (
+                  <Button variant="secondary" onClick={onStart}>
+                    Buka alokasi saya
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
           <p className="chart-caption">
-            Persentase dari pembayaran dan uang disisihkan yang sudah tercatat.
+            {top.length
+              ? "Persentase dari pembayaran dan uang disisihkan yang sudah tercatat."
+              : "Tandai alokasi yang sudah dibayar untuk melihat pembagiannya."}
           </p>
         </section>
         <section className="finance-panel">

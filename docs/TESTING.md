@@ -1,5 +1,15 @@
 # Pengujian Financée
 
+## Kandidat perbaikan grafik kosong dan penandaan sekaligus — 16 November 2026
+
+- Diagnosis: pesan kosong dulu berupa satu text node di li legenda berkisi 8px/minmax/auto; teks masuk kolom titik warna sehingga membungkus per huruf. Kini empty state terpisah, tanpa kisi legenda, dengan panduan dan akses menuju Alokasi sendiri.
+- Instalasi bersih dan build ulang menghasilkan 13 berkas build identik byte; migrasi juga identik. Enter pada kolom nominal tidak mengonfirmasi seluruh pilihan.
+- Build/typecheck dan **29 tes unit lulus/0 gagal/dilewati**. Empat tes baru menguji perubahan revisi akibat batch sendiri, perubahan anak yang membuat review basi, jawaban hilang sesudah commit/retry tanpa menandai tambahan baru, serta penghentian pada sesi habis/abort/nominal ilegal. Backend, migrasi dan kontrak API tetap.
+- Browser aktual → bundel Pages → Neon dummy dua akun lulus. Pesan kosong berlebar lebih200px/tinggi kurang65px pada320/369/390/430/1366; lebar369 mengikuti screenshot pengguna. Tidak ada luapan halaman/dialog. Satu konfirmasi menandai6pos suami; jenis kiriman/reserve dipilih pada ringkasan yang sama. Dua pos istri ditandai dari akunnya sendiri, tombol pasangan tidak muncul. Pos NULL tetap legacy dan tidak ditandai.
+- Peninjauan pos dengan catatan lama mengusulkan400ribu. Tambahan50ribu dibuat saat dialog terbuka; upaya pertama mendeteksi perubahan tanpa konversi, muat ulang mengusulkan450ribu dan konfirmasi berikutnya mencatat450ribu sekali. Hitungan kiriman/reserve dan pembacaan pembayaran keluarga2,55juta tetap benar. Sisa keluarga tetap — ketika satu pos sengaja NULL, bukan dianggap0.
+- Render kosong, ringkasan mobile dengan footer tombol tetap terlihat, desktop dan isi grafik diperiksa. Pengujian ini menggunakan data contoh, bukan pos keluarga. Belum rilis, belum Safari/iPhone fisik, dan bukan audit aksesibilitas atau keamanan menyeluruh. Tidak ada perubahan skema, autentikasi, secret atau provider.
+
+
 ## Alokasi aktual terverifikasi online — 16 November 2026
 
 Setelah persetujuan eksplisit pengguna, runtime `bc59ec6833ac21d71c62b9d62a94bef6bb0f2c06` ditayangkan pada proyek Pages yang sama; deployment `34332879-2ba4-43c0-9a3a-c5c9797a2bda`, status success. Sumber GitHub cocok; pembaruan dokumentasi sesudahnya tidak mengganti runtime. Bagian kandidat di bawah adalah arsip sebelum rilis.

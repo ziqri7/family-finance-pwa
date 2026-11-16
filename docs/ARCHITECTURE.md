@@ -1,5 +1,12 @@
 # Arsitektur Financée — Cloudflare Pages + Neon
 
+## Kandidat penyederhanaan peninjauan — tanpa perubahan backend
+
+QuickPosting menampilkan pos legacy terisi milik akun sendiri dalam satu dialog. src/lib/batch-postings.ts membaca ulang review setiap pos sebelum memakai PATCH posting yang sudah ada. Revisi periode yang berubah karena pos sebelumnya memakai nilai terkini; fingerprint row_version/anak/jumlah bukti melindungi peninjauan dari perubahan lain. CAS server tetap menentukan hasil akhir bila ada perubahan di antara GET/PATCH.
+
+Batch bersifat keberhasilan per pos, bukan transaksi lintas pos. UI menampilkan hasil sebagian. Retry membaca mode actual dan membandingkan nominal/jenis/tanggal; jika sama cukup ditandai selesai tanpa PATCH baru sehingga tambahan manual sesudah konversi tidak tersupersede. Nominal berbeda/anak berubah meminta peninjauan ulang; sesi habis, koneksi terputus dan abort menghentikan sisa permintaan. Tidak ada endpoint baru, migrasi, perubahan perhitungan, akses pasangan atau perubahan sandi. Grafik kosong dipisahkan dari kisi li legenda yang memiliki kolom pertama8px.
+
+
 ## Alokasi aktual — dirilis 16 November 2026
 
 Migrasi additive 0005 menambah metadata budget_items (recording_mode, posting_kind, posting_date, posting_version), metadata superseded pada expenses/transfers, klasifikasi default_items dan allocation_attachments. Migrasi mempertahankan baris lama dalam mode legacy; konversi dilakukan pemilik melalui peninjauan. View effective_postings menjadi proyeksi PostgreSQL dari pos actual dan catatan manual yang belum digantikan; tidak menyimpan salinan transaksi otomatis. shared/ledger.ts memberikan proyeksi UI setara, jumlah aman dan pemisahan external/internal/reserve; laporan tahun melakukan preagregasi view agar join tidak menggandakan.

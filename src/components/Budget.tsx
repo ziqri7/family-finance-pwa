@@ -1,3 +1,4 @@
+import { QuickPosting } from "./QuickPosting";
 import { AllocationPosting } from "./AllocationPosting";
 import { ledgerTotals as totals } from "../../shared/ledger";
 import { MoneyInput } from "./MoneyInput";
@@ -321,6 +322,9 @@ export function Budget({
               </div>
             </div>
           </section>
+          {canEdit && (
+            <QuickPosting store={store} owner={owner} active={active} />
+          )}
           <section className="budget-workspace" aria-label="Pengisian anggaran">
             <div className="section-heading">
               <div>

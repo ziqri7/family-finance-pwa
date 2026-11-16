@@ -190,7 +190,7 @@ export function Dashboard({
         </button>
       </div>
       {mode === "bulan" ? (
-        <MonthCharts snapshot={snapshot} />
+        <MonthCharts snapshot={snapshot} onStart={() => onView(actor)} />
       ) : (
         <YearDashboard snapshot={snapshot} periods={periods} active={active} />
       )}
