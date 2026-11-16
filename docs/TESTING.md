@@ -1,5 +1,17 @@
 # Pengujian Financée
 
+## Perbaikan HP dan penandaan sekaligus terverifikasi online — 16 November 2026
+
+Pengguna menyetujui penayangan. Runtime `79b20e57dd433184e4128bcac8094aca6cf21931` ditayangkan pada proyek Pages yang sama, deployment `836722e8-e14b-4890-92a5-7410c43e10b7` success. Sumber GitHub cocok dengan runtime; pembaruan dokumentasi sesudahnya tidak mengubah build. Bagian kandidat di bawah adalah arsip sebelum rilis.
+
+- Backup format 5 lengkap sebelum dan sesudah rilis: sepuluh tabel serta dua objek bukti. Tidak migrasi, inisialisasi akun, seed, perubahan sandi/secret atau konversi pos keluarga. Snapshot keuangan/kredensial sebelum-sesudah identik; sesi pengguna yang masih valid tetap ada. Tidak membuat data contoh di produksi.
+- HTML, JavaScript, CSS, service worker, manifest, ikon dan font online identik byte dengan build yang diuji. API/review/gambar privat anonim ditolak; metadata backend tidak terbuka. Tujuh secret produksi tetap, preview tanpa secret produksi.
+- Kedua akun berhasil login dengan sandi yang masih berlaku, membaca bulan/laporan tahun sesuai data efektif terkini, serta mengakses peninjauan sendiri; pasangan ditolak. Dua gambar lama dapat dibaca dan checksum cocok oleh kedua akun. Sesi verifikasi logout tanpa mencabut sesi pengguna.
+- Build/typecheck dan 29 tes unit diulang sebelum rilis, semuanya lulus. Build identik dengan hasil instalasi bersih. Render mobile/desktop dan satu konfirmasi banyak pos diuji memakai data contoh pada bundel yang sama. Tidak menekan penandaan pembayaran pada data keluarga untuk pengujian.
+
+Belum diuji pada iPhone/Safari fisik. Selesaikan isian yang belum tersimpan, lalu muat ulang atau tutup/buka PWA agar memakai tampilan terbaru. Pada bagian sendiri di bulan lama, buka Sudah dibayar / diserahkan, periksa nominal/jenis yang terpilih, lalu Tandai N pos selesai. Pos kosong tidak ikut ditandai.
+
+
 ## Kandidat perbaikan grafik kosong dan penandaan sekaligus — 16 November 2026
 
 - Diagnosis: pesan kosong dulu berupa satu text node di li legenda berkisi 8px/minmax/auto; teks masuk kolom titik warna sehingga membungkus per huruf. Kini empty state terpisah, tanpa kisi legenda, dengan panduan dan akses menuju Alokasi sendiri.

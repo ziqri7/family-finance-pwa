@@ -1,6 +1,6 @@
 # Arsitektur Financée — Cloudflare Pages + Neon
 
-## Kandidat penyederhanaan peninjauan — tanpa perubahan backend
+## Penyederhanaan peninjauan — dirilis tanpa perubahan backend
 
 QuickPosting menampilkan pos legacy terisi milik akun sendiri dalam satu dialog. src/lib/batch-postings.ts membaca ulang review setiap pos sebelum memakai PATCH posting yang sudah ada. Revisi periode yang berubah karena pos sebelumnya memakai nilai terkini; fingerprint row_version/anak/jumlah bukti melindungi peninjauan dari perubahan lain. CAS server tetap menentukan hasil akhir bila ada perubahan di antara GET/PATCH.
 
