@@ -196,3 +196,7 @@ Bahasa Caku/Jakarta dan diagram dipertahankan. Setiap baris non-income menampilk
 Caku/Jakarta tetap. Beranda membuka bagian akun aktif dan kelompok pembagian, dengan konteks Saya/Pasangan/Keluarga serta tiga menu Beranda/Catat/Bukti. Dialog Pemasukan hanya memuat pemasukan sendiri. Kelola pos membuka rincian struktur dan catatan lama. Belanja terbaru tampil di Beranda. Ringkasan grafik bulan/tahun berada pada Keluarga.
 
 Satu layar memuat nominal perpos, checkbox, total dan bukti bersama. Setelah konfirmasi berhasil kembali ke Beranda; upload gagal menyediakan retry dan penghapusan reservasi tertunda. Tabungan sendiri memakai label Tabungan/Sudah ditabung. Status konflik, sesi habis, nol/kosong dan angka terlalu besar tetap jelas. Bukti render mobile/desktop dan batas uji ada di TESTING.md.
+
+## Buku keluarga, 18 November 2026
+
+Preview disetujui sebelum implementasi. Identitas Caku, font lokal dan warna tetap. Beranda memakai ringkasan sisa/pemasukan/sudah dibagi serta daftar nominal; navigasi hanya Beranda/Bukti. Rincian per pos memuat pengaturan tracking dan pemakaian. Lihat bukti langsung menampilkan gambar serta pos terpilih; daftar centang hanya ketika membuat/mengubah tautan. Grafik dan penjelasan hitungan berada pada tindakan terkait. Semua pos biasa secara awal; tidak ada dompet pasangan atau pilihan Disisihkan.

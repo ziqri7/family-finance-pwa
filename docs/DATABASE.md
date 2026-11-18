@@ -1,5 +1,14 @@
 # Rancangan database PostgreSQL
 
+## Skema kandidat 0007
+
+16 tabel backup. Dua tabel baru usage_entries/usage_attachments; metadata tracking, asal salinan, bundle purpose, snapshot tautan dan pemetaan extras pada tabel lama. owner_id berarti pembuat yang immutable melalui API, bukan dompet penerima. Kelompok bukti baru memiliki posting_kind/recipient NULL. Satu pos boleh tertaut ke beberapa bundle. Konversi catatan lama menyimpan tujuan dan payload konfirmasi serta mengunci histori; tidak menghapus sumber atau menggandakan gambar.
+
+Salinan mempertahankan creator sumber dan copied_by. Self-FK asal salinan ditunda sampai commit agar restore tidak bergantung urutan UUID. Restore history usage pada pos dihapus memakai flag transaksi privat, tetap memvalidasi relasi/pembuat/jatah. Tidak ada flag restore pada API.
+
+Migrasi 1–6 tidak berubah. Lihat FAMILY_BOOK_PROPOSAL.md; bagian berikut menjelaskan versi sebelumnya.
+
+
 ## Migrasi 0006 — kelompok penyerahan
 
 Empat tabel baru allocation_groups, allocation_group_items, allocation_group_operations dan group_attachments. Indeks unique partial menjaga satu keanggotaan aktif per pos. Guard memvalidasi owner/bulan, ID bukti lintas koleksi, kuota dan penulisan pos kelompok. Commit/cancel menyimpan seluruh anggota dalam transaksi yang sama, cutover mempertahankan histori, receipt tidak dapat diperbarui/dihapus. Grup/anggota yang dilepas tetap dapat dipulihkan sebagai histori. Jenis reserve tetap untuk tabungan sendiri dan data lama.

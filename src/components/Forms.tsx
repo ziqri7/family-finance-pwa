@@ -36,7 +36,7 @@ export function MonthForm({
     <Dialog
       open
       title="Buat anggaran bulan"
-      description="Salin struktur pos saja. Nominal, tanggal dan bukti bulan baru kosong."
+      description="Salin seluruh struktur keluarga tanpa nominal dan bukti. Hak edit tetap mengikuti pembuat pos."
       busy={busy}
       onOpenChange={(v) => {
         if (!v) onClose();
@@ -74,13 +74,11 @@ export function MonthForm({
           onChange={(e) => setSource(e.target.value)}
         >
           <option value="">Pos bawaan saya, nominal belum diisi</option>
-          {store.periods
-            .filter((p) => p.owners.includes(actor))
-            .map((p) => (
-              <option key={p.id} value={p.id}>
-                Salin bagian saya · {monthName(p.id)}
-              </option>
-            ))}
+          {store.periods.map((p) => (
+            <option key={p.id} value={p.id}>
+              Salin buku keluarga · {monthName(p.id)}
+            </option>
+          ))}
         </select>
         {error && (
           <p role="alert" className="error">

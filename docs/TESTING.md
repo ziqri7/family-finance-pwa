@@ -1,5 +1,25 @@
 # Pengujian Financée
 
+## Buku keluarga — kandidat 18 November 2026
+
+Implementasi dan pengujian sudah disetujui. Kandidat ini belum dipush ke GitHub atau ditayangkan. Semua pengujian tulis memakai dua cabang Neon khusus dummy, tidak memakai data keluarga.
+
+- **80 tes lulus, 0 gagal/dilewati**, melalui `FINANCEE_TEST=1 npm test`. Mencakup autentikasi, ganti sandi dan sesi pasangan, pembatasan pembuat, input, dua penulis serentak, batas dana/jatah, bukti privat dan kuota, rollback, peralihan catatan lama, salin kosong, laporan, backup/pemulihan.
+- **35 tes unit lulus** pada instalasi bersih; merupakan bagian dari 80 tes di atas. Build/typecheck lulus; 13 berkas hasil build dan seluruh migrasi identik byte dengan workspace. Backend native juga berhasil diluncurkan dari instalasi bersih, serta menolak akses saat konfigurasi belum tersedia.
+- Bukti kolektif dengan sumber dari dua pembuat tidak mengubah kolom nominal, mode, tanggal atau versi pos. Satu objek dapat terkait beberapa pos, dan satu pos dapat memiliki beberapa bukti. Koreksi pos tidak mengganti snapshot nominal/versi saat bukti pertama ditautkan.
+- Pemakaian dibuat oleh akun lain pada pos tracked, tanpa menambah total pembagian. Dua permintaan bersamaan tidak dapat menggunakan jatah atau dana sisa yang sama. Koreksi parent di bawah pemakaian ditolak. Tracking off dan penghapusan pos tidak menghapus riwayat pasangan.
+- Restore format7 mencakup 16 tabel, gambar usage pada parent yang dihapus, serta expense superseded dan transfer yang sudah dipetakan setelah sumbernya dihapus. Kasus terakhir direproduksi gagal sebelum perbaikan dan lulus sesudahnya. Format5/6 berhasil ditingkatkan dan dipulihkan ke tujuan kosong, dengan nominal, pembuat, klasifikasi lama dan kunci objek tetap. Target berisi data, manifest/checksum tidak cocok atau pepper salah ditolak.
+- Native Chromium → build Pages → Neon dummy, dua akun: lebar **320, 369, 390, 430, 1366** tanpa luapan halaman. Foto tunggal untuk empat pos, akses gambar, hak koreksi, pemisah ribuan, batas dana/jatah, salin kedua creator kosong dan grafik tahun diuji lewat kontrol aplikasi. Tidak ada pageerror.
+- Dua sesi browser terpisah menyinkronkan perubahan saat online. Setelah sesi sendiri dicabut, dialog privat menutup ke layar masuk; akun yang sama melanjutkan draf dan menyimpan satu catatan. Sesi pasangan tetap berlaku.
+- Migrasi0001–0006, autentikasi, logika sandi, adapter transaksi dan dependency lock dipertahankan byte-identik. Tidak menambah layanan, bucket atau secret.
+
+Tes yang mengharuskan dompet pasangan/commit keuangan kelompok diganti dengan tes kontrak buku keluarga dan peralihan eksplisit. Uji rumus/helper historis tetap ada untuk referensi data lama; hasilnya bukan definisi dashboard baru. Kegagalan fixture selama pengembangan didiagnosis dan diperbaiki, kemudian kasus terkait serta seluruh suite diulang.
+
+Catatan teknis dan render berada pada folder privat pengembangan `private/family/`, tidak masuk sumber publik. Pemeriksaan paket publik dan SHA-256 dicatat bersama paket rilis. Pembacaan dampak produksi dilakukan read-only; tidak membuat sesi, menulis nominal, menerapkan migrasi, atau mengubah gambar/sandi produksi.
+
+Batas pemeriksaan: belum diuji pada iPhone/Safari fisik, dua perangkat fisik, beban maksimum atau audit keamanan menyeluruh. Ketersediaan/kuota layanan tidak dijamin oleh hasil tes ini. Riwayat pengujian versi sebelumnya di bawah tidak menjadi klaim bahwa kandidat telah tayang.
+
+
 ## UX ringkas dan bukti bersama terverifikasi online — 16 November 2026
 
 Pengguna menyetujui penayangan. Runtime `ed9d09bbebd33665908570f22dafa3828b0dcbae` ditayangkan pada proyek Pages yang sama, deployment `c07c8f3c-ae18-4ec1-aeca-7bc36d9c1539` success. Sumber GitHub cocok dengan runtime; pembaruan dokumentasi sesudahnya tidak mengubah build. Bagian kandidat di bawah merupakan arsip sebelum rilis.

@@ -62,7 +62,7 @@ test("password changes: ownership, validation, revocation, concurrency, rollback
       method: body === undefined ? "GET" : "POST",
       headers: {
         Origin: origin,
-        "X-Financee-Client": "2",
+        "X-Financee-Client": "3",
         Cookie: cookie,
         "Content-Type": "application/json",
         ...extra,
@@ -278,7 +278,7 @@ test("password changes: ownership, validation, revocation, concurrency, rollback
         await migrate(dest);
         await dest
           .prepare(
-            "TRUNCATE group_attachments,allocation_group_operations,allocation_group_items,allocation_groups,allocation_attachments,income_attachments,attachments,transfers,expenses,budget_items,budgets,periods,default_items,sessions,login_attempts,account_credentials",
+            "TRUNCATE usage_attachments,usage_entries,group_attachments,allocation_group_operations,allocation_group_items,allocation_groups,allocation_attachments,income_attachments,attachments,transfers,expenses,budget_items,budgets,periods,default_items,sessions,login_attempts,account_credentials",
           )
           .run();
         await assert.rejects(
@@ -291,7 +291,7 @@ test("password changes: ownership, validation, revocation, concurrency, rollback
         );
         assert.deepEqual(
           await restoreBackup(dest, storage, folder, auth.pepper),
-          { tables: 14, objects: 0 },
+          { tables: 16, objects: 0 },
         );
         assert.deepEqual(
           await dest

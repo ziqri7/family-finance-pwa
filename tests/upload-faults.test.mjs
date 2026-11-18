@@ -78,7 +78,7 @@ test("upload storage faults and parent deletion recover without exposing incompl
         method,
         headers: {
           Origin: origin,
-          "X-Financee-Client": "2",
+          "X-Financee-Client": "3",
           Cookie: cookie,
           "Content-Type": raw ? "image/png" : "application/json",
           ...(fault ? { "X-Test-Fault": fault } : {}),
@@ -116,18 +116,12 @@ test("upload storage faults and parent deletion recover without exposing incompl
         const expense = id(),
           file = id(),
           path = "/attachments/" + file + "/content";
-        assert.equal(
-          (
-            await req("POST", "/expenses", {
-              id: expense,
-              date: "2001-01-01",
-              itemId: item.id,
-              note: "Fault fixture",
-              amount: 25000,
-            })
-          ).status,
-          201,
-        );
+        await db
+          .prepare(
+            "INSERT INTO expenses(id,period_id,owner_id,item_id,occurred_on,note,amount,created_at,updated_at) VALUES($1,'2001-01','partner-a',$2,'2001-01-01','Fault fixture',25000,1,1)",
+          )
+          .bind(expense, item.id)
+          .run();
         const reservation = {
           id: file,
           contentType: "image/png",

@@ -1,5 +1,12 @@
 # Arsitektur Financée — Cloudflare Pages + Neon
 
+## Kontrak terbaru — kandidat buku keluarga
+
+Skema 0007, klien API 3. Snapshot/laporan dan seluruh penulisan keuangan memerlukan versi baru; login, me dan pembacaan gambar privat tetap memungkinkan pembaruan. Rute kelompok finansial, tambah expense/transfer dan posting lama mengembalikan FLOW_REPLACED. Sumber utama ialah family_book_totals/shared/family-book.ts, bukan ledger dompet lama. Dua penulis diserialkan memakai advisory lock keluarga; validasi CAS, dana dan jatah berada dalam transaksi sebelum commit. Bukti tidak menulis nominal. Usage memiliki pembuat terpisah dari pos.
+
+Lihat FAMILY_BOOK_PROPOSAL.md untuk keputusan lengkap. Penerapan masih kandidat lokal/dummy; catatan versi sebelumnya di bawah menjadi riwayat.
+
+
 ## Kelompok penyerahan — skema 0006
 
 allocation_groups dan allocation_group_items mengorganisasikan pos, group_attachments menyimpan satu gambar privat per bukti, allocation_group_operations menyimpan receipt idempotensi immutable. Ledger tetap mengambil nominal actual dari budget_items. Tidak menjumlahkan header kelompok sebagai transaksi tambahan.

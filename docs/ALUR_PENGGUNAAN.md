@@ -1,5 +1,10 @@
 # Tahap 3 — Alur penggunaan yang diusulkan
 
+## Alur aktif kandidat buku keluarga
+
+Beranda → isi nominal. Pemasukan → isi sumber dana. Bukti bersama → pilih pos dan JPG/PNG → Simpan bukti, tanpa mengubah uang. Pos → Pengaturan → Lacak pemakaian bila diperlukan; kedua akun mencatat dalam jatah pos. Bukti → lihat foto dan pos terkait. Grafik → Bulan/Tahun. Salin bulan → seluruh struktur kosong, hak edit mengikuti pembuat asli. Peninjauan lama sekali per ringkasan milik pembuat; tambahan manual dipetakan terlebih dahulu. Lihat README.md dan FAMILY_BOOK_PROPOSAL.md; alur lama berikut adalah riwayat.
+
+
 Status: alur awal telah diperluas oleh keputusan keluarga 1A–6B. Rincian terbaru di REVISI_KELUARGA.md menggantikan asumsi dua akun dapat mengubah seluruh data dan menambahkan dashboard, realisasi, bukti serta kiriman internal. Contoh tahap 4 belum membuktikan penyimpanan, otorisasi atau sinkronisasi server.
 
 Dasar yang sudah diputuskan: pos dari Excel tersedia sejak awal; nama dan pos bisa ditambah, diubah, atau dihapus; simpan otomatis; tidak ada impor atau ekspor Excel; dua akun menggunakan anggaran bersama.

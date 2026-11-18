@@ -28,9 +28,9 @@ const status = (m: ReportMonth) =>
   !m.exists
     ? "Belum dibuat"
     : m.missingOwners
-      ? "Anggaran kedua akun belum lengkap"
+      ? "Pemasukan belum tersedia"
       : m.missingAmounts
-        ? m.missingAmounts + " nominal belum diisi"
+        ? m.missingAmounts + " pos belum lengkap atau perlu ditinjau"
         : m.income === 0
           ? "Pemasukan anggaran nol"
           : "Masuk ringkasan";
@@ -118,7 +118,7 @@ export function YearDashboard({
       aria-label="Ringkasan tahunan"
     >
       <div className="finance-heading">
-        <h2>Pengeluaran tahun {year}</h2>
+        <h2>Pembagian tahun {year}</h2>
         <div className="year-controls">
           <label className="sr-only" htmlFor="report-year">
             Tahun
@@ -171,40 +171,36 @@ export function YearDashboard({
           <ChartNumbers
             values={[
               ["Pemasukan anggaran", data.included ? data.income : null],
-              ["Pengeluaran", data.included ? data.spent : null],
+              ["Sudah dibagi", data.included ? data.spent : null],
             ]}
           />
           {!data.included && (
             <p className="chart-status">
-              Belum ada bulan dengan anggaran lengkap. Isi nominal kedua akun,
-              termasuk 0 untuk pos yang tidak dipakai.
+              Belum ada bulan lengkap. Isi nominal dan tinjau catatan lama.
             </p>
           )}
           <div className="finance-heading">
             <h3>Perjalanan tiap bulan</h3>
             <ChartInfo title="Ringkasan tahun">
               <p>
-                Persentase = total pengeluaran dibagi total pemasukan anggaran
-                dari bulan yang disertakan. Bukan rata-rata persentase bulan.
+                Persentase = total pembagian dibagi total pemasukan dari bulan
+                yang disertakan. Bukan rata-rata persentase bulan.
               </p>
               <p>
-                Bulan disertakan jika kedua akun membuat anggaran dan seluruh
-                nominal pemasukan serta alokasi aktif terisi. Anggaran lengkap
-                bukan berarti bulan selesai. Bulan tanpa data tidak dihitung
-                sebagai nol.
+                Bulan disertakan jika seluruh nominal terisi dan catatan lama
+                sudah ditinjau. Bulan tanpa data tidak dianggap nol.
               </p>
               <p>
-                Pengeluaran yang belum dicatat tidak terwakili. Kiriman internal
-                tidak ikut. Persentase boleh melebihi 100%; pemasukan nol
+                Seluruh alokasi termasuk tabungan dihitung sekali. Bukti dan
+                rincian pemakaian tidak dijumlahkan lagi. Pemasukan nol
                 menghasilkan —.
               </p>
               <p>
-                Pembayaran:{" "}
+                Sudah dibagi:{" "}
                 {data.included ? rupiah.format(data.allocation) : "—"} · sisa
                 belum dibagi:{" "}
                 {data.included ? rupiah.format(data.remaining) : "—"}. Sisa
-                bukan saldo rekening. Tabungan:{" "}
-                {rupiah.format(data.reserved ?? 0)}.
+                bukan saldo rekening.
               </p>
             </ChartInfo>
           </div>
@@ -215,7 +211,7 @@ export function YearDashboard({
             </span>
             <span>
               <i className="spent" />
-              Pengeluaran
+              Sudah dibagi
             </span>
           </div>
           <div
@@ -268,7 +264,7 @@ export function YearDashboard({
                     ? compactMoney(chosen.income) +
                       " masuk · " +
                       compactMoney(chosen.spent) +
-                      " pengeluaran"
+                      " dibagi"
                     : status(chosen)}
                 </p>
               </div>

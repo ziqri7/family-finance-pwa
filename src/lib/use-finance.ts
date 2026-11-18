@@ -196,7 +196,7 @@ export function useFinance(user: User | null) {
     } catch (e) {
       if (!(e instanceof ApiError) || e.status !== 409) throw e;
       const existing = await api<Snapshot>(`/periods/${id}`).catch(() => null);
-      if (!existing?.budgets.some((b) => b.owner_id === user?.id)) throw e;
+      if (!existing) throw e;
       setMessage(
         "Anggaran bulan ini sudah ada. Kami membukanya tanpa mengubah data.",
       );

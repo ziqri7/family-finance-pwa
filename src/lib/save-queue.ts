@@ -105,7 +105,8 @@ export class SaveQueue {
           if (latest)
             this.drafts.set(key, {
               ...latest,
-              status: error.status === 409 ? "conflict" : "error",
+              status:
+                error.status === 409 && error.current ? "conflict" : "error",
               message: error.message,
               current: error.current,
             });

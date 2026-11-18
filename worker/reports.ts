@@ -6,24 +6,24 @@ export async function yearReport(c: Context<AppEnv>) {
   const year = c.req.param("year");
   if (!year || !/^(20\d{2}|2100)$/.test(year))
     fail(400, "INVALID_YEAR", "Pilih tahun antara 2000 dan 2100.");
-  // Pre-aggregate each collection to avoid join multiplication; internal transfers
-  // never enter the income/allocation/spending totals. One statement = one snapshot.
+  // One book, one aggregate. Usage and evidence are never financial sources.
   const result = await c.env.DB.prepare(
     `
     WITH months AS (SELECT $1 || '-' || lpad(n::text,2,'0') AS id FROM generate_series(1,12) n),
     plans AS (SELECT period_id,
-      count(*) FILTER (WHERE kind IN ('income','allocation') AND amount IS NULL)::int AS missing,
+      (count(*) FILTER (WHERE amount IS NULL OR (kind<>'income' AND recording_mode='legacy' AND amount IS NOT NULL)))::int AS missing,
       coalesce(sum(amount) FILTER (WHERE kind='income'),0)::bigint AS income,
       0::bigint AS allocation
       FROM budget_items WHERE deleted_at IS NULL AND period_id >= $1 || '-01' AND period_id <= $1 || '-12' GROUP BY period_id),
-    owners AS (SELECT period_id,count(*)::int AS n FROM budgets WHERE period_id >= $1 || '-01' AND period_id <= $1 || '-12' GROUP BY period_id),
-    spending AS (SELECT period_id,coalesce(sum(amount) FILTER(WHERE posting_kind='external'),0)::bigint AS spent,coalesce(sum(amount) FILTER(WHERE posting_kind='reserve'),0)::bigint AS reserved FROM effective_postings
-      WHERE true AND period_id >= $1 || '-01' AND period_id <= $1 || '-12' GROUP BY period_id)
-    SELECT m.id,p.id IS NOT NULL AS exists,(2-coalesce(o.n,0))::int AS "missingOwners",
-      coalesce(b.missing,0)::int AS "missingAmounts",coalesce(b.income,0)::bigint AS income,
-      coalesce(s.spent,0)::bigint AS allocation,coalesce(s.spent,0)::bigint AS spent,coalesce(s.reserved,0)::bigint AS reserved
+    extras AS (SELECT period_id,count(*)::int AS n FROM (
+      SELECT period_id FROM expenses WHERE deleted_at IS NULL AND superseded_by_item_id IS NULL AND converted_to IS NULL
+      UNION ALL SELECT period_id FROM transfers WHERE deleted_at IS NULL AND superseded_by_item_id IS NULL AND converted_to IS NULL
+    ) e GROUP BY period_id)
+    SELECT m.id,p.id IS NOT NULL AS exists,CASE WHEN EXISTS(SELECT 1 FROM budget_items WHERE period_id=m.id AND kind='income' AND deleted_at IS NULL) THEN 0 ELSE 1 END AS "missingOwners",
+      (coalesce(b.missing,0)+coalesce(e.n,0))::int AS "missingAmounts",coalesce(b.income,0)::bigint AS income,
+      coalesce(s.distributed,0)::bigint AS allocation,coalesce(s.distributed,0)::bigint AS spent,0::bigint AS reserved
     FROM months m LEFT JOIN periods p ON p.id=m.id LEFT JOIN plans b ON b.period_id=m.id
-      LEFT JOIN owners o ON o.period_id=m.id LEFT JOIN spending s ON s.period_id=m.id ORDER BY m.id
+      LEFT JOIN extras e ON e.period_id=m.id LEFT JOIN family_book_totals s ON s.period_id=m.id ORDER BY m.id
   `,
   )
     .bind(year)

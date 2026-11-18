@@ -14,6 +14,7 @@ interface FileRow {
   expense_id: string;
   income_item_id: string;
   allocation_item_id: string;
+  usage_entry_id: string;
   owner_id: Owner;
   object_key: string;
   content_type: string;
@@ -22,31 +23,38 @@ interface FileRow {
   status: string;
 }
 const source = (c: C) =>
-  c.req.path.startsWith("/api/allocation-groups/") ||
-  c.req.path.startsWith("/api/group-attachments/")
+  c.req.path.startsWith("/api/usages/") ||
+  c.req.path.startsWith("/api/usage-attachments/")
     ? {
-        table: "group_attachments" as const,
-        parent: "allocation_groups" as const,
-        key: "group_id" as const,
+        table: "usage_attachments" as const,
+        parent: "usage_entries" as const,
+        key: "usage_entry_id" as const,
       }
-    : c.req.path.startsWith("/api/allocation-")
+    : c.req.path.startsWith("/api/allocation-groups/") ||
+        c.req.path.startsWith("/api/group-attachments/")
       ? {
-          table: "allocation_attachments" as const,
-          parent: "budget_items" as const,
-          key: "allocation_item_id" as const,
+          table: "group_attachments" as const,
+          parent: "allocation_groups" as const,
+          key: "group_id" as const,
         }
-      : c.req.path.includes("/income-") ||
-          c.req.path.startsWith("/api/income-items/")
+      : c.req.path.startsWith("/api/allocation-")
         ? {
-            table: "income_attachments" as const,
+            table: "allocation_attachments" as const,
             parent: "budget_items" as const,
-            key: "income_item_id" as const,
+            key: "allocation_item_id" as const,
           }
-        : {
-            table: "attachments" as const,
-            parent: "expenses" as const,
-            key: "expense_id" as const,
-          };
+        : c.req.path.includes("/income-") ||
+            c.req.path.startsWith("/api/income-items/")
+          ? {
+              table: "income_attachments" as const,
+              parent: "budget_items" as const,
+              key: "income_item_id" as const,
+            }
+          : {
+              table: "attachments" as const,
+              parent: "expenses" as const,
+              key: "expense_id" as const,
+            };
 export async function reserve(c: C) {
   const src = source(c);
   const expenseId = rowId(c),
@@ -71,7 +79,11 @@ export async function reserve(c: C) {
       "GROUP_CHANGED",
       "Penyerahan berubah. Muat ulang sebelum mengunggah bukti.",
     );
-  if (src.table === "attachments" && (expense as Expense).superseded_by_item_id)
+  if (
+    src.table === "attachments" &&
+    ((expense as Expense).superseded_by_item_id ||
+      (expense as Expense).converted_to)
+  )
     fail(
       409,
       "HISTORY_LOCKED",
@@ -117,7 +129,7 @@ export async function reserve(c: C) {
     return c.json({ id: v.id, status: existing.status });
   }
   const inserted = await c.env.DB.prepare(
-    `INSERT INTO ${src.table}(id,${src.key},owner_id,object_key,content_type,byte_size,sha256,status,created_at,updated_at${src.table === "group_attachments" ? ",confirmed_group_version" : ""}) SELECT $1,$2,$3,$4,$5,$6,$7,'pending',$8,$9${src.table === "group_attachments" ? ",$10" : ""} WHERE EXISTS(SELECT 1 FROM ${src.parent} WHERE id=$2 AND deleted_at IS NULL ${src.table === "attachments" ? "AND superseded_by_item_id IS NULL" : src.table === "group_attachments" ? "AND status='posted' AND version=$10" : ""}) RETURNING id`,
+    `INSERT INTO ${src.table}(id,${src.key},owner_id,object_key,content_type,byte_size,sha256,status,created_at,updated_at${src.table === "group_attachments" ? ",confirmed_group_version" : ""}) SELECT $1,$2,$3,$4,$5,$6,$7,'pending',$8,$9${src.table === "group_attachments" ? ",$10" : ""} WHERE EXISTS(SELECT 1 FROM ${src.parent} WHERE id=$2 AND deleted_at IS NULL ${src.table === "attachments" ? "AND superseded_by_item_id IS NULL AND converted_to IS NULL" : src.table === "group_attachments" ? "AND status='posted' AND version=$10" : ""}) RETURNING id`,
   )
     .bind(
       v.id,
@@ -147,7 +159,11 @@ export async function upload(c: C) {
   const id = rowId(c),
     file = await owned<FileRow>(c, src.table, id),
     expense = await owned<Expense>(c, src.parent, file[src.key]);
-  if (src.table === "attachments" && (expense as Expense).superseded_by_item_id)
+  if (
+    src.table === "attachments" &&
+    ((expense as Expense).superseded_by_item_id ||
+      (expense as Expense).converted_to)
+  )
     fail(409, "HISTORY_LOCKED", "Bukti ini merupakan histori Alokasi.");
   if (
     expense.deleted_at ||
@@ -178,7 +194,7 @@ export async function upload(c: C) {
   });
   try {
     const result = await c.env.DB.prepare(
-      `UPDATE ${src.table} SET status='ready',width=$1,height=$2,updated_at=$3 WHERE id=$4 AND status IN ('pending','failed','ready') AND EXISTS(SELECT 1 FROM ${src.parent} WHERE id=${src.key} AND deleted_at IS NULL ${src.table === "allocation_attachments" ? "AND amount IS NOT NULL AND recording_mode='actual'" : src.table === "group_attachments" ? "AND status='posted' AND version=$5" : ""})`,
+      `UPDATE ${src.table} SET status='ready',width=$1,height=$2,updated_at=$3 WHERE id=$4 AND status IN ('pending','failed','ready') AND EXISTS(SELECT 1 FROM ${src.parent} WHERE id=${src.key} AND deleted_at IS NULL ${src.table === "allocation_attachments" ? "AND amount IS NOT NULL AND recording_mode='actual'" : src.table === "group_attachments" ? "AND status='posted' AND version=$5" : src.table === "attachments" ? "AND superseded_by_item_id IS NULL AND converted_to IS NULL" : ""})`,
     )
       .bind(
         dimensions.width,
@@ -229,7 +245,7 @@ export async function remove(c: C) {
   const id = rowId(c),
     file = await owned<FileRow>(c, src.table, id);
   const removed = await c.env.DB.prepare(
-    `UPDATE ${src.table} SET status='deleting',updated_at=$1 WHERE id=$2 AND owner_id=$3 ${src.table === "attachments" ? "AND EXISTS(SELECT 1 FROM expenses WHERE id=expense_id AND superseded_by_item_id IS NULL)" : ""}`,
+    `UPDATE ${src.table} SET status='deleting',updated_at=$1 WHERE id=$2 AND owner_id=$3 ${src.table === "attachments" ? "AND EXISTS(SELECT 1 FROM expenses WHERE id=expense_id AND superseded_by_item_id IS NULL AND converted_to IS NULL)" : ""}`,
   )
     .bind(Date.now(), id, c.get("user").id)
     .run();

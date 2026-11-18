@@ -1,16 +1,18 @@
 # Financée
 
+## Buku keluarga — kandidat 18 November 2026
+
+Implementasi dan pengujian disetujui pengguna; penayangan belum disetujui. [FAMILY_BOOK_PROPOSAL.md](docs/FAMILY_BOOK_PROPOSAL.md) menjadi acuan terbaru: satu buku, bukti kolektif tanpa efek uang, tracking opsional, hak pembuat, batas dana/jatah. Bagian lama di bawah merupakan riwayat keputusan yang telah digantikan bila bertentangan.
+
 ## UX ringkas dan bukti bersama — dirilis 16 November 2026
 
 Preview dan rancangan disetujui pada 16 November 2026. Halaman utama membuka bagian pemilik dan sisa dibagi. Saya/Pasangan/Keluarga mengganti konteks; grafik bulan/tahun di Keluarga. Tiga menu utama Beranda/Catat/Bukti. Pemasukan, struktur pos, bulan/salin bulan, akun/sandi dan rincian lama tetap tersedia melalui kontrol terkait.
 
 Pemilik mengatur tujuan kelompok sekali, memeriksa beberapa nominal lalu mengonfirmasi seluruh penyerahan sekaligus. JPG/PNG opsional melekat pada kelompok dan terlihat dari pos terkait. Nominal tetap sumber pada budget_items, penerima membaca turunan kiriman. Tujuan Pembayaran/Ke pasangan/Tabungan sendiri dipilih saat mengatur kelompok; formulir rutin tidak meminta klasifikasi tiap pos. Data lama masuk kelompok setelah review. Rilis produksi disetujui dan terverifikasi pada 16 November 2026.
 
-
 ## Keputusan Alokasi aktual — 16 November 2026
 
 Pengguna mengisi nominal Alokasi setelah uang dibayar atau diserahkan. Preview dan rancangan implementasi telah disetujui. Rilis 16 November 2026 menerapkan sumber nominal tunggal dengan catatan turunan, bukti langsung, peninjauan data lama, tiga jenis pembagian dan salin struktur tanpa nominal. Rumus rencana dari workbook tetap sebagai referensi historis yang teruji; sumber ringkasan aktual kini mengikuti catatan efektif, bukan rencana lama. Ini keputusan produk eksplisit, bukan klaim rumus baru dari Excel. Implementasi dan rilis telah disetujui pengguna serta diperiksa online.
-
 
 Status 16 November 2026: seluruh paket yang disetujui sudah ditayangkan setelah persetujuan pengguna dan diperiksa online. Batas kepemilikan, sandi aktif dan nilai data lama dipertahankan; perubahan sumber perhitungan Alokasi mengikuti keputusan di atas.
 

@@ -56,7 +56,7 @@ export const editItemSchema = z.discriminatedUnion("field", [
 export const deleteSchema = z
   .object({ expectedVersion: versionSchema })
   .strict();
-const dateSchema = z
+export const dateSchema = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}$/)
   .refine((s) => {
@@ -112,6 +112,9 @@ export interface Item {
   posting_kind?: "external" | "internal" | "reserve" | null;
   posting_date?: string | null;
   posting_version?: number;
+  tracking_enabled?: number;
+  copied_from_item_id?: string | null;
+  copied_by?: Owner | null;
 }
 export interface Expense {
   id: string;
@@ -125,6 +128,8 @@ export interface Expense {
   deleted_at: number | null;
   superseded_by_item_id?: string | null;
   superseded_at?: number | null;
+  converted_to?: "allocation" | "usage" | null;
+  converted_id?: string | null;
 }
 export interface Transfer {
   id: string;
@@ -138,6 +143,19 @@ export interface Transfer {
   deleted_at: number | null;
   superseded_by_item_id?: string | null;
   superseded_at?: number | null;
+  converted_to?: "allocation" | "usage" | null;
+  converted_id?: string | null;
+}
+export interface Usage {
+  id: string;
+  period_id: string;
+  item_id: string;
+  owner_id: Owner;
+  occurred_on: string;
+  note: string;
+  amount: number;
+  version: number;
+  deleted_at: number | null;
 }
 export interface Attachment {
   id: string;
@@ -145,6 +163,7 @@ export interface Attachment {
   income_item_id?: string;
   allocation_item_id?: string;
   group_id?: string;
+  usage_entry_id?: string;
   confirmed_group_version?: number;
   owner_id: Owner;
   content_type: string;
@@ -169,19 +188,21 @@ export interface Snapshot {
   attachments: Attachment[];
   groups?: AllocationGroup[];
   groupItems?: GroupMember[];
+  usages?: Usage[];
 }
 export interface AllocationGroup {
   id: string;
   period_id: string;
   owner_id: Owner;
   label: string;
-  posting_kind: "external" | "internal" | "reserve";
+  posting_kind: "external" | "internal" | "reserve" | null;
   recipient_owner_id: Owner | null;
   status: "draft" | "posted" | "cancelled";
   posting_date: string | null;
   version: number;
   position: number;
   deleted_at: number | null;
+  purpose?: "legacy" | "evidence";
 }
 export interface GroupMember {
   group_id: string;
@@ -189,6 +210,9 @@ export interface GroupMember {
   position: number;
   posted: number;
   retired_at: number | null;
+  linked_version?: number | null;
+  linked_amount?: number | null;
+  linked_label?: string | null;
 }
 export function totals(snapshot: Snapshot, owner: Owner) {
   const sum = (who: Owner, kind: Kind) =>

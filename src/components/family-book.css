@@ -1,0 +1,698 @@
+.book-bundle-view .book-image-list > div {
+  max-width: 100%;
+  width: 100%;
+}
+.book-bundle-view .book-image-list > div > button:first-child {
+  width: 100%;
+}
+.book-bundle-view .book-image-list img {
+  width: 100%;
+  height: 230px;
+  object-fit: contain;
+}
+.book-bundle-view h3 {
+  font-size: 14px;
+  margin: 20px 0 0;
+}
+.book-history {
+  margin-top: 25px;
+  font-size: 13px;
+  color: #61636e;
+}
+.book-history summary {
+  padding: 12px 0;
+  cursor: pointer;
+}
+.book-shell {
+  min-height: 100dvh;
+  padding-bottom: 100px;
+}
+.book-shell[hidden],
+.family-book[hidden] {
+  display: none;
+}
+.book-header,
+.book-main {
+  max-width: 1100px;
+  margin: auto;
+  padding: 24px;
+}
+.book-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.book-header .brand {
+  color: #7042b3;
+  text-decoration: none;
+  font-size: 25px;
+}
+.book-account {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 13px;
+  min-width: 0;
+}
+.book-account > span {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.book-account button {
+  padding: 10px;
+}
+.book-period {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 24px;
+}
+.book-period select {
+  width: auto;
+  max-width: calc(100% - 96px);
+  min-width: 0;
+  font-weight: 700;
+  background: transparent;
+  border: 0;
+  padding-left: 0;
+  font-size: 18px;
+}
+.book-period button {
+  padding: 10px;
+}
+.book-balance {
+  background: #7042b3;
+  color: #fff;
+  border-radius: 16px;
+  padding: 25px;
+  margin-bottom: 24px;
+}
+.book-balance > span {
+  font-size: 14px;
+  color: #f2eafa;
+}
+.book-balance > strong {
+  display: block;
+  font-size: clamp(27px, 6vw, 38px);
+  letter-spacing: -0.03em;
+  margin-top: 10px;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.book-stats {
+  display: flex;
+  gap: 18px;
+  justify-content: space-between;
+  margin: 23px 0 0;
+  padding-top: 18px;
+  border-top: 1px solid #ffffff50;
+}
+.book-stats dt {
+  color: #f2eafa;
+  font-size: 12px;
+}
+.book-stats dd {
+  margin: 7px 0 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+.book-balance footer {
+  display: flex;
+  justify-content: space-between;
+  margin: 22px -25px -25px;
+  padding: 11px 18px;
+  background: #262330;
+  border-radius: 0 0 16px 16px;
+  gap: 8px;
+}
+.book-balance footer button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: #fff;
+  background: none;
+  border: 0;
+  padding: 8px 4px;
+  min-height: 38px;
+}
+.book-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.book-section-heading h1 {
+  font-size: 20px;
+  letter-spacing: -0.025em;
+  margin: 0;
+}
+.book-section-heading button {
+  font-size: 12px;
+  padding: 9px;
+}
+.book-rows {
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+}
+.book-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(100px, 155px) 28px;
+  align-items: center;
+  column-gap: 8px;
+  padding: 17px 16px;
+  border-bottom: 1px solid #eeeef2;
+}
+.book-row:last-child {
+  border-bottom: 0;
+}
+.book-row .icon-button {
+  padding: 4px;
+  min-width: 28px;
+  width: 28px;
+}
+.book-row-name {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+  text-align: left;
+  background: none;
+  padding: 0;
+  border: 0;
+  color: #22242a;
+  min-height: 44px;
+}
+.book-row-name > span:last-child {
+  min-width: 0;
+}
+.book-row-name strong {
+  display: block;
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 650;
+  overflow-wrap: break-word;
+}
+.book-row-name small,
+.book-income-row small,
+.book-review-row small {
+  display: block;
+  color: #61636e;
+  font-size: 11px;
+  margin-top: 4px;
+  line-height: 1.5;
+}
+.book-check {
+  flex: 0 0 23px;
+  width: 23px;
+  height: 23px;
+  border-radius: 50%;
+  border: 1px solid #dfe0e6;
+  display: grid;
+  place-items: center;
+}
+.book-check.is-done {
+  background: #edf4e6;
+  color: #386324;
+  border: 0;
+}
+.book-amount {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+  position: relative;
+  min-width: 0;
+}
+.book-amount > span {
+  font-size: 12px;
+  color: #61636e;
+}
+.book-amount input {
+  text-align: right;
+  min-width: 0;
+  width: 100%;
+  font-size: 14px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  border: 1px solid #e6e3ed;
+  background: #faf9fc;
+  padding: 9px 6px;
+  border-radius: 7px;
+}
+.book-amount input:disabled {
+  background: transparent;
+  border-color: transparent;
+  opacity: 1;
+  color: #48454f;
+}
+.book-amount input::placeholder {
+  font-size: 11px;
+  color: #6a6672;
+  font-weight: 400;
+}
+.book-amount > small {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  font-size: 10px;
+  color: #61636e;
+}
+.book-row-error {
+  grid-column: 1 / -1;
+}
+.book-row-error:empty {
+  display: none;
+}
+.book-bottom-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 18px;
+}
+.book-bottom-actions .chart-info {
+  flex-shrink: 0;
+}
+.book-empty {
+  text-align: center;
+  padding: 36px 16px;
+  color: #61636e;
+}
+.book-empty h1 {
+  font-size: 24px;
+  color: #22242a;
+  margin-bottom: 20px;
+}
+.book-notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 15px;
+  background: #eee7f7;
+  color: #59318f;
+  border-radius: 10px;
+  font-size: 13px;
+  margin-bottom: 18px;
+}
+.book-notice span {
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+.book-notice button {
+  flex-shrink: 0;
+}
+.book-loading {
+  padding: 40px;
+  text-align: center;
+}
+.book-review {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: #f4ecd9;
+  color: #6e501c;
+  border: 0;
+  padding: 13px 16px;
+  border-radius: 10px;
+  margin: 0 0 16px;
+  font-size: 13px;
+}
+.book-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  padding: 8px 20px max(10px, env(safe-area-inset-bottom));
+  background: #fff;
+  border-top: 1px solid #dfe0e6;
+  z-index: 20;
+}
+.book-nav button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: min(44%, 290px);
+  min-height: 58px;
+  border: 0;
+  background: none;
+  color: #61636e;
+  font-size: 12px;
+}
+.book-nav button[aria-current] {
+  color: #7042b3;
+  font-weight: 750;
+}
+.book-creator {
+  font-size: 12px;
+  color: #61636e;
+  margin: 0 0 18px;
+}
+.book-usage-overview {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 0;
+  margin: 18px 0;
+  border-top: 1px solid #dfe0e6;
+  border-bottom: 1px solid #dfe0e6;
+}
+.book-usage-overview span {
+  color: #61636e;
+  font-size: 12px;
+}
+.book-usage-overview strong {
+  display: block;
+  font-size: 19px;
+  margin-top: 6px;
+}
+.book-usage-row,
+.book-review-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid #eeeef2;
+  background: none;
+  color: #22242a;
+  text-align: left;
+  padding: 17px 0;
+  font-size: 13px;
+}
+.book-usage-row > span,
+.book-review-row > span {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+.book-usage-row small {
+  display: block;
+  color: #61636e;
+  font-size: 11px;
+  margin-top: 6px;
+}
+.book-usage-row strong,
+.book-review-row strong {
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+.book-item-evidence {
+  margin: 25px 0 18px;
+}
+.book-item-evidence h3 {
+  font-size: 15px;
+  margin-bottom: 12px;
+}
+.book-image-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.book-image-list > div {
+  max-width: 150px;
+}
+.book-image-list > div > button:first-child {
+  padding: 0;
+  background: none;
+  border: 0;
+}
+.book-image-list img {
+  width: 130px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+.book-remove-image {
+  display: block;
+  font-size: 11px;
+  color: #a6332e;
+  border: 0;
+  background: none;
+  padding: 10px 0;
+}
+.book-full-image {
+  display: block;
+  max-width: 100%;
+  max-height: 65dvh;
+  object-fit: contain;
+  margin: 18px auto;
+}
+.book-upload {
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 18px 0 !important;
+  padding: 15px;
+  border: 1px dashed #b9afc9;
+  border-radius: 10px;
+  color: #59318f;
+  font-size: 13px;
+}
+.book-upload small {
+  display: block;
+  font-size: 11px;
+  color: #61636e;
+  margin-top: 5px;
+}
+.book-upload input {
+  width: 100%;
+  min-width: 0;
+  font-size: 12px;
+}
+.book-settings {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #7042b3;
+  background: none;
+  border: 0;
+  padding: 12px 0;
+  font-size: 13px;
+  min-height: 44px;
+}
+.book-settings-body {
+  padding: 10px 0;
+}
+.book-proof-selection {
+  padding: 0;
+  margin: 20px 0;
+  border: 0;
+  max-height: 300px;
+  overflow: auto;
+}
+.book-proof-selection legend {
+  font-size: 13px;
+  margin-bottom: 8px;
+  font-weight: 650;
+}
+.dialog-content .book-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  font-size: 13px;
+  margin: 10px 0;
+}
+.dialog-content .book-checkbox input {
+  flex: 0 0 19px;
+  width: 19px;
+  height: 19px;
+  min-height: 19px;
+  margin: 0;
+  accent-color: #7042b3;
+}
+.book-checkbox span {
+  min-width: 0;
+}
+.book-checkbox small {
+  display: block;
+  color: #61636e;
+  font-size: 11px;
+  margin-top: 5px;
+  line-height: 1.5;
+}
+.book-linked-proof {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 10px;
+  border: 0;
+  border-top: 1px solid #eeeef2;
+  background: none;
+  color: #7042b3;
+  padding: 15px 0;
+  font-size: 13px;
+  text-align: left;
+}
+.book-linked-proof small {
+  margin-left: auto;
+  font-size: 10px;
+  color: #61636e;
+}
+.book-income-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(100px, 165px);
+  gap: 10px;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid #eeeef2;
+}
+.book-income-row > button {
+  text-align: left;
+  font-size: 13px;
+  border: 0;
+  background: none;
+  min-height: 44px;
+}
+.book-income-row .field-error {
+  grid-column: 1/-1;
+}
+.book-family-chart {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin: 24px 0;
+}
+.book-family-chart .allocation-donut {
+  width: 160px;
+  flex: 0 0 160px;
+}
+.book-family-chart .allocation-legend {
+  flex: 1;
+  min-width: 0;
+}
+.book-chart-status {
+  font-size: 12px;
+  color: #61636e;
+  margin-top: 15px;
+}
+.book-comparison > div {
+  margin: 20px 0;
+}
+.book-comparison > div > span {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+}
+.book-bar {
+  height: 12px;
+  background: #eeedf2;
+  border-radius: 5px;
+  margin-top: 10px;
+  overflow: hidden;
+}
+.book-bar i {
+  display: block;
+  height: 100%;
+  background: #7042b3;
+  border-radius: 5px;
+}
+.book-bar,
+.book-amount {
+  font-variant-numeric: tabular-nums;
+}
+.book-content {
+  min-width: 0;
+}
+@media (min-width: 1000px) {
+  .book-container {
+    display: grid;
+    grid-template-columns: 310px minmax(0, 1fr);
+    gap: 30px;
+    align-items: start;
+  }
+  .book-balance {
+    position: sticky;
+    top: 25px;
+  }
+  .book-stats {
+    flex-direction: column;
+    gap: 17px;
+  }
+  .book-balance > strong {
+    font-size: 32px;
+  }
+  .book-evidence {
+    max-width: 850px;
+    margin: auto;
+  }
+}
+@media (max-width: 600px) {
+  .book-header,
+  .book-main {
+    padding: 19px 16px;
+  }
+  .book-main {
+    padding-top: 4px;
+  }
+  .book-account > span {
+    max-width: 90px;
+    font-size: 11px;
+  }
+  .book-header .brand {
+    font-size: 23px;
+  }
+  .book-balance {
+    padding: 22px;
+  }
+  .book-balance footer {
+    margin: 20px -22px -22px;
+  }
+  .book-row {
+    padding: 15px 12px;
+    column-gap: 6px;
+    grid-template-columns: minmax(0, 1fr) minmax(95px, 120px) 24px;
+  }
+  .book-row-name {
+    gap: 8px;
+  }
+  .book-check {
+    flex-basis: 19px;
+    width: 19px;
+    height: 19px;
+  }
+  .book-row-name strong {
+    font-size: 12px;
+  }
+  .book-amount input {
+    font-size: 12px;
+  }
+  .book-amount > span {
+    font-size: 10px;
+  }
+  .book-section-heading h1 {
+    font-size: 18px;
+  }
+  .book-family-chart {
+    flex-direction: column;
+    gap: 16px;
+  }
+  .book-family-chart .allocation-legend {
+    width: 100%;
+  }
+  .book-stats dd {
+    font-size: 17px;
+  }
+  .book-section-heading button {
+    font-size: 11px;
+  }
+  .book-evidence .book-section-heading {
+    flex-wrap: wrap;
+  }
+}

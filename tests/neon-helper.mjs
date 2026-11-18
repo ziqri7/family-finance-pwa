@@ -15,14 +15,14 @@ export async function reset(users) {
   for (const f of (
     await db
       .prepare(
-        "SELECT object_key FROM attachments UNION ALL SELECT object_key FROM income_attachments UNION ALL SELECT object_key FROM allocation_attachments UNION ALL SELECT object_key FROM group_attachments",
+        "SELECT object_key FROM attachments UNION ALL SELECT object_key FROM income_attachments UNION ALL SELECT object_key FROM allocation_attachments UNION ALL SELECT object_key FROM group_attachments UNION ALL SELECT object_key FROM usage_attachments",
       )
       .all()
   ).results)
     await bucket.delete(f.object_key);
   await db
     .prepare(
-      "TRUNCATE group_attachments,allocation_group_operations,allocation_group_items,allocation_groups,allocation_attachments,income_attachments,attachments,transfers,expenses,budget_items,budgets,periods,default_items,sessions,login_attempts,account_credentials",
+      "TRUNCATE usage_attachments,usage_entries,group_attachments,allocation_group_operations,allocation_group_items,allocation_groups,allocation_attachments,income_attachments,attachments,transfers,expenses,budget_items,budgets,periods,default_items,sessions,login_attempts,account_credentials",
     )
     .run();
   if (users) await initializeCredentials(db, users);

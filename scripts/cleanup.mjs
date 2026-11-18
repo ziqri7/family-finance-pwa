@@ -18,18 +18,25 @@ const groupQuery = {
   mark: query.mark?.replaceAll("attachments", "group_attachments"),
   select: query.select.replaceAll("attachments", "group_attachments"),
 };
+const usageQuery = {
+  mark: query.mark?.replaceAll("attachments", "usage_attachments"),
+  select: query.select.replaceAll("attachments", "usage_attachments"),
+};
 const rows = await db.batch([
     ...(groupQuery.mark ? [db.prepare(groupQuery.mark)] : []),
+    ...(usageQuery.mark ? [db.prepare(usageQuery.mark)] : []),
 
     ...(query.mark ? [db.prepare(query.mark)] : []),
     ...(incomeQuery.mark ? [db.prepare(incomeQuery.mark)] : []),
     ...(allocationQuery.mark ? [db.prepare(allocationQuery.mark)] : []),
     db.prepare(groupQuery.select),
+    db.prepare(usageQuery.select),
     db.prepare(allocationQuery.select),
     db.prepare(query.select),
     db.prepare(incomeQuery.select),
   ]),
   files = [
+    ...rows.at(-5).results,
     ...rows.at(-4).results,
     ...rows.at(-3).results,
     ...rows.at(-2).results,

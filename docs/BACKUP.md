@@ -1,5 +1,12 @@
 # Backup dan pemulihan Neon
 
+## Format kandidat 7 — buku keluarga
+
+Backup terbaru memuat 16 tabel dan lima koleksi gambar: expense, income, allocation, group dan usage. Seluruh checksum diverifikasi, termasuk pemakaian pada pos yang sudah dihapus. Metadata tombstone dan kredensial dipertahankan; sesi tidak disalin. Restore menolak tujuan berisi data atau pepper berbeda. Format 5/6 ditingkatkan dengan tracking off, bundle purpose legacy dan metadata baru kosong. Nilai lama tidak dikonversi.
+
+Sebelum upgrade 0007 gunakan kode immutable format6 dari instalasi lama, karena kode baru memerlukan tabel usage. Setelah upgrade buat backup7. Jangan memakai perintah reset cabang dummy pada database keluarga. Bagian prosedur berikut tetap berlaku; angka format/tabel lama adalah riwayat versi.
+
+
 ## Format 6 — kelompok dan bukti bersama
 
 Format6 menambahkan4tabel kelompok pada10tabel format5. Bukti wajib mencakup group_attachments ready dari kelompok posted yang masih aktif, termasuk gambar sebelum koreksi, serta ketiga koleksi sebelumnya. Operasi idempotensi, keanggotaan aktif/retired, hash sandi dan metadata bukti ikut snapshot. Objek pending/failed/deleting dipulihkan sebagai deleting dan dibersihkan melalui cleanup.

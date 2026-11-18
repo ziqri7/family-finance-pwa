@@ -1,47 +1,20 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   House,
-  UserRound,
-  ReceiptText,
   Images,
-  LogOut,
-  WifiOff,
-  X,
   Plus,
   KeyRound,
+  LogOut,
+  WifiOff,
+  RefreshCw,
 } from "lucide-react";
 import { Button } from "./components/ui/button";
-import { Dialog } from "./components/ui/dialog";
+import { MonthForm } from "./components/Forms";
 import { ChangePassword } from "./components/ChangePassword";
-import { EvidenceGallery } from "./components/EvidenceGallery";
-import { AutomaticRecords } from "./components/AllocationPosting";
-import {
-  CompactHome,
-  ConfigureGroup,
-  GroupEditor,
-} from "./components/GroupedAllocation";
-import "./components/grouped-allocation.css";
-import { IncomeEvidence } from "./components/IncomeEvidence";
-import { Budget } from "./components/Budget";
-import { Dashboard, ExpenseList, EvidenceImages } from "./components/Dashboard";
-import {
-  MonthForm,
-  AddItemForm,
-  ExpenseForm,
-  TransferForm,
-} from "./components/Forms";
-import { api, setExpiredHandler } from "./lib/api";
+import { FamilyBook } from "./components/FamilyBook";
 import { useFinance } from "./lib/use-finance";
-import {
-  ownerName,
-  monthName,
-  rupiah,
-  type User,
-  type Owner,
-  type Expense,
-  type Kind,
-  type Item,
-} from "../shared/domain";
+import { api, setExpiredHandler } from "./lib/api";
+import { monthName, type User } from "../shared/domain";
 function Login({
   onLogin,
   message,
@@ -138,43 +111,30 @@ function Login({
   );
 }
 export default function App() {
-  const [groupId, setGroupId] = useState<string | null>(null),
-    [setupGroup, setSetupGroup] = useState<{ item?: Item } | null>(null),
-    [manage, setManage] = useState(false);
-  const [incomeEvidence, setIncomeEvidence] = useState<Item | null>(null);
-  const [dashboardMode, setDashboardMode] = useState<"bulan" | "tahun">(
-    "bulan",
-  );
-  const [passwordOpen, setPasswordOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null),
     [lastUser, setLastUser] = useState<User | null>(null),
     [initial, setInitial] = useState(true),
-    [view, setView] = useState<"dashboard" | "evidence" | Owner>("dashboard");
-  const [monthOpen, setMonthOpen] = useState(false),
-    [addKind, setAddKind] = useState<Kind | null>(null),
-    [expense, setExpense] = useState<{
-      initial: Expense | null;
-      key: string;
-    } | null>(null),
-    [transferOpen, setTransferOpen] = useState(false),
-    [evidence, setEvidence] = useState<Expense | null>(null),
+    [view, setView] = useState<"home" | "evidence">("home"),
+    [monthOpen, setMonthOpen] = useState(false),
+    [passwordOpen, setPasswordOpen] = useState(false),
     [updateReady, setUpdateReady] = useState(false);
-  const registration = useRef<ServiceWorkerRegistration | null>(null),
-    store = useFinance(user),
+  const store = useFinance(user),
+    registration = useRef<ServiceWorkerRegistration | null>(null),
+    dialogDirty = useRef(false),
     userRef = useRef(user);
   userRef.current = user;
+  const dirty = useCallback((value: boolean) => {
+    dialogDirty.current = value;
+  }, []);
   useEffect(() => {
     setExpiredHandler(() => {
       setUser(null);
-      setEvidence(null);
-      setIncomeEvidence(null);
       setPasswordOpen(false);
     });
     api<{ user: User }>("/me")
-      .then((v) => {
-        setUser(v.user);
-        setLastUser(v.user);
-        setView(v.user.id);
+      .then(({ user }) => {
+        setUser(user);
+        setLastUser(user);
       })
       .catch((e) => {
         if (e.status !== 401) store.setMessage(e.message);
@@ -184,34 +144,34 @@ export default function App() {
   }, []);
   useEffect(() => {
     const prevent = (e: BeforeUnloadEvent) => {
-      if (store.hasDrafts || expense || transferOpen || groupId) {
+      if (store.hasDrafts || dialogDirty.current || monthOpen) {
         e.preventDefault();
         e.returnValue = "";
       }
     };
     window.addEventListener("beforeunload", prevent);
     return () => window.removeEventListener("beforeunload", prevent);
-  }, [store.hasDrafts, expense, transferOpen]);
+  }, [store.hasDrafts, monthOpen]);
   useEffect(() => {
     if (!import.meta.env.PROD || !("serviceWorker" in navigator)) return;
     let active = true;
-    const hadController = Boolean(navigator.serviceWorker.controller);
+    const controlled = !!navigator.serviceWorker.controller;
     navigator.serviceWorker
       .register("/sw.js")
       .then((reg) => {
         if (!active) return;
         registration.current = reg;
         if (reg.waiting) setUpdateReady(true);
-        reg.addEventListener("updatefound", () => {
+        reg.addEventListener("updatefound", () =>
           reg.installing?.addEventListener("statechange", () => {
             if (reg.waiting && navigator.serviceWorker.controller)
               setUpdateReady(true);
-          });
-        });
+          }),
+        );
       })
       .catch(() => {});
     const controller = () => {
-      if (hadController) setUpdateReady(true);
+      if (controlled) setUpdateReady(true);
     };
     navigator.serviceWorker.addEventListener("controllerchange", controller);
     return () => {
@@ -222,646 +182,230 @@ export default function App() {
       );
     };
   }, []);
-  async function navigate(next: typeof view) {
-    if (!(await store.flush())) {
-      store.setMessage("Simpan atau perbaiki isian sebelum pindah halaman.");
-      return false;
+  async function navigate(next: "home" | "evidence") {
+    if (await store.flush()) {
+      setView(next);
+      window.scrollTo(0, 0);
     }
-    setManage(false);
-    setView(next);
-    window.scrollTo(0, 0);
-    return true;
-  }
-  function showItem(item: Item) {
-    const member = store.snapshot?.groupItems?.find(
-      (m) => m.item_id === item.id,
-    );
-    if (member) setGroupId(member.group_id);
-    else setIncomeEvidence(item);
-  }
-  async function openMonth() {
-    if (await navigate(user?.id || "dashboard")) setMonthOpen(true);
-  }
-  async function openExpense(initial: Expense | null = null) {
-    if (!user || !(await store.flush())) return;
-    if (
-      !store.snapshot?.items.some(
-        (i) =>
-          i.owner_id === user.id && i.kind === "allocation" && !i.deleted_at,
-      )
-    ) {
-      await navigate(user.id);
-      store.setMessage(
-        "Buat anggaran dan tambahkan pos alokasi Anda terlebih dahulu.",
-      );
-      return;
-    }
-    setExpense({ initial, key: initial?.id || crypto.randomUUID() });
-  }
-  async function openTransfer() {
-    if (!user || !(await store.flush())) return;
-    if (
-      !store.snapshot?.items.some(
-        (i) =>
-          i.owner_id === user.id &&
-          ((i.kind === "transfer_out" && i.recording_mode !== "actual") ||
-            (i.posting_kind === "internal" &&
-              store.snapshot?.groupItems?.some(
-                (m) => m.item_id === i.id && m.posted === 1,
-              ))) &&
-          !i.deleted_at,
-      )
-    ) {
-      await navigate(user.id);
-      store.setMessage(
-        "Kiriman dicatat langsung pada Alokasi. Isi nominal pada pos kiriman pasangan.",
-      );
-      return;
-    }
-    setTransferOpen(true);
-  }
-  async function removeExpense(e: Expense) {
-    if (confirm(`Hapus pengeluaran “${e.note}” beserta akses buktinya?`))
-      try {
-        await store.mutate("/expenses/" + e.id, "DELETE", {
-          expectedVersion: e.version,
-        });
-      } catch (err) {
-        store.setMessage((err as Error).message);
-      }
   }
   async function signOut() {
-    if (!(await store.flush())) {
-      store.setMessage("Simpan atau selesaikan isian sebelum keluar.");
+    if (!(await store.flush())) return;
+    if (
+      dialogDirty.current &&
+      !confirm("Tutup isian yang masih terbuka dan keluar?")
+    )
       return;
-    }
     try {
       await api("/logout", { method: "POST", body: {} });
       store.clear();
       setUser(null);
       setLastUser(null);
-      setView("dashboard");
-      setExpense(null);
-      setTransferOpen(false);
-      setEvidence(null);
-      setIncomeEvidence(null);
       setMonthOpen(false);
-      setAddKind(null);
+      setView("home");
     } catch (e) {
       store.setMessage((e as Error).message);
     }
   }
-  async function signIn(email: string, password: string) {
-    const result = await api<{ user: User }>("/login", {
-      method: "POST",
-      body: { email, password },
-    });
-    if (
-      lastUser &&
-      result.user.id !== lastUser.id &&
-      (store.hasDrafts || expense || transferOpen)
-    ) {
-      await api("/logout", { method: "POST", body: {} });
-      throw Error(
-        "Masuk kembali sebagai " +
-          lastUser.name +
-          " untuk menjaga isian yang belum selesai.",
+  async function refreshApp() {
+    if (dialogDirty.current || monthOpen || passwordOpen) {
+      store.setMessage(
+        "Tutup rincian dan selesaikan isian sebelum memperbarui.",
       );
-    }
-    setUser(result.user);
-    setLastUser(result.user);
-    if (!lastUser) setView(result.user.id);
-    store.setMessage("");
-  }
-  async function update() {
-    if (
-      expense ||
-      transferOpen ||
-      monthOpen ||
-      addKind ||
-      !(await store.flush())
-    )
       return;
-    const waiting = registration.current?.waiting;
-    if (waiting) {
-      navigator.serviceWorker.addEventListener(
-        "controllerchange",
-        () => location.reload(),
-        { once: true },
-      );
-      waiting.postMessage("SKIP_WAITING");
-    } else location.reload();
+    }
+    if (!(await store.flush())) return;
+    registration.current?.waiting?.postMessage("SKIP_WAITING");
+    if (registration.current?.waiting)
+      await new Promise<void>((resolve) => {
+        navigator.serviceWorker.addEventListener(
+          "controllerchange",
+          () => resolve(),
+          { once: true },
+        );
+        setTimeout(resolve, 1500);
+      });
+    window.location.reload();
   }
   if (initial)
     return (
-      <main className="loading-panel" role="status">
-        Membuka Financée…
+      <main className="book-loading" role="status">
+        Memuat Financée…
       </main>
     );
-  const actor = lastUser?.id,
-    s = store.snapshot;
   return (
     <>
       {!user && (
         <Login
-          onLogin={signIn}
           message={store.message}
           resume={lastUser?.name}
+          onLogin={async (email, password) => {
+            const result = await api<{ user: User }>("/login", {
+              method: "POST",
+              body: { email, password },
+            });
+            if (lastUser && lastUser.id !== result.user.id) {
+              store.clear();
+              setMonthOpen(false);
+              setView("home");
+            }
+            setUser(result.user);
+            setLastUser(result.user);
+          }}
         />
       )}
-      <div hidden={!user} className="app">
-        <header className="app-header">
-          <div className="header-inner">
-            <span className="brand">Financée</span>
-            <div className="account-pill">
-              <UserRound size={16} />
-              <span>{user?.name}</span>
-            </div>
-            <Button
-              variant="ghost"
-              aria-label="Ganti sandi"
-              disabled={store.busy}
-              onClick={async () => {
-                if (
-                  expense ||
-                  transferOpen ||
-                  monthOpen ||
-                  addKind ||
-                  !(await store.flush())
-                ) {
-                  store.setMessage(
-                    "Simpan atau selesaikan isian sebelum mengganti sandi.",
-                  );
-                  return;
-                }
-                setPasswordOpen(true);
+      {lastUser && (
+        <div className="book-shell" hidden={!user}>
+          <header className="book-header">
+            <a
+              className="brand"
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                void navigate("home");
               }}
             >
-              <KeyRound size={18} />
-              <span className="sr-only">Ganti sandi</span>
-            </Button>
-            <Button
-              variant="ghost"
-              className="logout"
-              aria-label="Keluar"
-              disabled={store.busy}
-              onClick={() => void signOut()}
-            >
-              <LogOut size={16} />
-              <span>Keluar</span>
-            </Button>
-          </div>
-        </header>
-        {user && passwordOpen && (
-          <ChangePassword
-            onClose={() => setPasswordOpen(false)}
-            onChanged={() => {
-              setPasswordOpen(false);
-              store.clear();
-              setUser(null);
-              setLastUser(null);
-              setView("dashboard");
-              setEvidence(null);
-              setIncomeEvidence(null);
-              setExpense(null);
-              setTransferOpen(false);
-              setMonthOpen(false);
-              setAddKind(null);
-              store.setMessage(
-                "Sandi berhasil diganti. Silakan masuk kembali dengan sandi baru.",
-              );
-            }}
-          />
-        )}
-        <main className="main-shell">
-          <div className="page-heading">
-            <div>
-              <h1>
-                {view === "dashboard"
-                  ? "Keuangan keluarga"
-                  : view === "evidence"
-                    ? "Bukti"
-                    : "Pembagian uang"}
-              </h1>
+              Financée
+            </a>
+            <div className="book-account">
+              <span>{user?.name || lastUser.name}</span>
+              <Button
+                variant="ghost"
+                aria-label="Ganti sandi"
+                onClick={() => setPasswordOpen(true)}
+              >
+                <KeyRound size={18} />
+              </Button>
+              <Button
+                variant="ghost"
+                aria-label="Keluar"
+                onClick={() => void signOut()}
+              >
+                <LogOut size={18} />
+              </Button>
             </div>
-            <div className="period-controls">
-              <label htmlFor="period" className="sr-only">
-                Bulan anggaran
+          </header>
+          <main className="book-main">
+            <div className="book-period">
+              <label className="sr-only" htmlFor="book-month">
+                Bulan keluarga
               </label>
               <select
-                style={{
-                  display:
-                    view === "dashboard" && dashboardMode === "tahun"
-                      ? "none"
-                      : undefined,
-                }}
-                id="period"
-                disabled={store.busy}
+                id="book-month"
                 value={store.period}
                 onChange={(e) => void store.choose(e.target.value)}
+                disabled={store.loading || store.busy}
               >
-                {!store.periods.length && (
-                  <option value="">Belum ada anggaran</option>
-                )}
+                {!store.period && <option value="">Pilih bulan</option>}
                 {store.periods.map((p) => (
-                  <option key={p.id} value={p.id}>
+                  <option value={p.id} key={p.id}>
                     {monthName(p.id)}
                   </option>
                 ))}
               </select>
               <Button
+                variant="ghost"
+                aria-label="Buat bulan baru"
                 disabled={!store.online || store.busy}
-                onClick={() => void openMonth()}
+                onClick={async () => {
+                  if (await store.flush()) setMonthOpen(true);
+                }}
               >
-                <Plus size={15} />
-                Buat bulan
+                <Plus size={20} />
+              </Button>
+              <Button
+                variant="ghost"
+                aria-label="Muat data terbaru"
+                disabled={!store.online || store.loading}
+                onClick={() => void store.refresh(true)}
+              >
+                <RefreshCw size={17} />
               </Button>
             </div>
-          </div>
-          {incomeEvidence && user && (
-            <IncomeEvidence
-              allocation={incomeEvidence.kind !== "income"}
-              item={incomeEvidence}
-              store={store}
-              canEdit={incomeEvidence.owner_id === user.id}
-              onClose={() => setIncomeEvidence(null)}
-            />
-          )}
-          <nav className="app-nav compact-nav" aria-label="Bagian aplikasi">
+            {!store.online && (
+              <p className="book-notice" role="status">
+                <WifiOff size={16} /> Sedang offline. Sambungkan internet untuk
+                menyimpan.
+              </p>
+            )}
+            {updateReady && (
+              <div className="book-notice">
+                <span>Pembaruan tersedia.</span>
+                <Button variant="secondary" onClick={() => void refreshApp()}>
+                  Perbarui
+                </Button>
+              </div>
+            )}
+            {store.message && (
+              <div className="book-notice" role="status">
+                <span>{store.message}</span>
+                <Button variant="ghost" onClick={() => store.setMessage("")}>
+                  Tutup
+                </Button>
+              </div>
+            )}
+            {store.loading && !store.snapshot && (
+              <p role="status">Memuat buku keluarga…</p>
+            )}
+            {store.snapshot && (
+              <FamilyBook
+                key={lastUser.id + ":" + store.snapshot.id}
+                store={store}
+                actor={lastUser.id}
+                active={!!user}
+                view={view}
+                onDirty={dirty}
+                onNavigate={(v) => void navigate(v)}
+              />
+            )}
+            {!store.loading && !store.snapshot && (
+              <section className="book-empty">
+                <h1>Mulai buku keluarga</h1>
+                <Button
+                  onClick={() => setMonthOpen(true)}
+                  disabled={!store.online}
+                >
+                  Buat bulan pertama
+                </Button>
+              </section>
+            )}
+          </main>
+          <nav className="book-nav" aria-label="Menu utama">
             <button
-              aria-label="Beranda"
-              aria-pressed={view !== "evidence"}
-              onClick={() => void navigate(actor ?? "dashboard")}
+              aria-current={view === "home" ? "page" : undefined}
+              onClick={() => void navigate("home")}
             >
-              <House />
-              <span>Beranda</span>
+              <House size={22} />
+              Beranda
             </button>
             <button
-              aria-label="Catat pengeluaran"
-              disabled={!store.online || store.busy}
-              onClick={() => void openExpense()}
-            >
-              <ReceiptText />
-              <span>Catat</span>
-            </button>
-            <button
-              aria-label="Galeri bukti"
-              aria-pressed={view === "evidence"}
+              aria-current={view === "evidence" ? "page" : undefined}
               onClick={() => void navigate("evidence")}
             >
-              <Images />
-              <span>Bukti</span>
+              <Images size={22} />
+              Bukti
             </button>
           </nav>
-          {actor && (
-            <div className="compact-scope" role="group" aria-label="Tampilan">
-              <button
-                aria-pressed={view === actor}
-                onClick={() => void navigate(actor)}
-              >
-                Saya
-              </button>
-              <button
-                aria-pressed={
-                  view !== "dashboard" && view !== "evidence" && view !== actor
-                }
-                onClick={() =>
-                  void navigate(
-                    actor === "partner-a" ? "partner-b" : "partner-a",
-                  )
-                }
-              >
-                Pasangan
-              </button>
-              <button
-                aria-pressed={view === "dashboard"}
-                onClick={() => void navigate("dashboard")}
-              >
-                Keluarga
-              </button>
-            </div>
-          )}
-          {!store.online && (
-            <p className="offline-note" role="status">
-              <WifiOff size={16} />
-              Koneksi terputus. Anda bisa mengisi lagi setelah tersambung.
-            </p>
-          )}
-          {store.message && (
-            <div className="message" role="status">
-              <p>{store.message}</p>
-              <button
-                className="icon-button"
-                aria-label="Tutup pesan"
-                onClick={() => store.setMessage("")}
-              >
-                <X size={16} />
-              </button>
-            </div>
-          )}
-          {updateReady && (
-            <div className="message">
-              <p>Versi baru tersedia. Selesaikan isian sebelum memperbarui.</p>
-              <Button
-                variant="secondary"
-                disabled={Boolean(expense || transferOpen || store.busy)}
-                onClick={() => void update()}
-              >
-                Perbarui aplikasi
-              </Button>
-            </div>
-          )}
-          {store.loading && !s ? (
-            <p className="loading-panel" role="status">
-              Memuat anggaran…
-            </p>
-          ) : !s ? (
-            <section className="empty-panel">
-              <h2>Mulai anggaran keluarga</h2>
-              <p>
-                Siapkan bulan pertama. Pos bawaan tersedia dengan nominal
-                kosong.
-              </p>
-              <Button disabled={!store.online} onClick={() => void openMonth()}>
-                Buat anggaran saya
-              </Button>
-            </section>
-          ) : (
-            actor && (
-              <div className="view-content" key={view + ":" + s.id}>
-                {view === "dashboard" ? (
-                  <Dashboard
-                    onAllocation={showItem}
-                    mode={dashboardMode}
-                    onMode={(mode) => setDashboardMode(mode)}
-                    snapshot={s}
-                    periods={store.periods}
-                    active={Boolean(user)}
-                    actor={actor}
-                    onView={(v) => void navigate(v)}
-                    onExpense={() => void openExpense()}
-                    onTransfer={() => void openTransfer()}
-                    onEdit={(e) => void openExpense(e)}
-                    onDelete={(e) => void removeExpense(e)}
-                    onEvidence={setEvidence}
-                  />
-                ) : view === "evidence" ? (
-                  <EvidenceGallery
-                    onGroup={setGroupId}
-                    snapshot={s}
-                    onExpense={setEvidence}
-                    onIncome={showItem}
-                  />
-                ) : (
-                  <>
-                    <CompactHome
-                      store={store}
-                      owner={view}
-                      actor={actor}
-                      onGroup={setGroupId}
-                      onSetup={(item) => setSetupGroup({ item })}
-                      onManage={() => setManage((v) => !v)}
-                      onItem={showItem}
-                      managing={manage}
-                      active={Boolean(user)}
-                      onExpense={(e) => void openExpense(e)}
-                      onDelete={(e) => void removeExpense(e)}
-                      onEvidence={setEvidence}
-                    />
-                    <div hidden={!manage}>
-                      <Budget
-                        active={Boolean(user)}
-                        store={store}
-                        owner={view}
-                        actor={actor}
-                        onCreate={() => void openMonth()}
-                        onAdd={setAddKind}
-                        onGroup={setGroupId}
-                      />
-                      {s.budgets.some((b) => b.owner_id === view) && (
-                        <>
-                          <section className="records-panel">
-                            <div className="section-heading">
-                              <div>
-                                <h2>Catatan pembagian dan tambahan</h2>
-                                <p>Bukti opsional.</p>
-                              </div>
-                              {view === actor && (
-                                <Button
-                                  disabled={!store.online || store.busy}
-                                  onClick={() => void openExpense()}
-                                >
-                                  + Catat
-                                </Button>
-                              )}
-                            </div>
-                            <AutomaticRecords
-                              snapshot={s}
-                              owner={view}
-                              onItem={showItem}
-                            />
-                            <ExpenseList
-                              snapshot={s}
-                              owner={view}
-                              actor={actor}
-                              onEdit={(e) => void openExpense(e)}
-                              onDelete={(e) => void removeExpense(e)}
-                              onEvidence={setEvidence}
-                            />
-                          </section>
-                          {(s.items.some(
-                            (i) =>
-                              i.owner_id === view &&
-                              i.kind === "transfer_out" &&
-                              i.recording_mode !== "actual" &&
-                              !i.deleted_at,
-                          ) ||
-                            s.transfers.some(
-                              (t) =>
-                                !t.deleted_at &&
-                                !t.superseded_by_item_id &&
-                                (t.from_owner_id === view ||
-                                  t.to_owner_id === view),
-                            )) && (
-                            <section className="records-panel">
-                              <div className="section-heading">
-                                <div>
-                                  <h2>Kiriman antar pasangan</h2>
-                                  <p>Hanya pencatatan, bukan transfer uang.</p>
-                                </div>
-                                {view === actor && (
-                                  <Button
-                                    variant="secondary"
-                                    disabled={!store.online || store.busy}
-                                    onClick={() => void openTransfer()}
-                                  >
-                                    + Kiriman
-                                  </Button>
-                                )}
-                              </div>
-                              {!s.transfers.some(
-                                (t) =>
-                                  !t.superseded_by_item_id &&
-                                  (t.from_owner_id === view ||
-                                    t.to_owner_id === view),
-                              ) && (
-                                <p className="empty-note">
-                                  Belum ada kiriman yang dicatat.
-                                </p>
-                              )}
-                              {s.transfers
-                                .filter(
-                                  (t) =>
-                                    !t.superseded_by_item_id &&
-                                    (t.from_owner_id === view ||
-                                      t.to_owner_id === view),
-                                )
-                                .map((t) => (
-                                  <article
-                                    className="transfer-record"
-                                    key={t.id}
-                                  >
-                                    <div>
-                                      <strong>
-                                        {ownerName[t.from_owner_id]} →{" "}
-                                        {ownerName[t.to_owner_id]}
-                                      </strong>
-                                      <small>
-                                        {t.occurred_on} ·{" "}
-                                        {t.from_owner_id === view
-                                          ? "Keluar"
-                                          : "Masuk · otomatis"}
-                                      </small>
-                                    </div>
-                                    <strong>{rupiah.format(t.amount)}</strong>
-                                    {view === actor &&
-                                      t.from_owner_id === actor && (
-                                        <Button
-                                          variant="ghost"
-                                          disabled={!store.online || store.busy}
-                                          onClick={() => {
-                                            if (
-                                              confirm(
-                                                "Hapus catatan kiriman dari kedua tampilan?",
-                                              )
-                                            )
-                                              void store
-                                                .mutate(
-                                                  "/transfers/" + t.id,
-                                                  "DELETE",
-                                                  {
-                                                    expectedVersion: t.version,
-                                                  },
-                                                )
-                                                .catch((e) =>
-                                                  store.setMessage(e.message),
-                                                );
-                                          }}
-                                        >
-                                          Hapus
-                                        </Button>
-                                      )}
-                                  </article>
-                                ))}
-                            </section>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  </>
-                )}
-              </div>
-            )
-          )}
-        </main>
-      </div>
-      {actor && s && groupId && (
-        <GroupEditor
-          key={groupId}
-          id={groupId}
-          store={store}
-          actor={actor}
-          active={Boolean(user)}
-          onClose={() => setGroupId(null)}
-          readOnly={
-            view !== actor && view !== "evidence" && view !== "dashboard"
-          }
-          onExtra={() => {
-            setGroupId(null);
-            void openTransfer();
-          }}
-        />
+        </div>
       )}
-      {user && actor && setupGroup && (
-        <ConfigureGroup
-          store={store}
-          actor={actor}
-          item={setupGroup.item}
-          onClose={() => setSetupGroup(null)}
-          onCreated={(id) => {
-            setSetupGroup(null);
-            setGroupId(id);
-          }}
-        />
-      )}
-      {user && actor && monthOpen && (
+      {user && monthOpen && (
         <MonthForm
           store={store}
-          actor={actor}
+          actor={user.id}
           onClose={() => setMonthOpen(false)}
         />
-      )}{" "}
-      {user && addKind && (
-        <AddItemForm
-          kind={addKind}
-          store={store}
-          onClose={() => setAddKind(null)}
-        />
-      )}{" "}
-      {actor && s && expense && (
-        <ExpenseForm
-          key={expense.key}
-          open={Boolean(user)}
-          store={store}
-          actor={actor}
-          initial={expense.initial}
-          onClose={() => setExpense(null)}
-        />
-      )}{" "}
-      {actor && s && transferOpen && (
-        <TransferForm
-          open={Boolean(user)}
-          store={store}
-          actor={actor}
-          onClose={() => setTransferOpen(false)}
+      )}
+      {user && passwordOpen && (
+        <ChangePassword
+          onClose={() => setPasswordOpen(false)}
+          onChanged={() => {
+            setPasswordOpen(false);
+            setUser(null);
+            store.setMessage(
+              "Sandi berhasil diganti. Masuk kembali dengan sandi baru.",
+            );
+          }}
         />
       )}
-      <Dialog
-        open={Boolean(user && evidence)}
-        title="Bukti pengeluaran"
-        description={
-          evidence
-            ? ownerName[evidence.owner_id] +
-              " · " +
-              evidence.note +
-              " · " +
-              rupiah.format(evidence.amount)
-            : undefined
-        }
-        wide
-        onOpenChange={(v) => {
-          if (!v) setEvidence(null);
-          setIncomeEvidence(null);
-        }}
-      >
-        <EvidenceImages
-          files={
-            s?.attachments.filter(
-              (a) => a.expense_id === evidence?.id && a.status === "ready",
-            ) || []
-          }
-        />
-      </Dialog>
     </>
   );
 }

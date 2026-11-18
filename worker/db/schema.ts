@@ -22,7 +22,7 @@ export const allocationGroups = pgTable("allocation_groups", {
   period_id: text().notNull(),
   owner_id: owner(),
   label: text().notNull(),
-  posting_kind: text().$type<"external" | "internal" | "reserve">().notNull(),
+  posting_kind: text().$type<"external" | "internal" | "reserve">(),
   recipient_owner_id: text(),
   status: text().$type<"draft" | "posted" | "cancelled">().notNull(),
   posting_date: text(),
@@ -31,6 +31,7 @@ export const allocationGroups = pgTable("allocation_groups", {
   created_at: bigint({ mode: "number" }).notNull(),
   updated_at: bigint({ mode: "number" }).notNull(),
   deleted_at: bigint({ mode: "number" }),
+  purpose: text().notNull().default("legacy"),
 });
 export const allocationGroupItems = pgTable("allocation_group_items", {
   group_id: text().notNull(),
@@ -38,6 +39,9 @@ export const allocationGroupItems = pgTable("allocation_group_items", {
   position: integer().notNull(),
   posted: integer().notNull(),
   retired_at: bigint({ mode: "number" }),
+  linked_version: integer(),
+  linked_amount: bigint({ mode: "number" }),
+  linked_label: text(),
 });
 export const groupAttachments = pgTable("group_attachments", {
   id: text().primaryKey(),
@@ -80,6 +84,9 @@ export const budgetItems = pgTable(
     posting_kind: text().$type<"external" | "internal" | "reserve">(),
     posting_date: text(),
     posting_version: integer().notNull().default(1),
+    tracking_enabled: integer().notNull().default(0),
+    copied_from_item_id: text(),
+    copied_by: text(),
     position: integer().notNull(),
     label_version: integer().notNull().default(1),
     amount_version: integer().notNull().default(1),
@@ -112,6 +119,9 @@ export const expenses = pgTable(
     deleted_at: bigint({ mode: "number" }),
     superseded_by_item_id: text(),
     superseded_at: bigint({ mode: "number" }),
+    converted_to: text(),
+    converted_id: text(),
+    converted_payload: text(),
   },
   (t) => [
     foreignKey({
@@ -139,6 +149,9 @@ export const transfers = pgTable(
     deleted_at: bigint({ mode: "number" }),
     superseded_by_item_id: text(),
     superseded_at: bigint({ mode: "number" }),
+    converted_to: text(),
+    converted_id: text(),
+    converted_payload: text(),
   },
   (t) => [
     foreignKey({
@@ -221,4 +234,37 @@ export const loginAttempts = pgTable("login_attempts", {
   attempts: integer().notNull(),
   window_start: bigint({ mode: "number" }).notNull(),
   blocked_until: bigint({ mode: "number" }).notNull(),
+});
+export const usageEntries = pgTable("usage_entries", {
+  id: text().primaryKey(),
+  period_id: text()
+    .notNull()
+    .references(() => periods.id),
+  item_id: text()
+    .notNull()
+    .references(() => budgetItems.id),
+  owner_id: owner(),
+  occurred_on: text().notNull(),
+  note: text().notNull(),
+  amount: bigint({ mode: "number" }).notNull(),
+  version: integer().notNull().default(1),
+  created_at: bigint({ mode: "number" }).notNull(),
+  updated_at: bigint({ mode: "number" }).notNull(),
+  deleted_at: bigint({ mode: "number" }),
+});
+export const usageAttachments = pgTable("usage_attachments", {
+  id: text().primaryKey(),
+  usage_entry_id: text()
+    .notNull()
+    .references(() => usageEntries.id),
+  owner_id: owner(),
+  object_key: text().notNull().unique(),
+  content_type: text().notNull(),
+  byte_size: integer().notNull(),
+  sha256: text().notNull(),
+  width: integer(),
+  height: integer(),
+  status: text().notNull(),
+  created_at: bigint({ mode: "number" }).notNull(),
+  updated_at: bigint({ mode: "number" }).notNull(),
 });

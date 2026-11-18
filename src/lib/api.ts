@@ -41,7 +41,7 @@ export async function api<T>(
       credentials: "same-origin",
       cache: "no-store",
       headers: {
-        "X-Financee-Client": "2",
+        "X-Financee-Client": "3",
         ...(options.body === undefined
           ? {}
           : { "Content-Type": "application/json" }),
@@ -82,6 +82,7 @@ export async function upload(
     | "attachments"
     | "income-attachments"
     | "allocation-attachments"
+    | "usage-attachments"
     | "group-attachments" = "attachments",
 ) {
   let response: Response;
@@ -89,7 +90,7 @@ export async function upload(
     response = await fetch(`/api/${collection}/${id}/content`, {
       method: "PUT",
       credentials: "same-origin",
-      headers: { "Content-Type": file.type, "X-Financee-Client": "2" },
+      headers: { "Content-Type": file.type, "X-Financee-Client": "3" },
       body: file,
     });
   } catch {

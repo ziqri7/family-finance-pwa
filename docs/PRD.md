@@ -1,5 +1,10 @@
 # PRD — family-finance-pwa
 
+## Keputusan terbaru, 18 November 2026
+
+Satu buku keluarga menggantikan dua dompet dan kiriman turunan. Seluruh alokasi aktual termasuk tabungan mengurangi sisa satu kali. Bukti kolektif hanya hubungan gambar. Tracking opsional per pos; penggunaan lintas pembuat diperbolehkan, koreksi hanya pembuatnya. Dana/jatah diperiksa backend. Navigasi Beranda/Bukti dan rincian kontekstual mengikuti preview yang disetujui. Lihat FAMILY_BOOK_PROPOSAL.md. Implementasi/uji disetujui; rilis produksi belum. Bagian lama bersifat historis bila bertentangan.
+
+
 ## Revisi Alokasi aktual — sudah dirilis 16 November 2026
 
 Preview dan engineering disetujui pada 16 November 2026. Nominal pos baru menyatakan pembayaran/penyerahan yang sudah terjadi; catatan otomatis dibentuk dari pos tersebut. Pilih jenis Pembayaran/Kiriman pasangan/Disisihkan sekali; jenis dan tanggal opsional dapat dikoreksi dengan pemeriksaan versi. Tanggal yang kosong ditampilkan sebagai konteks bulan.

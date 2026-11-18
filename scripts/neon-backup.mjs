@@ -135,6 +135,36 @@ const groupTables = [
   "allocation_group_operations",
   "group_attachments",
 ];
+const version6Columns = structuredClone(columns);
+columns.budget_items.push(
+  "tracking_enabled",
+  "copied_from_item_id",
+  "copied_by",
+);
+columns.expenses.push("converted_to", "converted_id", "converted_payload");
+columns.transfers.push("converted_to", "converted_id", "converted_payload");
+columns.allocation_groups.push("purpose");
+columns.allocation_group_items.push(
+  "linked_version",
+  "linked_amount",
+  "linked_label",
+);
+columns.usage_entries = [
+  "id",
+  "period_id",
+  "item_id",
+  "owner_id",
+  "occurred_on",
+  "note",
+  "amount",
+  "version",
+  "created_at",
+  "updated_at",
+  "deleted_at",
+];
+columns.usage_attachments = columns.attachments.map((k) =>
+  k === "expense_id" ? "usage_entry_id" : k,
+);
 export const digest = (data) => createHash("sha256").update(data).digest("hex");
 export async function snapshot(db, includeMigrations = false) {
   const tables = Object.keys(columns),
@@ -178,6 +208,13 @@ export function requiredObjects(data) {
       .map((g) => g.id),
   );
   return [
+    ...(data.usage_attachments || []).filter(
+      (a) =>
+        a.status === "ready" &&
+        (data.usage_entries || []).some(
+          (u) => u.id === a.usage_entry_id && u.deleted_at === null,
+        ),
+    ),
     ...(data.group_attachments || []).filter(
       (a) => a.status === "ready" && groups.has(a.group_id),
     ),
@@ -207,6 +244,7 @@ export function restoredData(data) {
     ...(copy.income_attachments || []),
     ...(copy.allocation_attachments || []),
     ...(copy.group_attachments || []),
+    ...(copy.usage_attachments || []),
   ])
     if (!required.has(a.id)) a.status = "deleting";
   return copy;
@@ -244,7 +282,7 @@ export async function createBackup(
     join(folder, "manifest.json"),
     JSON.stringify(
       {
-        version: 6,
+        version: 7,
         complete: true,
         createdAt: new Date().toISOString(),
         databaseSha256: digest(json),
@@ -263,7 +301,7 @@ export async function readBackup(folder) {
       await readFile(join(folder, "manifest.json"), "utf8"),
     ),
     bytes = await readFile(join(folder, "database.json"));
-  if (![5, 6].includes(manifest.version))
+  if (![5, 6, 7].includes(manifest.version))
     throw Error("Format backup harus versi 5 atau 6 yang memuat kredensial.");
   if (manifest.complete !== true || digest(bytes) !== manifest.databaseSha256)
     throw Error("Backup tidak lengkap atau checksum berbeda.");
@@ -271,9 +309,13 @@ export async function readBackup(folder) {
   const expectedColumns =
     manifest.version === 5
       ? Object.fromEntries(
-          Object.entries(columns).filter(([t]) => !groupTables.includes(t)),
+          Object.entries(version6Columns).filter(
+            ([t]) => !groupTables.includes(t),
+          ),
         )
-      : columns;
+      : manifest.version === 6
+        ? version6Columns
+        : columns;
   if (
     Object.keys(data).sort().join() !==
     Object.keys(expectedColumns).sort().join()
@@ -305,6 +347,29 @@ export async function readBackup(folder) {
       "Backup harus memuat dua kredensial akun; tidak boleh kembali ke sandi awal.",
     );
   if (manifest.version === 5) for (const t of groupTables) data[t] = [];
+  if (manifest.version < 7) {
+    for (const i of data.budget_items)
+      Object.assign(i, {
+        tracking_enabled: 0,
+        copied_from_item_id: null,
+        copied_by: null,
+      });
+    for (const r of [...data.expenses, ...data.transfers])
+      Object.assign(r, {
+        converted_to: null,
+        converted_id: null,
+        converted_payload: null,
+      });
+    for (const g of data.allocation_groups) g.purpose = "legacy";
+    for (const m of data.allocation_group_items)
+      Object.assign(m, {
+        linked_version: null,
+        linked_amount: null,
+        linked_label: null,
+      });
+    data.usage_entries = [];
+    data.usage_attachments = [];
+  }
   validateManifestObjects(requiredObjects(data), manifest);
   for (const f of manifest.objects) {
     const bytes = await readFile(join(folder, f.file));
@@ -328,9 +393,9 @@ export async function restoreBackup(db, storage, folder, passwordPepper) {
       .all()
   ).results;
   if (
-    JSON.stringify(manifest.version === 5 ? versions.slice(0, 5) : versions) !==
+    JSON.stringify(versions.slice(0, manifest.version)) !==
       JSON.stringify(manifest.migrations) ||
-    (manifest.version === 5 && manifest.migrations.length !== 5)
+    manifest.migrations.length !== manifest.version
   )
     throw Error("Versi migrasi backup berbeda.");
   const emptySql = `SELECT ${[...Object.keys(columns), "sessions", "login_attempts"].map((t) => `(SELECT count(*) FROM ${t})`).join("+")} AS n`;
@@ -360,6 +425,7 @@ export async function restoreBackup(db, storage, folder, passwordPepper) {
       throw Error("Gambar pulihan berbeda.");
   }
   const writes = [
+    db.prepare("SELECT set_config('financee.restore','1',true)"),
     db.prepare(
       `DO $$ BEGIN IF (${emptySql})<>0 THEN RAISE EXCEPTION 'RESTORE_DESTINATION_NOT_EMPTY'; END IF; END $$`,
     ),

@@ -46,7 +46,7 @@ test("income evidence: both owners, private reads, quota, copy, retirement and r
       method,
       headers: {
         Origin: origin,
-        "X-Financee-Client": "2",
+        "X-Financee-Client": "3",
         Cookie: cookies[who] || "",
         "Content-Type": type,
       },
@@ -86,7 +86,7 @@ test("income evidence: both owners, private reads, quota, copy, retirement and r
       assert.equal(
         (await req(who, "POST", "/periods", { id: "2003-01", mode: "default" }))
           .status,
-        201,
+        i === 0 ? 201 : 409,
       );
     }
     // Defaults are not required by this fixture; create explicit income/allocation rows.
@@ -283,18 +283,16 @@ test("income evidence: both owners, private reads, quota, copy, retirement and r
       "evidence IDs cannot collide across income and expense backup entries",
       async () => {
         const expense = id();
-        assert.equal(
-          (
-            await req("a", "POST", "/expenses", {
-              id: expense,
-              itemId: allocation,
-              date: "2003-01-01",
-              note: "Contoh",
-              amount: 1,
-            })
-          ).status,
-          201,
-        );
+        await db
+          .prepare("UPDATE budget_items SET amount=1 WHERE id=$1")
+          .bind(b)
+          .run();
+        await db
+          .prepare(
+            "INSERT INTO expenses(id,period_id,owner_id,item_id,occurred_on,note,amount,created_at,updated_at) VALUES($1,'2003-01','partner-a',$2,'2003-01-01','Contoh',1,1,1)",
+          )
+          .bind(expense, allocation)
+          .run();
         assert.equal(
           (
             await req(
@@ -373,11 +371,11 @@ test("income evidence: both owners, private reads, quota, copy, retirement and r
         await migrate(dest);
         await dest
           .prepare(
-            "TRUNCATE group_attachments,allocation_group_operations,allocation_group_items,allocation_groups,allocation_attachments,income_attachments,attachments,transfers,expenses,budget_items,budgets,periods,default_items,sessions,login_attempts,account_credentials",
+            "TRUNCATE usage_attachments,usage_entries,group_attachments,allocation_group_operations,allocation_group_items,allocation_groups,allocation_attachments,income_attachments,attachments,transfers,expenses,budget_items,budgets,periods,default_items,sessions,login_attempts,account_credentials",
           )
           .run();
         assert.deepEqual(await restoreBackup(dest, storage, folder), {
-          tables: 14,
+          tables: 16,
           objects: 3,
         });
       },

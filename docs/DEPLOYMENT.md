@@ -1,5 +1,17 @@
 # Deployment Cloudflare dan Neon milik sendiri
 
+## Upgrade buku keluarga 0007 — kandidat belum tayang
+
+1. Tinjau paket dan hasil pengujian, lalu dapatkan persetujuan rilis. Siapkan masa pembaruan singkat agar klien lama tidak menulis saat peralihan.
+2. Dengan kode immutable format6 dari instalasi sekarang, cadangkan database dan gambar. Simpan pepper terpisah. Ambil pembanding privat seluruh kolom lama, kredensial, sesi dan checksum gambar.
+3. Periksa dampak definisi baru: seluruh alokasi aktual termasuk internal/reserve dihitung sekali sebagai pembagian keluarga. Tidak ada pemasukan turunan pasangan. Daftar legacy/extra tetap perlu tinjauan pengguna; jangan mengonversi saat deploy.
+4. Dalam masa pembaruan, deploy bundel yang telah diuji ke proyek Pages yang sama lebih dulu untuk menolak klien lama. Tunggu pergantian runtime selesai dan permintaan lama berakhir; ambil backup/pembanding format6 terakhir dengan kode lama. Buku sementara belum dapat dibuka sebelum skema siap. Selesaikan draf dan tutup aplikasi sebelum peralihan.
+5. Terapkan hanya 0007, tanpa seed/accounts:init/secret baru. Cocokkan seluruh kolom lama, gambar dan sandi sebelum/sesudah. Bundel klien API3 yang sama baru melayani buku setelah skema tersedia. Jangan menerapkan 0007 selagi runtime lama masih menerima penulisan keuangan.
+6. Verifikasi aset/API privat, laporan dan sesi yang berlaku. Jangan mengganti sandi atau menulis dummy pada buku keluarga. Buat backup7 lengkap 16 tabel/lima koleksi.
+
+Tidak memerlukan layanan, bucket atau secret baru. Jangan rollback ke aplikasi dua dompet setelah buku baru dipakai; gunakan perbaikan maju atau pemulihan terisolasi yang sudah diuji. Instalasi baru menerapkan seluruh migrasi1–7. Prosedur upgrade versi sebelumnya di bawah adalah riwayat.
+
+
 ## Upgrade kelompok 0006 — rilis terverifikasi 16 November 2026
 
 1. Periksa sumber/bundel yang diuji serta kondisi proyek dan skema produksi. Buat backup format5 dengan kode immutable718103ba876a17b580b88cd34797df9a922787f8 dalam checkout terpisah yang memakai konfigurasi privat produksi. Simpan pepper terpisah dan pastikan snapshot/gambar lengkap.

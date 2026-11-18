@@ -50,6 +50,20 @@ function harness() {
     },
   };
 }
+test("funds guard without a current row remains a recoverable error, not a fabricated field conflict", async () => {
+  const { queue, requests } = harness();
+  queue.edit(base, "amount", "100");
+  const saved = queue.commit(key);
+  requests[0].reject(
+    Object.assign(new Error("Dana belum cukup"), { status: 409 }),
+  );
+  await saved;
+  assert.equal(queue.drafts.get(key).status, "error");
+  assert.equal(queue.drafts.get(key).value, "100");
+  assert.equal(queue.drafts.get(key).current, undefined);
+  queue.resolve(key, false);
+  assert.equal(queue.drafts.size, 0);
+});
 test("late success cannot mark a newer value saved; next write uses returned version", async () => {
   const { queue, requests, saved } = harness();
   queue.edit(base, "amount", "100");

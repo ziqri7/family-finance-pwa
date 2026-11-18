@@ -158,7 +158,9 @@ export function CompactHome({
                   </strong>
                   <small>
                     {g.status === "posted"
-                      ? statusName[g.posting_kind] +
+                      ? (g.posting_kind
+                          ? statusName[g.posting_kind]
+                          : "Bukti bersama") +
                         " · " +
                         members.length +
                         " pos"
@@ -643,7 +645,11 @@ export function GroupEditor({
       }
       if (action === "cancel") setFiles([]);
       if (updated.group.status === "posted")
-        store.setMessage(statusName[updated.group.posting_kind] + ".");
+        store.setMessage(
+          (updated.group.posting_kind
+            ? statusName[updated.group.posting_kind]
+            : "Bukti bersama") + ".",
+        );
       if (
         enabled.current &&
         (action === "cancel" || files.every((file) => file.done))
@@ -741,7 +747,9 @@ export function GroupEditor({
             {!canEdit && review.group.status === "posted" && (
               <p className="group-success">
                 <Check size={18} />
-                {statusName[review.group.posting_kind]}
+                {review.group.posting_kind
+                  ? statusName[review.group.posting_kind]
+                  : "Bukti bersama"}
               </p>
             )}
             {rows.map((row) => {
@@ -982,7 +990,11 @@ export function GroupEditor({
                 >
                   {busy
                     ? "Menyimpan…"
-                    : actionName[review.group.posting_kind] + " " + totalLabel}
+                    : (review.group.posting_kind
+                        ? actionName[review.group.posting_kind]
+                        : "Simpan bukti") +
+                      " " +
+                      totalLabel}
                 </Button>
               )}
             </div>

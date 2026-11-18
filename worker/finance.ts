@@ -32,7 +32,9 @@ export async function owned<T extends { owner_id: Owner }>(
     | "income_attachments"
     | "allocation_attachments"
     | "allocation_groups"
-    | "group_attachments",
+    | "group_attachments"
+    | "usage_entries"
+    | "usage_attachments",
   id: string,
 ) {
   const row = await c.env.DB.prepare(
