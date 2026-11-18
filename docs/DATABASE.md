@@ -1,6 +1,6 @@
 # Rancangan database PostgreSQL
 
-## Skema kandidat 0007
+## Skema 0007 — dirilis 18 November 2026
 
 16 tabel backup. Dua tabel baru usage_entries/usage_attachments; metadata tracking, asal salinan, bundle purpose, snapshot tautan dan pemetaan extras pada tabel lama. owner_id berarti pembuat yang immutable melalui API, bukan dompet penerima. Kelompok bukti baru memiliki posting_kind/recipient NULL. Satu pos boleh tertaut ke beberapa bundle. Konversi catatan lama menyimpan tujuan dan payload konfirmasi serta mengunci histori; tidak menghapus sumber atau menggandakan gambar.
 

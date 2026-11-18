@@ -1,6 +1,6 @@
 # Backup dan pemulihan Neon
 
-## Format kandidat 7 — buku keluarga
+## Format 7 — buku keluarga, dirilis 18 November 2026
 
 Backup terbaru memuat 16 tabel dan lima koleksi gambar: expense, income, allocation, group dan usage. Seluruh checksum diverifikasi, termasuk pemakaian pada pos yang sudah dihapus. Metadata tombstone dan kredensial dipertahankan; sesi tidak disalin. Restore menolak tujuan berisi data atau pepper berbeda. Format 5/6 ditingkatkan dengan tracking off, bundle purpose legacy dan metadata baru kosong. Nilai lama tidak dikonversi.
 

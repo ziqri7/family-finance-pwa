@@ -2,7 +2,7 @@
 
 PWA keuangan keluarga dengan satu buku untuk dua akun. Isi pemasukan dan alokasi langsung, lihat sisa yang belum dibagi, dan simpan bukti JPG/PNG. Tidak perlu mengunggah Excel.
 
-**Kandidat 18 November 2026:** buku keluarga, bukti kolektif mandiri dan pelacakan opsional sudah diimplementasikan; 80 tes lulus. Belum dirilis ke produksi. Keputusan terbaru di [rancangan buku keluarga](docs/FAMILY_BOOK_PROPOSAL.md) menggantikan alur kiriman dan dua anggaran versi sebelumnya.
+**Rilis 18 November 2026:** buku keluarga, bukti kolektif mandiri dan pelacakan opsional sudah diimplementasikan; 80 tes lulus. Sudah ditayangkan dan diperiksa online di https://financees.pages.dev. Keputusan terbaru di [rancangan buku keluarga](docs/FAMILY_BOOK_PROPOSAL.md) menggantikan alur kiriman dan dua anggaran versi sebelumnya.
 
 Setiap keluarga memasang salinan sendiri pada Cloudflare Pages + Functions dan Neon miliknya. Tidak ada server akun pusat, pendaftaran publik, koneksi bank atau pelaksanaan transfer uang. Kode berlisensi [MIT](LICENSE).
 

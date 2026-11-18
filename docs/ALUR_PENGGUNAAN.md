@@ -1,6 +1,6 @@
 # Tahap 3 — Alur penggunaan yang diusulkan
 
-## Alur aktif kandidat buku keluarga
+## Alur aktif buku keluarga — dirilis 18 November 2026
 
 Beranda → isi nominal. Pemasukan → isi sumber dana. Bukti bersama → pilih pos dan JPG/PNG → Simpan bukti, tanpa mengubah uang. Pos → Pengaturan → Lacak pemakaian bila diperlukan; kedua akun mencatat dalam jatah pos. Bukti → lihat foto dan pos terkait. Grafik → Bulan/Tahun. Salin bulan → seluruh struktur kosong, hak edit mengikuti pembuat asli. Peninjauan lama sekali per ringkasan milik pembuat; tambahan manual dipetakan terlebih dahulu. Lihat README.md dan FAMILY_BOOK_PROPOSAL.md; alur lama berikut adalah riwayat.
 

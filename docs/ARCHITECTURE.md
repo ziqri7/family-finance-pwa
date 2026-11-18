@@ -1,10 +1,10 @@
 # Arsitektur Financée — Cloudflare Pages + Neon
 
-## Kontrak terbaru — kandidat buku keluarga
+## Kontrak buku keluarga — dirilis 18 November 2026
 
 Skema 0007, klien API 3. Snapshot/laporan dan seluruh penulisan keuangan memerlukan versi baru; login, me dan pembacaan gambar privat tetap memungkinkan pembaruan. Rute kelompok finansial, tambah expense/transfer dan posting lama mengembalikan FLOW_REPLACED. Sumber utama ialah family_book_totals/shared/family-book.ts, bukan ledger dompet lama. Dua penulis diserialkan memakai advisory lock keluarga; validasi CAS, dana dan jatah berada dalam transaksi sebelum commit. Bukti tidak menulis nominal. Usage memiliki pembuat terpisah dari pos.
 
-Lihat FAMILY_BOOK_PROPOSAL.md untuk keputusan lengkap. Penerapan masih kandidat lokal/dummy; catatan versi sebelumnya di bawah menjadi riwayat.
+Lihat FAMILY_BOOK_PROPOSAL.md untuk keputusan lengkap. Penerapan sudah dirilis dan diperiksa online; catatan versi sebelumnya di bawah menjadi riwayat.
 
 
 ## Kelompok penyerahan — skema 0006

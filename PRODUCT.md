@@ -2,7 +2,7 @@
 
 ## Buku keluarga — kandidat 18 November 2026
 
-Implementasi dan pengujian disetujui pengguna; penayangan belum disetujui. [FAMILY_BOOK_PROPOSAL.md](docs/FAMILY_BOOK_PROPOSAL.md) menjadi acuan terbaru: satu buku, bukti kolektif tanpa efek uang, tracking opsional, hak pembuat, batas dana/jatah. Bagian lama di bawah merupakan riwayat keputusan yang telah digantikan bila bertentangan.
+Implementasi, pengujian dan penayangan disetujui pengguna. Versi buku keluarga dirilis dan diperiksa online pada 18 November 2026. [FAMILY_BOOK_PROPOSAL.md](docs/FAMILY_BOOK_PROPOSAL.md) menjadi acuan terbaru: satu buku, bukti kolektif tanpa efek uang, tracking opsional, hak pembuat, batas dana/jatah. Bagian lama di bawah merupakan riwayat keputusan yang telah digantikan bila bertentangan.
 
 ## UX ringkas dan bukti bersama — dirilis 16 November 2026
 

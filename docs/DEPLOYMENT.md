@@ -1,6 +1,6 @@
 # Deployment Cloudflare dan Neon milik sendiri
 
-## Upgrade buku keluarga 0007 — kandidat belum tayang
+## Upgrade buku keluarga 0007 — rilis terverifikasi 18 November 2026
 
 1. Tinjau paket dan hasil pengujian, lalu dapatkan persetujuan rilis. Siapkan masa pembaruan singkat agar klien lama tidak menulis saat peralihan.
 2. Dengan kode immutable format6 dari instalasi sekarang, cadangkan database dan gambar. Simpan pepper terpisah. Ambil pembanding privat seluruh kolom lama, kredensial, sesi dan checksum gambar.

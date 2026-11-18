@@ -1,6 +1,6 @@
 # Satu catatan keluarga dan bukti kolektif mandiri
 
-Status 18 November 2026 — arah produk, preview dan rancangan penyimpanan disetujui. Implementasi/uji diizinkan, rilis produksi terpisah. Acuan kode `6e5273ce7b1b4e72daf855cda7e6453cd4d77e50`, skema 0001–0006, backup format6. Preview data contoh di `private/family-preview`, http://127.0.0.1:5210.
+Status 18 November 2026 — arah produk, preview dan rancangan penyimpanan disetujui. Implementasi/uji serta rilis produksi mendapat persetujuan terpisah; penayangan diverifikasi pada 18 November 2026. Acuan kode `6e5273ce7b1b4e72daf855cda7e6453cd4d77e50`, skema 0001–0006, backup format6. Preview data contoh di `private/family-preview`, http://127.0.0.1:5210.
 
 ## Keputusan pengguna
 

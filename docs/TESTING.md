@@ -1,8 +1,20 @@
 # Pengujian Financée
 
-## Buku keluarga — kandidat 18 November 2026
+## Verifikasi produksi — 18 November 2026
 
-Implementasi dan pengujian sudah disetujui. Kandidat ini belum dipush ke GitHub atau ditayangkan. Semua pengujian tulis memakai dua cabang Neon khusus dummy, tidak memakai data keluarga.
+Rilis disetujui setelah paket sumber diperiksa. Runtime memakai commit `307d28323a81d9b58bb233f7635e659b421dcfa7`; perubahan setelahnya hanya dokumentasi.
+
+- Backup format6 lengkap sebelum peralihan dan sekali lagi setelah runtime API3 aktif. Migrasi0007 saja diterapkan; tidak seed, inisialisasi akun ulang atau konversi otomatis.
+- Seluruh kolom lama dalam14tabel tetap sama. Dua tabel usage baru kosong, tracking awal off, kelompok lama berstatus purpose legacy. Kredensial serta sesi pengguna yang masih berlaku dipertahankan.
+- HTML, JS, CSS, service worker, manifest, font dan ikon online identik dengan build yang diuji. Backend/aset internal tidak terekspos; API privat tanpa akun ditolak dan memakai no-store.
+- Kedua akun berhasil masuk dengan sandi yang masih cocok dengan referensi awal yang telah diverifikasi secara lokal. Snapshot/laporan seluruh periode yang tersedia cocok dengan sumber buku keluarga; gambar lama terbaca dan checksum sesuai dari kedua akun. Hanya sesi uji yang dikeluarkan setelah pemeriksaan.
+- Klien lama ditolak, rute commit kelompok finansial lama ditutup, protokol baru tersedia, dan origin asing ditolak. Pemeriksaan awal rute lama sesaat setelah pergantian runtime mendapat409; pengulangan pemeriksaan yang sama kemudian lulus410 tanpa perubahan runtime.
+- Snapshot keuangan, hash sandi dan metadata bukti identik sebelum/sesudah pemeriksaan HTTP. Tidak membuat data contoh atau mengubah nominal keluarga sebagai tes produksi.
+- Backup format7 sesudah rilis lengkap16tabel dan seluruh objek gambar yang diperlukan. Tujuh secret tetap; tidak memasang secret produksi pada preview.
+
+## Buku keluarga — dirilis 18 November 2026
+
+Implementasi dan pengujian sudah disetujui. Kode dan aplikasi sudah dipublikasikan setelah persetujuan pengguna, lalu diperiksa online. Semua pengujian tulis memakai dua cabang Neon khusus dummy, tidak memakai data keluarga.
 
 - **80 tes lulus, 0 gagal/dilewati**, melalui `FINANCEE_TEST=1 npm test`. Mencakup autentikasi, ganti sandi dan sesi pasangan, pembatasan pembuat, input, dua penulis serentak, batas dana/jatah, bukti privat dan kuota, rollback, peralihan catatan lama, salin kosong, laporan, backup/pemulihan.
 - **35 tes unit lulus** pada instalasi bersih; merupakan bagian dari 80 tes di atas. Build/typecheck lulus; 13 berkas hasil build dan seluruh migrasi identik byte dengan workspace. Backend native juga berhasil diluncurkan dari instalasi bersih, serta menolak akses saat konfigurasi belum tersedia.
@@ -17,7 +29,7 @@ Tes yang mengharuskan dompet pasangan/commit keuangan kelompok diganti dengan te
 
 Catatan teknis dan render berada pada folder privat pengembangan `private/family/`, tidak masuk sumber publik. Pemeriksaan paket publik dan SHA-256 dicatat bersama paket rilis. Pembacaan dampak produksi dilakukan read-only; tidak membuat sesi, menulis nominal, menerapkan migrasi, atau mengubah gambar/sandi produksi.
 
-Batas pemeriksaan: belum diuji pada iPhone/Safari fisik, dua perangkat fisik, beban maksimum atau audit keamanan menyeluruh. Ketersediaan/kuota layanan tidak dijamin oleh hasil tes ini. Riwayat pengujian versi sebelumnya di bawah tidak menjadi klaim bahwa kandidat telah tayang.
+Batas pemeriksaan: belum diuji pada iPhone/Safari fisik, dua perangkat fisik, beban maksimum atau audit keamanan menyeluruh. Ketersediaan/kuota layanan tidak dijamin oleh hasil tes ini. Riwayat pengujian versi sebelumnya di bawah tetap dipertahankan.
 
 
 ## UX ringkas dan bukti bersama terverifikasi online — 16 November 2026
